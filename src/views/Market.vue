@@ -11,31 +11,67 @@
       </div>
     </header>
 
-    <!-- 主内容 -->
-    <main class="main">
-      <div class="coin-grid">
+    <!-- 热门币种横向滚动 -->
+    <div class="ticker-bar">
+      <div class="ticker-scroll">
         <div 
           v-for="coin in coinList" 
           :key="coin.symbol" 
-          class="coin-card"
+          class="ticker-item"
           @click="goToChart(coin.symbol)"
         >
-          <div class="card-header">
-            <img :src="coin.icon" class="coin-icon">
-            <div class="coin-info">
-              <span class="coin-symbol">{{ coin.symbol }}</span>
-              <span class="coin-name">{{ coin.name }}</span>
-            </div>
-          </div>
-          <div class="card-body">
-            <span class="price">${{ formatPrice(coin.price) }}</span>
-            <span class="change" :class="coin.change >= 0 ? 'up' : 'down'">
-              {{ coin.change >= 0 ? '▲' : '▼' }}
-              {{ coin.change >= 0 ? '+' : '' }}{{ coin.change.toFixed(2) }}%
-            </span>
-          </div>
-          <div class="card-bg"></div>
+          <span class="ticker-symbol">{{ coin.symbol }}</span>
+          <span class="ticker-price">${{ formatPrice(coin.price) }}</span>
+          <span class="ticker-change" :class="coin.change >= 0 ? 'up' : 'down'">
+            {{ coin.change >= 0 ? '+' : '' }}{{ coin.change.toFixed(2) }}%
+          </span>
         </div>
+      </div>
+    </div>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <!-- 行情表格 -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📊 行情榜单</h2>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>币种</th>
+              <th>价格</th>
+              <th>24h涨跌</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              v-for="(coin, index) in coinList" 
+              :key="coin.symbol"
+              @click="goToChart(coin.symbol)"
+            >
+              <td>{{ index + 1 }}</td>
+              <td class="coin-cell">
+                <img :src="coin.icon" class="coin-icon">
+                <div>
+                  <div class="coin-symbol">{{ coin.symbol }}</div>
+                  <div class="coin-name">{{ coin.name }}</div>
+                </div>
+              </td>
+              <td class="price-cell">${{ formatPrice(coin.price) }}</td>
+              <td>
+                <span class="change-tag" :class="coin.change >= 0 ? 'up' : 'down'">
+                  {{ coin.change >= 0 ? '+' : '' }}{{ coin.change.toFixed(2) }}%
+                </span>
+              </td>
+              <td>
+                <button class="trade-btn">交易</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </main>
 
@@ -140,179 +176,117 @@ onUnmounted(() => {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg-dark: #0a0a0f;
-  --bg-card: #14141f;
-  --bg-card-hover: #1a1a28;
-  --accent: #00ff88;
-  --accent-glow: rgba(0, 255, 136, 0.15);
-  --text-primary: #ffffff;
-  --text-secondary: #8888aa;
-  --red: #ff4444;
-  --green: #00ff88;
+  --primary: #F97316;
+  --bg: #F8FAFC;
+  --white: #FFFFFF;
+  --text: #1E293B;
+  --text-secondary: #64748B;
+  --border: #E2E8F0;
+  --green: #22C55E;
+  --red: #EF4444;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 body {
   font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--bg-dark);
-  color: var(--text-primary);
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
-  background-image: 
-    radial-gradient(ellipse at top, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(100, 100, 255, 0.03) 0%, transparent 50%);
 }
 
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+.app { min-height: 100vh; }
 
 /* Header */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  background: rgba(20, 20, 31, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px 24px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.header-left {
+.header-left { display: flex; align-items: center; gap: 12px; }
+.logo { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+.brand { font-size: 20px; font-weight: 700; color: var(--primary); }
+.time { font-size: 14px; color: var(--text-secondary); }
+
+/* Ticker Bar */
+.ticker-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  overflow-x: auto;
+}
+
+.ticker-scroll {
+  display: flex;
+  gap: 24px;
+  padding: 0 24px;
+  min-width: max-content;
+}
+
+.ticker-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
 }
 
-.logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  object-fit: cover;
-}
+.ticker-item:hover { background: var(--bg); }
 
-.brand {
-  font-size: 20px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #fff 0%, #00ff88 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.time {
-  font-size: 14px;
-  color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
-}
+.ticker-symbol { font-weight: 600; }
+.ticker-price { font-weight: 600; font-family: monospace; }
+.ticker-change { font-size: 12px; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
+.ticker-change.up { color: var(--green); background: rgba(34,197,94,0.1); }
+.ticker-change.down { color: var(--red); background: rgba(239,68,68,0.1); }
 
 /* Main */
-.main {
-  flex: 1;
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
+.main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 
-/* Coin Grid */
-.coin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.coin-card {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 20px;
-  cursor: pointer;
-  position: relative;
+/* Card */
+.card {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
 }
 
-.coin-card:hover {
-  background: var(--bg-card-hover);
-  transform: translateY(-4px);
-  border-color: rgba(0, 255, 136, 0.3);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 40px var(--accent-glow);
-}
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; }
 
-.card-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, transparent 0%, var(--accent-glow) 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--bg); }
+.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.data-table tr { cursor: pointer; transition: background 0.2s; }
+.data-table tr:hover { background: var(--bg); }
 
-.coin-card:hover .card-bg {
-  opacity: 1;
-}
+.coin-cell { display: flex; align-items: center; gap: 10px; }
+.coin-icon { width: 28px; height: 28px; border-radius: 50%; }
+.coin-symbol { font-weight: 600; }
+.coin-name { font-size: 12px; color: var(--text-secondary); }
+.price-cell { font-weight: 600; font-family: monospace; }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
+.change-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+.change-tag.up { color: var(--green); background: rgba(34,197,94,0.1); }
+.change-tag.down { color: var(--red); background: rgba(239,68,68,0.1); }
 
-.coin-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.coin-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.coin-symbol {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.coin-name {
+.trade-btn {
+  padding: 6px 14px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
   font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.card-body {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.price {
-  font-size: 24px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.change {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 8px;
-}
-
-.change.up {
-  color: var(--green);
-  background: rgba(0, 255, 136, 0.1);
-}
-
-.change.down {
-  color: var(--red);
-  background: rgba(255, 68, 68, 0.1);
+  font-weight: 500;
+  cursor: pointer;
 }
 
 /* Footer */
@@ -321,23 +295,14 @@ body {
   justify-content: center;
   gap: 32px;
   padding: 20px;
-  color: var(--text-secondary);
   font-size: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
 }
 
 /* Responsive */
-@media (max-width: 600px) {
-  .coin-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .header {
-    padding: 16px;
-  }
-  
-  .main {
-    padding: 16px;
-  }
+@media (max-width: 768px) {
+  .main { padding: 16px; }
+  .ticker-scroll { padding: 0 16px; }
 }
 </style>
