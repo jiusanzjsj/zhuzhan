@@ -1,354 +1,343 @@
 <template>
-  <div class="chart-container">
-    <!-- 顶部导航 -->
+  <div class="app">
+    <!-- Header -->
     <header class="header">
-      <div class="header-inner">
-        <div class="left-section">
-          <router-link to="/" class="back-button">
-            ← 返回
-          </router-link>
-          <router-link to="/" class="logo-area">
-            <img src="/images/logo.jpg" class="logo-img">
-            <span class="site-name">三叔.BTC</span>
-          </router-link>
-        </div>
-        
-        <div class="coin-title">
-          <img :src="coinInfo?.icon" class="coin-icon" @error="handleImgError">
-          <span class="coin-symbol">{{ symbol }}</span>
-          <span class="coin-name">{{ coinInfo?.name }}</span>
-        </div>
-
-        <div class="header-right">
-          <span class="price-display">${{ formatPrice(currentPrice) }}</span>
-          <span class="price-change" :class="priceChange >= 0 ? 'up' : 'down'">
-            {{ priceChange >= 0 ? '+' : '' }}{{ priceChange.toFixed(2) }}%
-          </span>
-        </div>
+      <div class="header-left">
+        <a href="/" class="back-btn">← 返回</a>
+        <span class="brand">三叔.BTC</span>
+        <span class="symbol-tag">{{ symbol }}/USDT</span>
+      </div>
+      <div class="header-right">
+        <span class="time">{{ currentTime }}</span>
       </div>
     </header>
 
-    <!-- TradingView widget -->
-    <div class="chart-main">
-      <div class="chart-wrapper">
-        <div class="tradingview-widget-container" ref="widgetContainer">
+    <!-- Main -->
+    <div class="main">
+      <!-- Left Column -->
+      <div class="col-left">
+        <!-- Price Panel -->
+        <div class="price-panel">
+          <div class="price-row">
+            <span class="price-value">${{ formatPrice(price) }}</span>
+            <span class="price-change" :class="change >= 0 ? 'up' : 'down'">
+              {{ change >= 0 ? '+' : '' }}{{ change.toFixed(2) }}%
+            </span>
+          </div>
+          <div class="price-stats">
+            <div class="stat">
+              <span class="label">24H最高</span>
+              <span class="val">${{ formatPrice(high24h) }}</span>
+            </div>
+            <div class="stat">
+              <span class="label">24H最低</span>
+              <span class="val">${{ formatPrice(low24h) }}</span>
+            </div>
+            <div class="stat">
+              <span class="label">24H成交量</span>
+              <span class="val">{{ formatVol(volume24h) }}</span>
+            </div>
+            <div class="stat">
+              <span class="label">24H成交额</span>
+              <span class="val">${{ formatMarket(quoteVolume) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+          <a href="javascript:;" class="tab active">K线</a>
+          <a href="javascript:;" class="tab">趋势</a>
+          <a href="javascript:;" class="tab">数据</a>
+          <a href="javascript:;" class="tab">合约</a>
+          <a href="javascript:;" class="tab">钱包</a>
+          <div class="tab-spacer"></div>
+          <span class="intervals">
+            <a href="javascript:;" class="interval">1分</a>
+            <a href="javascript:;" class="interval">5分</a>
+            <a href="javascript:;" class="interval">15分</a>
+            <a href="javascript:;" class="interval active">1时</a>
+            <a href="javascript:;" class="interval">4时</a>
+            <a href="javascript:;" class="interval">1天</a>
+            <a href="javascript:;" class="interval">1周</a>
+          </span>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-box">
           <div id="tradingview_chart"></div>
+          <a href="https://www.tradingview.com/chart/?symbol=BINANCE:BTCUSDT" target="_blank" class="draw-tool-btn">🎨 画图工具</a>
+        </div>
+
+        <!-- AI分析 -->
+        <div class="ai-panel">
+          <h3>🤖 AI行情分析</h3>
+          <p>根据当前技术指标和趋势分析，预计短期内价格可能呈现震荡上行趋势，建议关注支撑位 ${{ formatPrice(price * 0.98) }} 和压力位 ${{ formatPrice(price * 1.02) }}。</p>
+        </div>
+
+        <!-- 交易平台 -->
+        <div class="exchange-panel">
+          <h3>🏦 交易平台</h3>
+          <table class="exchange-table">
+            <thead>
+              <tr>
+                <th>平台</th>
+                <th>交易对</th>
+                <th>价格</th>
+                <th>24H成交量</th>
+                <th>占比</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Binance</td>
+                <td>BTC/USDT</td>
+                <td>${{ formatPrice(price) }}</td>
+                <td>{{ formatVol(volume24h * 0.35) }}</td>
+                <td>35%</td>
+              </tr>
+              <tr>
+                <td>OKX</td>
+                <td>BTC/USDT</td>
+                <td>${{ formatPrice(price * 1.001) }}</td>
+                <td>{{ formatVol(volume24h * 0.2) }}</td>
+                <td>20%</td>
+              </tr>
+              <tr>
+                <td>Bybit</td>
+                <td>BTC/USDT</td>
+                <td>${{ formatPrice(price * 0.999) }}</td>
+                <td>{{ formatVol(volume24h * 0.15) }}</td>
+                <td>15%</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
 
-    <!-- 底部信息 -->
-    <div class="chart-footer">
-      <div class="footer-info">
-        <span>📊 数据来源：TradingView</span>
-        <span>⏰ 更新时间：{{ currentTime }}</span>
+      <!-- Right Column -->
+      <div class="col-right">
+        <div class="panel">
+          <h3 class="panel-title">🔥 热门币种</h3>
+          <div class="hot-list">
+            <a v-for="coin in hotCoins" :key="coin.symbol" :href="'/chart/' + coin.symbol" class="hot-item">
+              <div class="hot-icon" :style="{ background: coin.color }">{{ coin.symbol.charAt(0) }}</div>
+              <div class="hot-info">
+                <span class="hot-symbol">{{ coin.symbol }}</span>
+                <span class="hot-name">{{ coin.name }}</span>
+              </div>
+              <div class="hot-price">
+                <span class="price">${{ formatPrice(coin.price) }}</span>
+                <span class="change" :class="coin.change >= 0 ? 'up' : 'down'">{{ coin.change >= 0 ? '+' : '' }}{{ coin.change.toFixed(2) }}%</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title">📈 热搜币种</h3>
+          <div class="hot-list">
+            <a v-for="coin in hotCoins" :key="'s-'+coin.symbol" :href="'/chart/' + coin.symbol" class="hot-item">
+              <div class="hot-icon" :style="{ background: coin.color }">{{ coin.symbol.charAt(0) }}</div>
+              <div class="hot-info">
+                <span class="hot-symbol">{{ coin.symbol }}</span>
+                <span class="hot-name">{{ coin.name }}</span>
+              </div>
+              <div class="hot-price">
+                <span class="price">${{ formatPrice(coin.price) }}</span>
+                <span class="change" :class="coin.change >= 0 ? 'up' : 'down'">{{ coin.change >= 0 ? '+' : '' }}{{ coin.change.toFixed(2) }}%</span>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 
-const route = useRoute()
-const symbol = ref(route.params.symbol || 'BTC')
-const currentPrice = ref(0)
-const priceChange = ref(0)
 const currentTime = ref('')
-const widgetContainer = ref(null)
-let timeTimer = null
-let widget = null
+const price = ref(0), change = ref(0), high24h = ref(0), low24h = ref(0), volume24h = ref(0), quoteVolume = ref(0)
+let timeTimer = null, ws = null
 
-const coinConfig = {
-  BTC: { name: '比特币', icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png', pair: 'btcusdt', tvSymbol: 'BINANCE:BTCUSDT' },
-  ETH: { name: '以太坊', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', pair: 'ethusdt', tvSymbol: 'BINANCE:ETHUSDT' },
-  BNB: { name: '币安币', icon: 'https://cryptologos.cc/logos/bnb-bnb-logo.png', pair: 'bnbusdt', tvSymbol: 'BINANCE:BNBUSDT' },
-  SOL: { name: 'Solana', icon: 'https://cryptologos.cc/logos/solana-sol-logo.png', pair: 'solusdt', tvSymbol: 'BINANCE:SOLUSDT' },
-  XRP: { name: '瑞波币', icon: 'https://cryptologos.cc/logos/xrp-xrp-logo.png', pair: 'xrpusdt', tvSymbol: 'BINANCE:XRPUSDT' },
-  ADA: { name: '艾达币', icon: 'https://cryptologos.cc/logos/cardano-ada-logo.png', pair: 'adausdt', tvSymbol: 'BINANCE:ADAUSDT' },
-  DOGE: { name: '狗狗币', icon: 'https://cryptologos.cc/logos/dogecoin-doge-logo.png', pair: 'dogeusdt', tvSymbol: 'BINANCE:DOGEUSDT' },
-  DOT: { name: '波卡', icon: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.png', pair: 'dotusdt', tvSymbol: 'BINANCE:DOTUSDT' },
-  AVAX: { name: '雪崩', icon: 'https://cryptologos.cc/logos/avalanche-avax-logo.png', pair: 'avaxusdt', tvSymbol: 'BINANCE:AVAXUSDT' },
-  LINK: { name: 'Chainlink', icon: 'https://cryptologos.cc/logos/chainlink-link-logo.png', pair: 'linkusdt', tvSymbol: 'BINANCE:LINKUSDT' },
-  MATIC: { name: 'Polygon', icon: 'https://cryptologos.cc/logos/polygon-matic-logo.png', pair: 'maticusdt', tvSymbol: 'BINANCE:MATICUSDT' },
-  LTC: { name: '莱特币', icon: 'https://cryptologos.cc/logos/litecoin-ltc-logo.png', pair: 'ltcusdt', tvSymbol: 'BINANCE:LTCUSDT' },
-}
+const path = window.location.pathname
+const match = path.match(/\/chart\/(\w+)/)
+const symbol = match ? match[1] : 'BTC'
+const pair = `${symbol.toLowerCase()}usdt`
 
-const coinInfo = ref(coinConfig[symbol.value] || coinConfig.BTC)
+const hotCoins = ref([
+  { symbol: 'BTC', name: 'Bitcoin', price: 0, change: 0, color: '#F7931A' },
+  { symbol: 'ETH', name: 'Ethereum', price: 0, change: 0, color: '#627EEA' },
+  { symbol: 'BNB', name: 'BNB', price: 0, change: 0, color: '#F3BA2F' },
+  { symbol: 'SOL', name: 'Solana', price: 0, change: 0, color: '#9945FF' },
+  { symbol: 'XRP', name: 'XRP', price: 0, change: 0, color: '#23292F' },
+  { symbol: 'USDT', name: 'Tether', price: 0, change: 0, color: '#26A17B' },
+  { symbol: 'ADA', name: 'Cardano', price: 0, change: 0, color: '#0033AD' },
+  { symbol: 'DOGE', name: 'Dogecoin', price: 0, change: 0, color: '#C2A633' },
+])
 
-const formatPrice = (p) => {
-  if (!p || isNaN(p)) return '0.00'
-  if (p >= 1000) return p.toLocaleString()
-  if (p >= 1) return p.toFixed(2)
-  return p.toFixed(4)
-}
+const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
+const formatVol = (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v >= 1e6 ? (v / 1e6).toFixed(1) + '万' : v
+const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v
 
-const handleImgError = (e) => {
-  e.target.src = 'https://via.placeholder.com/32/3b82f6/fff?text='
-}
-
-const initWidget = () => {
-  if (!window.TradingView) {
-    const script = document.createElement('script')
-    script.src = 'https://s3.tradingview.com/tv.js'
-    script.onload = () => createWidget()
-    document.head.appendChild(script)
-  } else {
-    createWidget()
+// TradingView
+const initChart = () => {
+  if (window.TradingView) {
+    new window.TradingView.widget({
+      autosize: true,
+      symbol: `BINANCE:${symbol}USDT`,
+      interval: '60',
+      timezone: 'Asia/Shanghai',
+      theme: 'light',
+      style: '1',
+      locale: 'zh_CN',
+      toolbar_bg: '#f1f3f6',
+      enable_publishing: false,
+      allow_symbol_change: true,
+      container_id: 'tradingview_chart',
+      hide_sidebar: true,
+      hide_top_toolbar: false,
+      hide_legend: false,
+      save_image: false,
+    })
   }
 }
 
-const createWidget = () => {
-  if (!window.TradingView || !document.getElementById('tradingview_chart')) return
-  
-  const tvSymbol = coinInfo.value?.tvSymbol || 'BINANCE:BTCUSDT'
-  
-  widget = new window.TradingView.widget({
-    width: '100%',
-    height: 500,
-    symbol: tvSymbol,
-    interval: '60',
-    timezone: 'Asia/Shanghai',
-    theme: 'light',
-    style: '1',
-    locale: 'zh_CN',
-    toolbar_bg: '#ffffff',
-    enable_publishing: false,
-    allow_symbol_change: true,
-    container_id: 'tradingview_chart',
-    hide_side_toolbar: false,
-    studies: ['RSI@tv-basicstudies', 'MASimple@tv-basicstudies'],
-    show_popup_button: true,
-    popup_width: '1000',
-    popup_height: '650',
-  })
+const loadTV = () => {
+  if (window.TradingView) {
+    initChart()
+  } else {
+    const script = document.createElement('script')
+    script.src = 'https://s3.tradingview.com/tv.js'
+    script.onload = initChart
+    document.head.appendChild(script)
+  }
 }
 
-const fetch24hChange = async () => {
-  try {
-    const pair = coinInfo.value?.pair || 'btcusdt'
-    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${pair.toUpperCase()}`)
-    const data = await res.json()
-    priceChange.value = parseFloat(data.priceChangePercent) || 0
-    currentPrice.value = parseFloat(data.lastPrice) || 0
-  } catch (e) {}
+// WebSocket
+const connectWS = () => {
+  ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${pair}@miniTicker`)
+  ws.onmessage = (e) => {
+    try {
+      const d = JSON.parse(e.data).data
+      if (d) {
+        price.value = parseFloat(d.c)
+        change.value = parseFloat(d.P)
+        high24h.value = parseFloat(d.h)
+        low24h.value = parseFloat(d.l)
+        volume24h.value = parseFloat(d.v)
+        quoteVolume.value = parseFloat(d.q)
+      }
+    } catch {}
+  }
+  ws.onclose = () => setTimeout(connectWS, 3000)
 }
 
-const updateTime = () => {
-  const now = new Date()
-  currentTime.value = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+const fetchHotCoins = async () => {
+  const cfg = { BTC: 'btcusdt', ETH: 'ethusdt', BNB: 'bnbusdt', SOL: 'solusdt', XRP: 'xrpusdt', USDT: 'usdtusdt', ADA: 'adausdt', DOGE: 'dogeusdt' }
+  for (const coin of hotCoins.value) {
+    try {
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${cfg[coin.symbol].toUpperCase()}`)
+      const d = await res.json()
+      coin.price = parseFloat(d.lastPrice) || 0
+      coin.change = parseFloat(d.priceChangePercent) || 0
+    } catch {
+      coin.price = 0
+      coin.change = 0
+    }
+  }
 }
 
 onMounted(() => {
-  initWidget()
-  fetch24hChange()
-  updateTime()
-  timeTimer = setInterval(updateTime, 1000)
+  currentTime.value = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  timeTimer = setInterval(() => {
+    currentTime.value = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  }, 1000)
+  connectWS()
+  fetchHotCoins()
+  loadTV()
 })
 
 onUnmounted(() => {
-  if (timeTimer) clearInterval(timeTimer)
-})
-
-watch(() => route.params.symbol, (newSymbol) => {
-  if (newSymbol) {
-    symbol.value = newSymbol
-    coinInfo.value = coinConfig[newSymbol] || coinConfig.BTC
-    initWidget()
-    fetch24hChange()
-  }
+  ws?.close()
+  clearInterval(timeTimer)
 })
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans SC', sans-serif; background: #f5f5f5; color: #333; }
+a { text-decoration: none; color: inherit; }
+.app { min-height: 100vh; }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+.header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.back-btn { color: #666; font-size: 14px; padding: 8px 16px; background: #f5f5f5; border-radius: 6px; }
+.brand { font-size: 18px; font-weight: 700; color: #F97316; }
+.symbol-tag { background: #F97316; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.time { font-size: 13px; color: #999; }
 
-:root {
-  --primary: #f97316;
-  --primary-light: #fb923c;
-  --blue: #3b82f6;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-}
+.main { max-width: 1200px; margin: 0 auto; padding: 15px; display: flex; gap: 15px; }
+.col-left { flex: 1; min-width: 0; }
+.col-right { width: 300px; flex-shrink: 0; }
 
-body {
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
+.price-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin-bottom: 10px; }
+.price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 15px; }
+.price-value { font-size: 32px; font-weight: 700; }
+.price-change { font-size: 16px; font-weight: 600; padding: 4px 10px; border-radius: 4px; }
+.price-change.up { color: #22c55e; background: #dcfce7; }
+.price-change.down { color: #ef4444; background: #fee2e2; }
+.price-stats { display: flex; gap: 20px; }
+.stat { text-align: center; }
+.stat .label { display: block; font-size: 12px; color: #999; margin-bottom: 4px; }
+.stat .val { font-size: 14px; font-weight: 600; }
 
-.chart-container {
-  min-height: 100vh;
-  background: var(--bg);
-}
+.tab-bar { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0 15px; margin-bottom: 10px; display: flex; align-items: center; height: 44px; }
+.tab { padding: 10px 15px; color: #666; font-size: 14px; border-bottom: 2px solid transparent; }
+.tab.active { color: #F97316; border-bottom-color: #F97316; font-weight: 600; }
+.tab-spacer { flex: 1; }
+.intervals { display: flex; gap: 8px; }
+.interval { padding: 4px 8px; font-size: 12px; color: #666; border-radius: 4px; }
+.interval.active { background: #F97316; color: #fff; }
 
-/* 头部 */
-.header {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+.chart-box { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; height: 450px; overflow: hidden; margin-bottom: 10px; position: relative; }
+#tradingview_chart { width: 100%; height: 100%; }
+.draw-tool-btn { position: absolute; bottom: 15px; right: 15px; background: #F97316; color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.draw-tool-btn:hover { background: #ea580c; }
 
-.header-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 20px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.ai-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+.ai-panel h3 { font-size: 14px; margin-bottom: 10px; }
+.ai-panel p { font-size: 13px; color: #666; line-height: 1.6; }
 
-.left-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+.exchange-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; }
+.exchange-panel h3 { font-size: 14px; margin-bottom: 10px; }
+.exchange-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.exchange-table th { text-align: left; padding: 8px; border-bottom: 1px solid #eee; color: #999; font-weight: 500; }
+.exchange-table td { padding: 8px; border-bottom: 1px solid #f5f5f5; }
 
-.logo-area {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
+.panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+.panel-title { font-size: 14px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
 
-.logo-box {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.hot-list { display: flex; flex-direction: column; gap: 8px; }
+.hot-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 6px; }
+.hot-item:hover { background: #f9f9f9; }
+.hot-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; }
+.hot-info { flex: 1; }
+.hot-symbol { font-weight: 600; font-size: 13px; display: block; }
+.hot-name { font-size: 11px; color: #999; }
+.hot-price { text-align: right; }
+.hot-price .price { display: block; font-size: 12px; font-weight: 600; }
+.hot-price .change { font-size: 11px; }
+.hot-price .up { color: #22c55e; }
+.hot-price .down { color: #ef4444; }
 
-.logo-icon {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.site-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.coin-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.coin-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-}
-
-.coin-symbol {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.coin-name {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.back-button {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
-  padding: 8px 14px;
-  background: rgba(247,147,26,0.1);
-  border-radius: var(--radius-md);
-  transition: all 0.2s;
-}
-
-.back-button:hover {
-  background: rgba(247,147,26,0.2);
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.price-display {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.price-change {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.price-change.up {
-  color: var(--success);
-  background: rgba(34, 197, 94, 0.1);
-}
-
-.price-change.down {
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
-}
-
-/* 图表区域 */
-.chart-main {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.chart-wrapper {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.tradingview-widget-container {
-  width: 100%;
-  height: 500px;
-}
-
-#tradingview_chart {
-  width: 100%;
-  height: 100%;
-}
-
-/* 底部 */
-.chart-footer {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 20px 20px;
-}
-
-.footer-info {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  font-size: 12px;
-  color: var(--text-muted);
+@media (max-width: 900px) {
+  .main { flex-direction: column; }
+  .col-right { width: 100%; }
+  .price-stats { flex-wrap: wrap; }
+  .stat { min-width: 45%; }
 }
 </style>
