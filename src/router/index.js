@@ -2,11 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Market from '../views/Market.vue'
 import Chart from '../views/Chart.vue'
 import NewsDetail from '../views/NewsDetail.vue'
+import NewsList from '../views/NewsList.vue'
+import Kline from '../views/Kline.vue'
+import Tools from '../views/Tools.vue'
+import Topics from '../views/Topics.vue'
 
 const routes = [
   { path: '/', name: 'Market', component: Market },
   { path: '/chart/:symbol', name: 'Chart', component: Chart },
-  { path: '/news/:id', name: 'NewsDetail', component: NewsDetail }
+  { path: '/news', name: 'NewsList', component: NewsList },
+  { path: '/news/:id', name: 'NewsDetail', component: NewsDetail },
+  { path: '/kline', name: 'Kline', component: Kline },
+  { path: '/tools', name: 'Tools', component: Tools },
+  { path: '/topics', name: 'Topics', component: Topics }
 ]
 
 const router = createRouter({

@@ -1,17 +1,5 @@
 <template>
-  <div class="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <a href="/" class="back-btn">← 返回</a>
-        <span class="brand">三叔.BTC</span>
-        <span class="symbol-tag">{{ symbol }}/USDT</span>
-      </div>
-      <div class="header-right">
-        <span class="time">{{ currentTime }}</span>
-      </div>
-    </header>
-
+  <div class="chart-page">
     <!-- Main -->
     <div class="main">
       <!-- Left Column -->
