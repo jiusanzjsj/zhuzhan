@@ -1,13 +1,14 @@
 <template>
   <div class="market-page">
     <!-- Ticker Bar -->
-    <div class="bg-white border-b border-gray-100 shadow-sm">
-      <div class="max-w-7xl mx-auto">
-        <div class="flex gap-3 px-4 py-2.5 min-w-max">
-          <a v-for="coin in [...coinList,...coinList]" :key="coin.symbol+'-dup'" @click.prevent="goToChart(coin.symbol)" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer whitespace-nowrap transition-all hover:scale-105">
-            <span class="font-bold text-gray-800 text-sm">{{ coin.symbol }}</span>
-            <span class="font-mono font-medium text-gray-700">${{ formatPrice(coin.price) }}</span>
-            <span class="text-xs font-medium px-1.5 py-0.5 rounded" :class="coin.change>=0 ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'">
+    <div class="bg-white border-b border-gray-100 shadow-sm overflow-hidden">
+      <div class="max-w-7xl mx-auto relative">
+        <div class="ticker-wrap flex gap-3 py-2">
+          <a v-for="coin in [...coinList,...coinList]" :key="coin.symbol+'-dup'" @click.prevent="goToChart(coin.symbol)" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer whitespace-nowrap transition-all flex-shrink-0">
+            <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'" class="w-5 h-5 rounded-full" @error="onImageError($event)" alt="">
+            <span class="font-bold text-gray-800 text-xs">{{ coin.symbol }}</span>
+            <span class="font-mono font-medium text-gray-700 text-xs">${{ formatPrice(coin.price) }}</span>
+            <span class="text-xs font-medium px-1 py-0.5 rounded" :class="coin.change>=0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
               {{ coin.change>=0?'+':''}}{{ coin.change?.toFixed(2) || '0.00' }}%
             </span>
           </a>
@@ -135,14 +136,17 @@ const onImageError = (e) => {
 const goToChart = (s) => window.location.href = `/chart/${s}`
 
 const connectWS = () => {
-  const streams = coinConfig.map(c => c.pair + '@miniTicker').join('/')
+  const streams = coinConfig.map(c => c.pair + '@ticker').join('/')
   ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`)
   ws.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data).data
       if (!d) return
       const c = coinList.value.find(x => x.symbol === d.s.replace('USDT', ''))
-      if (c && d.c) c.price = parseFloat(d.c)
+      if (c) {
+        if (d.c) c.price = parseFloat(d.c)
+        if (d.P) c.change = parseFloat(d.P)
+      }
     } catch {}
   }
   ws.onclose = () => setTimeout(connectWS, 3000)
@@ -167,8 +171,21 @@ const fetchChange = async () => {
 
 onMounted(() => {
   connectWS()
-  fetchChange()
 })
 
 onUnmounted(() => { ws?.close() })
 </script>
+
+<style>
+.ticker-wrap {
+  width: 200%;
+  animation: ticker-scroll 40s linear infinite;
+}
+.ticker-wrap:hover {
+  animation-play-state: paused;
+}
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+</style>
