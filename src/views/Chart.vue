@@ -206,7 +206,7 @@ const loadTV = () => {
 
 // WebSocket
 const connectWS = () => {
-  ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${pair}@miniTicker`)
+  ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${pair}@ticker`)
   ws.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data).data

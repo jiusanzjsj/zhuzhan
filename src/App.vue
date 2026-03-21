@@ -5,7 +5,7 @@
       <div class="max-w-7xl mx-auto px-4 h-14 flex items-center">
         <router-link to="/" class="flex items-center gap-2 group">
           <img src="/src/assets/logo.jpg" class="w-8 h-8 rounded-full ring-2 ring-orange-500/30 group-hover:ring-orange-500/60 transition" />
-          <span class="text-xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">三叔.BTC</span>
+          <span class="text-xl font-bold text-orange-500">三叔.BTC</span>
         </router-link>
         
         <nav class="flex ml-12 gap-1">
@@ -17,9 +17,13 @@
             <span class="relative z-10">K线</span>
             <div v-if="$route.path === '/kline'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
           </router-link>
-          <router-link to="/news" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/news' }">
+          <router-link to="/news" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/news' || $route.path === '/flash' }">
+            <span class="relative z-10">资讯</span>
+            <div v-if="$route.path === '/news' || $route.path === '/flash'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
+          </router-link>
+          <router-link to="/flash" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/flash' }">
             <span class="relative z-10">快讯</span>
-            <div v-if="$route.path === '/news'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
+            <div v-if="$route.path === '/flash'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
           </router-link>
           <router-link to="/tools" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/tools' }">
             <span class="relative z-10">工具</span>
