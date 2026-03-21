@@ -7,6 +7,8 @@
         <!-- Price Panel -->
         <div class="price-panel">
           <div class="price-row">
+            <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + symbol.toLowerCase() + '.png'" class="w-8 h-8 rounded-full" @error="onImgError($event)" alt="">
+            <span class="ml-2 text-xl font-bold text-gray-800">{{ symbol }}</span>
             <span class="price-value">${{ formatPrice(price) }}</span>
             <span class="price-change" :class="change >= 0 ? 'up' : 'down'">
               {{ change >= 0 ? '+' : '' }}{{ change.toFixed(2) }}%
@@ -167,6 +169,10 @@ const hotCoins = ref([
 ])
 
 const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
+
+const onImgError = (e) => {
+  e.target.style.display = 'none'
+}
 const formatVol = (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v >= 1e6 ? (v / 1e6).toFixed(1) + '万' : v
 const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v
 
