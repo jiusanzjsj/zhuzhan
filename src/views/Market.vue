@@ -16,6 +16,11 @@
       </div>
     </div>
 
+    <!-- 海报 -->
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <img src="/banner.png" alt="Banner" class="w-full rounded-lg shadow-sm">
+    </div>
+
     <!-- 数据统计卡片 -->
     <div class="bg-gray-50 border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 py-3">
@@ -26,8 +31,10 @@
               <span class="text-sm text-gray-400">24H成交额</span>
               <span class="text-lg">📊</span>
             </div>
-            <div ref="volumeChart" class="h-20"></div>
-            <div class="text-lg font-bold text-gray-800">${{ formatVolume(totalVolume24h) }}</div>
+            <div v-if="statsLoading" class="h-20 skeleton-glow"></div>
+            <div v-else ref="volumeChart" class="h-20"></div>
+            <div v-if="statsLoading" class="h-7 w-24 skeleton-text mt-2"></div>
+            <div v-else class="text-lg font-bold text-gray-800">${{ formatVolume(totalVolume24h) }}</div>
           </div>
           <!-- 总市值 -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
@@ -35,8 +42,10 @@
               <span class="text-sm text-gray-400">总市值</span>
               <span class="text-lg">💰</span>
             </div>
-            <div ref="marketChart" class="h-20"></div>
-            <div class="text-lg font-bold text-gray-800">${{ formatMarket(totalMarketCap) }}</div>
+            <div v-if="statsLoading" class="h-20 skeleton-glow"></div>
+            <div v-else ref="marketChart" class="h-20"></div>
+            <div v-if="statsLoading" class="h-7 w-24 skeleton-text mt-2"></div>
+            <div v-else class="text-lg font-bold text-gray-800">${{ formatMarket(totalMarketCap) }}</div>
           </div>
           <!-- 恐慌指数 -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
@@ -44,11 +53,12 @@
               <span class="text-sm text-gray-400">恐慌指数</span>
               <span class="text-lg">😱</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div v-if="statsLoading" class="h-12 skeleton-glow"></div>
+            <div v-else class="flex items-center gap-2">
               <div class="text-3xl font-bold" :class="fearGreedIndex >= 50 ? 'text-green-500' : 'text-red-500'">{{ fearGreedIndex }}</div>
               <span class="text-sm px-2 py-1 rounded-full font-medium" :class="fearGreedIndex >= 50 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">{{ fearGreedIndex >= 50 ? '贪婪' : '恐慌' }}</span>
             </div>
-            <div class="w-full bg-gray-100 rounded-full h-2 mt-2 overflow-hidden">
+            <div v-if="!statsLoading" class="w-full bg-gray-100 rounded-full h-2 mt-2 overflow-hidden">
               <div class="h-full rounded-full transition-all" :class="fearGreedIndex >= 50 ? 'bg-green-500' : 'bg-red-500'" :style="{ width: fearGreedIndex + '%' }"></div>
             </div>
           </div>
@@ -58,8 +68,10 @@
               <span class="text-sm text-gray-400">24H涨跌</span>
               <span class="text-lg">📈</span>
             </div>
-            <div ref="pieChart" class="h-20"></div>
-            <div class="flex justify-between text-sm mt-1">
+            <div v-if="statsLoading" class="h-20 skeleton-glow"></div>
+            <div v-else ref="pieChart" class="h-20"></div>
+            <div v-if="statsLoading" class="h-5 w-16 skeleton-text mt-2"></div>
+            <div v-else class="flex justify-between text-sm mt-1">
               <span class="text-green-500">↑{{ upPercent }}%</span>
               <span class="text-red-500">↓{{ downPercent }}%</span>
             </div>
@@ -335,8 +347,10 @@ const totalMarketCap = ref(0)
 const fearGreedIndex = ref(50)
 const upPercent = ref(50)
 const downPercent = ref(50)
+const statsLoading = ref(true)
 
 const fetchStats = async () => {
+  statsLoading.value = true
   try {
     // 从Binance获取24h交易量
     const res = await fetch('https://api.binance.com/api/v3/ticker/24hr')
@@ -375,6 +389,7 @@ const fetchStats = async () => {
   
   // 更新图表
   updateCharts()
+  statsLoading.value = false
 }
 
 const sortedList = computed(() => {
@@ -468,5 +483,51 @@ onUnmounted(() => {
 @keyframes ticker-scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+/* 炫酷骨架屏 */
+.skeleton-glow {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.15), transparent);
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  animation: border-glow 2s ease-in-out infinite;
+}
+.skeleton-text {
+  background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%);
+  background-size: 200% 100%;
+  animation: text-shimmer 1.2s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { left: -50%; }
+  100% { left: 150%; }
+}
+
+@keyframes border-glow {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.1); }
+  50% { box-shadow: inset 0 0 0 2px rgba(249, 115, 22, 0.3), 0 0 15px rgba(249, 115, 22, 0.2); }
+}
+
+@keyframes text-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 </style>

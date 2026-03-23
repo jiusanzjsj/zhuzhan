@@ -80,21 +80,21 @@
             </thead>
             <tbody>
               <tr>
-                <td>Binance</td>
+                <td><img src="https://bin.bnbstatic.com/static/images/favicon.ico" class="w-5 h-5 inline-block mr-2 align-middle" onerror="this.style.display='none'">Binance</td>
                 <td>BTC/USDT</td>
                 <td>${{ formatPrice(price) }}</td>
                 <td>{{ formatVol(volume24h * 0.35) }}</td>
                 <td>35%</td>
               </tr>
               <tr>
-                <td>OKX</td>
+                <td><img src="https://www.okx.com/favicon.ico" class="w-5 h-5 inline-block mr-2 align-middle" onerror="this.style.display='none'">OKX</td>
                 <td>BTC/USDT</td>
                 <td>${{ formatPrice(price * 1.001) }}</td>
                 <td>{{ formatVol(volume24h * 0.2) }}</td>
                 <td>20%</td>
               </tr>
               <tr>
-                <td>Bybit</td>
+                <td><img src="https://www.bybit.com/favicon.ico" class="w-5 h-5 inline-block mr-2 align-middle" onerror="this.style.display='none'">Bybit</td>
                 <td>BTC/USDT</td>
                 <td>${{ formatPrice(price * 0.999) }}</td>
                 <td>{{ formatVol(volume24h * 0.15) }}</td>
@@ -111,7 +111,7 @@
           <h3 class="panel-title">🔥 热门币种</h3>
           <div class="hot-list">
             <a v-for="coin in hotCoins" :key="coin.symbol" :href="'/chart/' + coin.symbol" class="hot-item">
-              <div class="hot-icon" :style="{ background: coin.color }">{{ coin.symbol.charAt(0) }}</div>
+              <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'" class="hot-icon" @error="onHotImgError($event)" alt="">
               <div class="hot-info">
                 <span class="hot-symbol">{{ coin.symbol }}</span>
                 <span class="hot-name">{{ coin.name }}</span>
@@ -128,7 +128,7 @@
           <h3 class="panel-title">📈 热搜币种</h3>
           <div class="hot-list">
             <a v-for="coin in hotCoins" :key="'s-'+coin.symbol" :href="'/chart/' + coin.symbol" class="hot-item">
-              <div class="hot-icon" :style="{ background: coin.color }">{{ coin.symbol.charAt(0) }}</div>
+              <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'" class="hot-icon" @error="onHotImgError($event)" alt="">
               <div class="hot-info">
                 <span class="hot-symbol">{{ coin.symbol }}</span>
                 <span class="hot-name">{{ coin.name }}</span>
@@ -171,6 +171,10 @@ const hotCoins = ref([
 const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
 
 const onImgError = (e) => {
+  e.target.style.display = 'none'
+}
+
+const onHotImgError = (e) => {
   e.target.style.display = 'none'
 }
 const formatVol = (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v >= 1e6 ? (v / 1e6).toFixed(1) + '万' : v
@@ -318,7 +322,7 @@ a { text-decoration: none; color: inherit; }
 .hot-list { display: flex; flex-direction: column; gap: 8px; }
 .hot-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 6px; }
 .hot-item:hover { background: #f9f9f9; }
-.hot-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; }
+.hot-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
 .hot-info { flex: 1; }
 .hot-symbol { font-weight: 600; font-size: 13px; display: block; }
 .hot-name { font-size: 11px; color: #999; }

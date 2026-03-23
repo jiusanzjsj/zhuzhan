@@ -7,6 +7,7 @@ import Kline from '../views/Kline.vue'
 import Tools from '../views/Tools.vue'
 import Topics from '../views/Topics.vue'
 import Flash from '../views/Flash.vue'
+import Exchange from '../views/Exchange.vue'
 
 const routes = [
   { path: '/', name: 'Market', component: Market },
@@ -16,7 +17,8 @@ const routes = [
   { path: '/kline', name: 'Kline', component: Kline },
   { path: '/tools', name: 'Tools', component: Tools },
   { path: '/topics', name: 'Topics', component: Topics },
-  { path: '/flash', name: 'Flash', component: Flash }
+  { path: '/flash', name: 'Flash', component: Flash },
+  { path: '/exchange', name: 'Exchange', component: Exchange }
 ]
 
 const router = createRouter({

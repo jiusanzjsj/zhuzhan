@@ -33,6 +33,10 @@
             <span class="relative z-10">专题</span>
             <div v-if="$route.path === '/topics'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
           </router-link>
+          <router-link to="/exchange" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/exchange' }">
+            <span class="relative z-10">交易所</span>
+            <div v-if="$route.path === '/exchange'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
+          </router-link>
         </nav>
         
         <div class="ml-auto flex items-center gap-4">
