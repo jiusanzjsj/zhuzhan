@@ -13,39 +13,33 @@
             <span class="relative z-10">行情</span>
             <div v-if="$route.path === '/'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
           </router-link>
-          <router-link to="/kline" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/kline' }">
+          <!-- <router-link to="/kline" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/kline' }">
             <span class="relative z-10">K线</span>
             <div v-if="$route.path === '/kline'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
-          </router-link>
+          </router-link> -->
           <router-link to="/news" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/news' || $route.path === '/flash' }">
             <span class="relative z-10">资讯</span>
             <div v-if="$route.path === '/news' || $route.path === '/flash'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
           </router-link>
-          <router-link to="/flash" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/flash' }">
-            <span class="relative z-10">快讯</span>
+          <!-- <router-link to="/flash" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/flash' }">
+           
             <div v-if="$route.path === '/flash'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
-          </router-link>
-          <router-link to="/tools" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/tools' }">
+          </router-link> -->
+          <!-- <router-link to="/tools" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/tools' }">
             <span class="relative z-10">工具</span>
             <div v-if="$route.path === '/tools'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
-          </router-link>
-          <router-link to="/topics" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/topics' }">
+          </router-link> -->
+          <!-- <router-link to="/topics" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/topics' }">
             <span class="relative z-10">专题</span>
             <div v-if="$route.path === '/topics'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
-          </router-link>
+          </router-link> -->
           <router-link to="/exchange" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/exchange' }">
             <span class="relative z-10">交易所</span>
             <div v-if="$route.path === '/exchange'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
           </router-link>
         </nav>
         
-        <div class="ml-auto flex items-center gap-4">
-          <div class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-full border border-orange-100">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span class="text-xs text-gray-500">实时同步中</span>
-          </div>
-          <span class="text-gray-400 text-sm font-mono">{{ currentTime }}</span>
-        </div>
+        
       </div>
     </header>
 

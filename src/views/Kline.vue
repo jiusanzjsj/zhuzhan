@@ -5,12 +5,15 @@
         <div class="w-1 h-7 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></div>
         <h2 class="text-xl font-bold text-gray-800">📊 K线行情</h2>
       </div>
+      <!-- 时间框架选择已注释
       <div class="flex gap-2">
         <span v-for="tab in timeframes" :key="tab" @click="activeTF = tab" class="px-4 py-2 text-sm font-medium rounded-xl border cursor-pointer transition-all" :class="activeTF === tab ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-transparent shadow-lg shadow-orange-500/25' : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-500'">{{ tab }}</span>
       </div>
+      -->
     </div>
     
     <div class="flex gap-5">
+      <!-- K线图表区域已注释
       <div class="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm h-[550px] flex items-center justify-center">
         <div class="text-center">
           <div class="text-6xl mb-4">📊</div>
@@ -18,8 +21,9 @@
           <p class="text-sm text-gray-400 mt-2">选择币种和时间框架查看K线图</p>
         </div>
       </div>
+      -->
       
-      <aside class="w-64">
+      <aside class="w-full">
         <div class="flex items-center gap-2 mb-4">
           <div class="w-1 h-5 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></div>
           <h3 class="font-bold text-gray-800">🔥 热门币种</h3>
@@ -37,9 +41,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const activeTF = ref('1H')
-const timeframes = ['1分', '5分', '15分', '1小时', '4小时', '1天', '1周', '1月']
+const router = useRouter()
+// const activeTF = ref('1H')
+// const timeframes = ['1分', '5分', '15分', '1小时', '4小时', '1天', '1周', '1月']
 
 const hotCoins = ref([
   { symbol: 'BTC/USDT', price: '70,535', change: 1.39 },
@@ -50,6 +56,7 @@ const hotCoins = ref([
 ])
 
 const selectCoin = (symbol) => {
+  // 点击币种不跳转，留在这里显示
   console.log('Selected:', symbol)
 }
 </script>

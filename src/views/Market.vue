@@ -121,17 +121,6 @@
           </a>
         </div>
       </div>
-
-      <!-- 分页 -->
-      <div class="flex justify-center items-center gap-2 py-4 border-t border-gray-100">
-        <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed bg-gray-100 hover:bg-orange-100 text-gray-600 hover:text-orange-600 transition">
-          上一页
-        </button>
-        <span class="text-sm text-gray-500">第 {{ currentPage }} / {{ totalPages }} 页</span>
-        <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed bg-gray-100 hover:bg-orange-100 text-gray-600 hover:text-orange-600 transition">
-          下一页
-        </button>
-      </div>
     </main>
   </div>
 </template>
@@ -198,11 +187,15 @@ const coinConfig = [
   { symbol: 'IMX', name: 'Immutable', market: 2000000000, volume: 600000000, supply: 1500000000, color: '#00C2E4', pair: 'imxusdt' },
   { symbol: 'ENS', name: 'Ethereum Name Service', market: 1500000000, volume: 400000000, supply: 200000000, color: '#529652', pair: 'ensusdt' },
   { symbol: 'BLUR', name: 'Blur', market: 1000000000, volume: 500000000, supply: 3000000000, color: '#FF6B6B', pair: 'blurusdt' },
+  { symbol: 'MKR', name: 'Maker', market: 1800000000, volume: 500000000, supply: 900000, color: '#1AAB9B', pair: 'mkrusdt' },
+  { symbol: 'CRV', name: 'Curve DAO', market: 1500000000, volume: 400000000, supply: 3000000000, color: '#FF6B6B', pair: 'crvusdt' },
+  { symbol: 'BCH', name: 'Bitcoin Cash', market: 12000000000, volume: 3000000000, supply: 19700000, color: '#8DC351', pair: 'bchusdt' },
+  { symbol: 'TON', name: 'Toncoin', market: 18000000000, volume: 8000000000, supply: 5000000000, color: '#0098EA', pair: 'tonusdt' },
+  { symbol: 'NOT', name: 'Notcoin', market: 2500000000, volume: 1500000000, supply: 100000000000, color: '#FF4040', pair: 'notusdt' },
+  { symbol: 'PNUT', name: 'Peanut the Squirrel', market: 2000000000, volume: 800000000, supply: 1000000000, color: '#FFB347', pair: 'pnutusdt' },
 ]
 
 const coinList = ref(coinConfig.map(c => ({ ...c, price: 0, change: 0 })))
-const currentPage = ref(1)
-const pageSize = 20
 
 // ECharts refs
 const volumeChart = ref(null)
@@ -393,20 +386,9 @@ const fetchStats = async () => {
 }
 
 const sortedList = computed(() => {
-  let list = [...coinList.value]
-  const start = (currentPage.value - 1) * pageSize
-  return list.slice(start, start + pageSize)
+  // 只返回前13个币种
+  return coinList.value.slice(0, 13)
 })
-
-const totalPages = computed(() => Math.ceil(coinConfig.length / pageSize))
-
-const goToPage = (p) => {
-  if (p >= 1 && p <= totalPages.value) {
-    ws?.close()
-    currentPage.value = p
-    connectWS()
-  }
-}
 
 const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
 const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : v
@@ -417,7 +399,10 @@ const onImageError = (e) => {
   e.target.style.display = 'none'
 }
 
-const goToChart = (s) => window.location.href = `/chart/${s}`
+const goToChart = (s) => {
+  // 暂时禁用跳转，点击只打印日志
+  console.log('Selected:', s)
+}
 
 const connectWS = () => {
   // 连接所有币种
@@ -442,12 +427,15 @@ const fetchChange = async () => {
     const promises = coinConfig.map(async (c) => {
       const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
       const d = await res.json()
-      return { symbol: c.symbol, change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0 }
+      return { symbol: c.symbol, price: d.lastPrice ? parseFloat(d.lastPrice) : 0, change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0 }
     })
     const results = await Promise.all(promises)
     results.forEach(r => {
       const coin = coinList.value.find(c => c.symbol === r.symbol)
-      if (coin) coin.change = r.change
+      if (coin) {
+        coin.price = r.price
+        coin.change = r.change
+      }
     })
   } catch (e) {
     console.error('fetchChange error:', e)
@@ -456,6 +444,7 @@ const fetchChange = async () => {
 
 onMounted(() => {
   connectWS()
+  fetchChange()
   fetchStats().then(() => {
     nextTick(() => {
       initCharts()
@@ -473,10 +462,59 @@ onUnmounted(() => {
 </script>
 
 <style>
+/* 走马灯容器样式 */
 .ticker-wrap {
-  width: 200%;
-  animation: ticker-scroll 40s linear infinite;
+  width: 200%;           /* 宽度是屏幕的2倍，用于循环滚动 */
+  animation: ticker-scroll 30s linear infinite;  /* 30秒滚动一次，无限循环 */
+  display: flex;         /* 弹性布局 */
+  align-items: center;  /* 垂直居中 */
 }
+.ticker-wrap:hover {
+  animation-play-state: paused;  /* 鼠标悬停时暂停滚动 */
+}
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }       /* 开始位置 */
+  100% { transform: translateX(-50%); } /* 滚动到一半的位置 */
+}
+
+/* 走马灯每个项目的样式 */
+.ticker-wrap a {
+  display: flex;                    /* 弹性布局 */
+  align-items: center;             /* 垂直居中 */
+  gap: 6px;                        /* 项目内元素间距 */
+  padding: 6px 12px;              /* 内边距 */
+  margin-right: 8px;              /* 右外边距 */
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);  /* 渐变背景 */
+  border-radius: 20px;            /* 圆角20px */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);  /* 阴影 */
+  transition: all 0.3s ease;       /* 过渡动画0.3秒 */
+  white-space: nowrap;             /* 不换行 */
+  border: 1px solid #f0f0f0;      /* 边框 */
+}
+.ticker-wrap a:hover {
+  transform: translateY(-2px);    /* 悬停时向上移动2px */
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);  /* 悬停时橙色阴影 */
+  border-color: #F97316;         /* 悬停时边框变橙色 */
+}
+.ticker-wrap a img {
+  width: 20px;        /* 图标宽度20px */
+  height: 20px;       /* 图标高度20px */
+  border-radius: 50%; /* 圆形头像 */
+}
+.ticker-wrap a .font-bold {
+  font-size: 13px;    /* 币种名字体大小 */
+  color: #1f2937;     /* 字体颜色深灰 */
+}
+.ticker-wrap a .font-mono {
+  font-size: 12px;    /* 价格字体大小 */
+  color: #6b7280;     /* 价格颜色中灰 */
+}
+.ticker-wrap a .text-xs {
+  font-size: 11px;    /* 涨跌字体大小 */
+  padding: 2px 6px;  /* 涨跌内边距 */
+  border-radius: 10px; /* 涨跌圆角 */
+}
+
 .ticker-wrap:hover {
   animation-play-state: paused;
 }
