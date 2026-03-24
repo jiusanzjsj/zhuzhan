@@ -1,10 +1,13 @@
 <template>
   <div class="market-page">
     <!-- Ticker Bar -->
-    <div class="bg-white border-b border-gray-100 shadow-sm overflow-hidden">
-      <div class="mx-auto">
-        <div class="ticker-wrap flex gap-3 py-2 justify-center">
-          <a v-for="coin in [...coinList,...coinList]" :key="coin.symbol+'-dup'" @click.prevent="goToChart(coin.symbol)" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer whitespace-nowrap transition-all flex-shrink-0">
+    <div class="bg-gradient-to-r from-orange-50 via-white to-amber-50 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-3">
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl border-t border-b border-orange-200 shadow-[0_2px_12px_rgba(249,115,22,0.08)] p-2 overflow-hidden relative">
+          <div class="ticker-wrap flex gap-3 items-center">
+            <div class="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-orange-50 to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-amber-50 to-transparent z-10 pointer-events-none"></div>
+          <a v-for="coin in [...coinList.slice(0,13),...coinList.slice(0,13)]" :key="coin.symbol+'-dup'" @click.prevent="goToChart(coin.symbol)" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer whitespace-nowrap transition-all flex-shrink-0">
             <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'" class="w-5 h-5 rounded-full" @error="onImageError($event)" :alt="coin.symbol" :data-symbol="coin.symbol">
             <span class="font-bold text-gray-800 text-xs">{{ coin.symbol }}</span>
             <span class="font-mono font-medium text-gray-700 text-xs">${{ formatPrice(coin.price) }}</span>
@@ -12,6 +15,7 @@
               {{ coin.change>=0?'+':''}}{{ coin.change?.toFixed(2) || '0.00' }}%
             </span>
           </a>
+        </div>
         </div>
       </div>
     </div>
