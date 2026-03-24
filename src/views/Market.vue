@@ -90,7 +90,7 @@
       <!-- Data Table -->
       <div class="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <!-- Table Header -->
-        <div class="flex items-center px-5 py-3.5 bg-gray-50/50 border-b border-gray-100 text-xs text-gray-500 font-medium">
+        <div class="flex items-center px-11 py-3.5 bg-gray-50/50 border-b border-gray-100 text-xs text-gray-500 font-medium">
           <span class="w-10 text-center">#</span>
           <span class="flex-1 min-w-[140px] text-left">币种</span>
           <span class="w-28 text-right">价格</span>
@@ -115,7 +115,10 @@
                 <span class="text-xs text-gray-400">{{ coin.name }}</span>
               </div>
             </span>
-            <span class="w-28 text-right font-mono font-semibold text-gray-800">${{ formatPrice(coin.price) }}</span>
+            <div class="w-32 text-right flex flex-col items-end -ml-2">
+              <span class="font-mono font-semibold text-gray-800">${{ formatPrice(coin.price) }}</span>
+              <span class="text-xs text-gray-400">¥{{ formatCNY(coin.price) }}</span>
+            </div>
             <span class="w-24 text-right font-bold" :class="coin.change>=0 ? 'text-green-500' : 'text-red-500'">
               {{ coin.change>=0?'+':''}}{{ coin.change?.toFixed(2) || '0.00' }}%
             </span>
@@ -395,6 +398,7 @@ const sortedList = computed(() => {
 })
 
 const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
+const formatCNY = (p) => p ? (p * 7.3).toFixed(0) : '0'
 const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : v
 const formatVolume = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : v
 const formatSupply = (s) => s >= 1e9 ? (s / 1e9).toFixed(1) + '亿' : s >= 1e6 ? (s / 1e6).toFixed(1) + '万' : s
