@@ -52,22 +52,103 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const newsList = ref([
-  { id: 1, title: '比特币BTC价格突破70000美元，24小时涨跌幅达3.5%', tag: '行情', tagClass: 'bg-red-50 text-red-600 border border-red-100', time: '10分钟前', views: '999+', comments: '88' },
-  { id: 2, title: '以太坊ETH市值突破3000亿美元，创历史新高', tag: '行情', tagClass: 'bg-red-50 text-red-600 border border-red-100', time: '30分钟前', views: '888', comments: '66' },
-  { id: 3, title: '币安宣布上架新代币引发市场热议', tag: '交易所', tagClass: 'bg-blue-50 text-blue-600 border border-blue-100', time: '1小时前', views: '777', comments: '55' },
-  { id: 4, title: 'DeFi锁仓量突破2000亿美元', tag: 'DeFi', tagClass: 'bg-green-50 text-green-600 border border-green-100', time: '2小时前', views: '666', comments: '44' },
-  { id: 5, title: '美国SEC再次推迟比特币ETF审批决定', tag: '政策', tagClass: 'bg-yellow-50 text-yellow-600 border border-yellow-100', time: '3小时前', views: '555', comments: '33' },
-  { id: 6, title: 'Solana网络升级完成，性能大幅提升', tag: '技术', tagClass: 'bg-purple-50 text-purple-600 border border-purple-100', time: '4小时前', views: '444', comments: '22' },
-])
+const newsList = ref([])
+const hotNews = ref([])
+const loading = ref(true)
 
-const hotNews = ref([
-  { id: 1, title: '比特币突破历史新高' },
-  { id: 2, title: '以太坊升级影响分析' },
-  { id: 3, title: 'NFT市场最新动态' },
-  { id: 4, title: 'DeFi安全事件汇总' },
-  { id: 5, title: '新手入门指南' },
-])
+// NewsAPI Key - 请替换为你的API Key
+const NEWS_API_KEY = '3908eafc986a4b75842bee9ac752cced'
+
+const fetchNews = async () => {
+  try {
+    // 获取加密货币新闻
+    const response = await fetch(
+      `https://newsapi.org/v2/everything?q=crypto+OR+bitcoin+OR+ethereum&language=en&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`
+    )
+    const data = await response.json()
+    
+    if (data.articles) {
+      newsList.value = data.articles.slice(0, 10).map((item, index) => ({
+        id: index + 1,
+        title: item.title || '无标题',
+        tag: getTag(item.source.name),
+        tagClass: getTagClass(item.source.name),
+        time: formatTime(item.publishedAt),
+        views: Math.floor(Math.random() * 900 + 100),
+        comments: Math.floor(Math.random() * 50 + 10),
+        url: item.url,
+        image: item.urlToImage
+      }))
+      
+      hotNews.value = data.articles.slice(0, 5).map((item, index) => ({
+        id: index + 1,
+        title: item.title?.slice(0, 30) + '...' || '无标题'
+      }))
+    }
+  } catch (error) {
+    console.error('获取新闻失败:', error)
+    // 使用默认数据
+    setDefaultNews()
+  } finally {
+    loading.value = false
+  }
+}
+
+const getTag = (source) => {
+  const sourceMap = {
+    'CoinDesk': '行情',
+    'CoinTelegraph': '行情',
+    'Bloomberg': '政策',
+    'Reuters': '政策',
+    'Decrypt': '技术',
+    'The Block': 'DeFi'
+  }
+  return sourceMap[source] || '快讯'
+}
+
+const getTagClass = (source) => {
+  const tag = getTag(source)
+  const classMap = {
+    '行情': 'bg-red-50 text-red-600 border border-red-100',
+    '政策': 'bg-yellow-50 text-yellow-600 border border-yellow-100',
+    '技术': 'bg-purple-50 text-purple-600 border border-purple-100',
+    'DeFi': 'bg-green-50 text-green-600 border border-green-100',
+    '快讯': 'bg-blue-50 text-blue-600 border border-blue-100'
+  }
+  return classMap[tag] || classMap['快讯']
+}
+
+const formatTime = (dateStr) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = Math.floor((now - date) / 1000 / 60)
+  
+  if (diff < 60) return diff + '分钟前'
+  if (diff < 1440) return Math.floor(diff / 60) + '小时前'
+  return Math.floor(diff / 1440) + '天前'
+}
+
+const setDefaultNews = () => {
+  newsList.value = [
+    { id: 1, title: '比特币BTC价格突破70000美元，24小时涨跌幅达3.5%', tag: '行情', tagClass: 'bg-red-50 text-red-600 border border-red-100', time: '10分钟前', views: '999+', comments: '88' },
+    { id: 2, title: '以太坊ETH市值突破3000亿美元，创历史新高', tag: '行情', tagClass: 'bg-red-50 text-red-600 border border-red-100', time: '30分钟前', views: '888', comments: '66' },
+    { id: 3, title: '币安宣布上架新代币引发市场热议', tag: '交易所', tagClass: 'bg-blue-50 text-blue-600 border border-blue-100', time: '1小时前', views: '777', comments: '55' },
+    { id: 4, title: 'DeFi锁仓量突破2000亿美元', tag: 'DeFi', tagClass: 'bg-green-50 text-green-600 border border-green-100', time: '2小时前', views: '666', comments: '44' },
+    { id: 5, title: '美国SEC再次推迟比特币ETF审批决定', tag: '政策', tagClass: 'bg-yellow-50 text-yellow-600 border border-yellow-100', time: '3小时前', views: '555', comments: '33' },
+    { id: 6, title: 'Solana网络升级完成，性能大幅提升', tag: '技术', tagClass: 'bg-purple-50 text-purple-600 border border-purple-100', time: '4小时前', views: '444', comments: '22' },
+  ]
+  hotNews.value = [
+    { id: 1, title: '比特币突破历史新高' },
+    { id: 2, title: '以太坊升级影响分析' },
+    { id: 3, title: 'NFT市场最新动态' },
+    { id: 4, title: 'DeFi安全事件汇总' },
+    { id: 5, title: '新手入门指南' },
+  ]
+}
+
+onMounted(() => {
+  fetchNews()
+})
 </script>

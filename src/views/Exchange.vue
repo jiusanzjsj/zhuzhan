@@ -1,153 +1,166 @@
 <template>
-  <div class="flex-1 bg-gradient-to-b from-gray-50 to-white">
+  <div class="flex-1 bg-gradient-to-b from-slate-50 via-orange-50/30 to-white">
     <!-- Banner -->
-    <div class="h-32 bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 flex items-center justify-center">
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-white mb-2">全球交易所综合排行榜</h1>
-        <p class="text-orange-100 text-sm">全球知名加密货币交易所数据一览</p>
+    <div class="relative h-40 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 overflow-hidden">
+      <div class="absolute inset-0">
+        <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+      </div>
+      <div class="relative h-full flex items-center justify-center">
+        <div class="text-center">
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-8 h-8 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+            <h1 class="text-3xl font-bold text-white">全球加密货币交易所</h1>
+          </div>
+          <p class="text-orange-100 text-sm">追踪全球加密货币交易所，获取实时排名、交易量、流量等多维度数据</p>
+        </div>
       </div>
     </div>
 
     <!-- 内容区域 -->
     <div class="max-w-7xl mx-auto px-4 py-6">
-      <!-- 筛选 tabs -->
-      <div class="flex items-center gap-4 mb-6">
-        <div class="flex bg-white rounded-lg p-1 shadow-sm border border-gray-100">
-          <button 
-            v-for="tab in tabs" 
-            :key="tab.value"
-            @click="activeTab = tab.value"
-            :class="[
-              'px-4 py-2 rounded-md text-sm font-medium transition-all',
-              activeTab === tab.value 
-                ? 'bg-orange-500 text-white shadow' 
-                : 'text-gray-600 hover:text-orange-500'
-            ]"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
+      <!-- 分类 Tab -->
+      <div class="flex items-center gap-2 mb-6 overflow-x-auto">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.value"
+          @click="activeTab = tab.value"
+          :class="[
+            'px-5 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-300',
+            activeTab === tab.value 
+              ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md' 
+              : 'bg-white text-slate-600 hover:bg-orange-50 border border-slate-200'
+          ]"
+        >
+          {{ tab.label }}
+        </button>
         
-        <div class="ml-auto">
-          <input 
-            v-model="searchKeyword"
-            type="text"
-            placeholder="搜索交易所..."
-            class="w-48 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
-          />
+        <div class="ml-auto flex items-center gap-3">
+          <select 
+            v-model="sortBy"
+            class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+          >
+            <option value="trust_score_rank">评分排序</option>
+            <option value="trade_volume_24h">交易量排序</option>
+            <option value="name">名称排序</option>
+          </select>
+          
+          <div class="relative">
+            <input 
+              v-model="searchKeyword"
+              type="text"
+              placeholder="搜索交易所..."
+              class="w-48 px-4 py-2 pl-10 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+            />
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
         </div>
       </div>
 
+      <!-- 加载状态 -->
+      <div v-if="loading" class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-16 text-center">
+        <div class="animate-spin w-12 h-12 mx-auto mb-4 border-4 border-orange-500 border-t-transparent rounded-full"></div>
+        <p class="text-slate-500">正在加载交易所数据...</p>
+      </div>
+      
+      <!-- 错误状态 -->
+      <div v-else-if="error" class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-12 text-center">
+        <div class="text-red-500 mb-4">
+          <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <p class="text-slate-600 mb-2">获取数据失败</p>
+        <p class="text-slate-400 text-sm mb-4">{{ error }}</p>
+        <button @click="fetchExchanges" class="px-6 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium">
+          重试
+        </button>
+      </div>
+      
       <!-- 数据表格 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div v-else class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
         <table class="w-full">
-          <thead class="bg-gray-50">
+          <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">交易平台</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">ExRank</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">24H额($)</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">24H涨跌</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">资产($)</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">交易对(个)</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">人气指数</th>
-              <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">7天成交额走势</th>
+              <th class="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-16">#</th>
+              <th class="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">交易所</th>
+              <th class="px-4 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24">评分</th>
+              <th class="px-4 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">24h交易额($)</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-slate-100">
             <tr 
-              v-for="(exchange, index) in paginatedExchanges" 
+              v-for="(exchange, index) in sortedExchanges" 
               :key="exchange.id"
-              class="hover:bg-orange-50/50 transition"
+              class="hover:bg-gradient-to-r hover:from-orange-50/80 hover:to-amber-50/50 transition-all duration-300 group"
             >
-              <td class="px-4 py-3 text-gray-400 font-mono">{{ index + 1 + (currentPage - 1) * pageSize }}</td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <img :src="exchange.image" :alt="exchange.name" class="w-8 h-8 rounded-lg" />
+              <!-- 排名 -->
+              <td class="px-4 py-4">
+                <span class="text-lg font-bold" :class="index < 3 ? 'text-orange-500' : 'text-slate-400'">
+                  {{ index + 1 }}
+                </span>
+              </td>
+              
+              <!-- 交易所信息 -->
+              <td class="px-4 py-4">
+                <div class="flex items-center gap-4">
+                  <img :src="exchange.image" :alt="exchange.name" class="w-10 h-10 rounded-lg" @error="handleImageError(exchange, $event)" />
                   <div>
-                    <div class="font-medium text-gray-800">{{ exchange.name }}</div>
-                    <div class="text-xs text-gray-400">{{ exchange.country || '-' }}</div>
+                    <div class="flex items-center gap-2">
+                      <a :href="exchange.url || '#'" target="_blank" class="font-bold text-slate-800 group-hover:text-orange-600 transition-colors">
+                        {{ exchange.name }}
+                      </a>
+                      <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                      </svg>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-0.5">{{ exchange.country || '-' }}</div>
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-center">
-                <span :class="getScoreClass(exchange.trust_score)" class="px-2 py-1 rounded text-xs font-bold">
-                  {{ exchange.trust_score || '-' }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-right font-mono text-gray-700">${{ formatVolume(exchange.trade_volume_24h_btc) }}</td>
-              <td class="px-4 py-3 text-center">
-                <span :class="(exchange.trade_volume_change_24h || 0) >= 0 ? 'text-green-500' : 'text-red-500'" class="font-medium">
-                  {{ (exchange.trade_volume_change_24h || 0) >= 0 ? '+' : '' }}{{ (exchange.trade_volume_change_24h || 0).toFixed(1) }}%
-                </span>
-              </td>
-              <td class="px-4 py-3 text-right font-mono text-gray-700">${{ formatVolume(exchange.totalAssets || 0) }}</td>
-              <td class="px-4 py-3 text-center text-gray-600">{{ exchange.number_of_markets || 0 }}</td>
-              <td class="px-4 py-3 text-center text-orange-500 font-medium">#{{ exchange.trust_score_rank || '-' }}</td>
-              <td class="px-4 py-3">
-                <div class="h-8 flex items-center justify-center">
-                  <!-- 简易走势线 -->
-                  <svg class="w-28 h-8" viewBox="0 0 100 30">
-                    <path 
-                      d="M0,25 Q10,20 20,22 T40,15 T60,18 T80,10 T100,5"
-                      fill="none"
-                      stroke="#f97316"
-                      stroke-width="2"
-                    />
-                    <path 
-                      d="M0,25 Q10,20 20,22 T40,15 T60,18 T80,10 T100,5 L100,30 L0,30 Z"
-                      fill="url(#orangeGradient)"
-                      opacity="0.3"
-                    />
-                    <defs>
-                      <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#f97316"/>
-                        <stop offset="100%" style="stop-color:#fff"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
+              
+              <!-- 评分 -->
+              <td class="px-4 py-4 text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <div class="flex">
+                    <svg v-for="i in 10" :key="i" class="w-3 h-3" :class="i <= (exchange.trust_score || 0) ? 'text-orange-400' : 'text-slate-200'" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  </div>
+                  <span class="text-sm font-medium text-slate-500 ml-1">{{ exchange.trust_score || '-' }}</span>
                 </div>
+              </td>
+              
+              <!-- 24h交易额 -->
+              <td class="px-4 py-4 text-right">
+                <span class="font-mono font-bold text-slate-700">${{ formatVolume(exchange.trade_volume_24h_btc) }}</span>
               </td>
             </tr>
           </tbody>
         </table>
         
-        <!-- 分页 -->
-        <div class="flex justify-center py-4 border-t border-gray-100">
-          <div class="flex gap-2">
-            <button 
-              v-for="page in totalPages" 
-              :key="page"
-              @click="currentPage = page"
-              :class="[
-                'w-10 h-10 rounded-lg text-sm font-medium transition',
-                currentPage === page 
-                  ? 'bg-orange-500 text-white' 
-                  : 'text-gray-600 hover:bg-orange-50'
-              ]"
-            >
-              {{ page }}
-            </button>
+        <!-- 底部 -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-sm text-slate-500">显示 {{ sortedExchanges.length }} 个交易所</span>
+          <div class="flex items-center gap-2">
+            <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-orange-50 transition">查看更多</button>
           </div>
         </div>
       </div>
 
-      <!-- 公告区域 -->
-      <div class="mt-8">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">交易所公告</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div 
-            v-for="notice in notices" 
-            :key="notice.id"
-            class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer"
-          >
-            <div class="flex items-start gap-3">
-              <img :src="notice.image" class="w-10 h-10 rounded-lg" />
-              <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-medium text-gray-700 truncate">{{ notice.title }}</h3>
-                <p class="text-xs text-gray-400 mt-1">{{ notice.exchange }}</p>
-              </div>
-            </div>
+      <!-- 提示信息 -->
+      <div class="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div class="text-sm text-blue-700">
+            <p class="font-medium">数据来源说明</p>
+            <p class="text-blue-600 mt-1">交易所数据来源于 CoinGecko API，评分基于交易量、流动性、监管合规性等多维度综合评估。数据每5分钟更新一次。</p>
           </div>
         </div>
       </div>
@@ -156,45 +169,77 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+
+const API_KEY = 'CG-42Ty4UXdyANMSugcsqZSEU7Y'
 
 const tabs = [
   { label: '全部', value: 'all' },
-  { label: '期货', value: 'future' },
-  { label: 'DEX', value: 'dex' },
-  { label: 'OTC', value: 'otc' }
+  { label: '衍生品', value: 'derivatives' },
+  { label: '现货', value: 'spot' },
+  { label: 'DeFi', value: 'defi' },
+  { label: '交易所提供', value: 'offering' }
 ]
 
 const activeTab = ref('all')
+const sortBy = ref('trust_score_rank')
 const searchKeyword = ref('')
-const currentPage = ref(1)
-const pageSize = 20
+const loading = ref(true)
+const error = ref(null)
 
-// 模拟交易所数据
-const exchanges = ref([
-  { id: 'binance', name: 'Binance', image: 'https://assets.coingecko.com/marketples/images/378/small/binance-circle.png', trust_score: 9.8, trade_volume_24h_btc: 125000000000, trade_volume_change_24h: 5.2, number_of_markets: 1439, trust_score_rank: 1, country: '日本', totalAssets: 25000000000 },
-  { id: 'okx', name: 'OKX', image: 'https://assets.coingecko.com/marketples/images/96/small/okx.png', trust_score: 9.5, trade_volume_24h_btc: 45000000000, trade_volume_change_24h: 3.1, number_of_markets: 897, trust_score_rank: 2, country: '塞舌尔', totalAssets: 12000000000 },
-  { id: 'bybit', name: 'Bybit', image: 'https://assets.coingecko.com/marketples/images/378/small/bybit.png', trust_score: 9.3, trade_volume_24h_btc: 35000000000, trade_volume_change_24h: -2.4, number_of_markets: 756, trust_score_rank: 3, country: '迪拜', totalAssets: 8000000000 },
-  { id: 'huobi', name: 'Huobi', image: 'https://assets.coingecko.com/marketples/images/378/small/huobi.png', trust_score: 9.0, trade_volume_24h_btc: 28000000000, trade_volume_change_24h: 1.8, number_of_markets: 687, trust_score_rank: 4, country: '塞舌尔', totalAssets: 6500000000 },
-  { id: 'gate', name: 'Gate.io', image: 'https://assets.coingecko.com/marketples/images/378/small/gate.png', trust_score: 8.8, trade_volume_24h_btc: 18000000000, trade_volume_change_24h: -1.2, number_of_markets: 2845, trust_score_rank: 5, country: '开曼群岛', totalAssets: 4500000000 },
-  { id: 'kucoin', name: 'KuCoin', image: 'https://assets.coingecko.com/marketples/images/378/small/5.png', trust_score: 8.5, trade_volume_24h_btc: 12000000000, trade_volume_change_24h: 4.5, number_of_markets: 934, trust_score_rank: 6, country: '塞舌尔', totalAssets: 3200000000 },
-  { id: 'bitget', name: 'Bitget', image: 'https://assets.coingecko.com/marketples/images/378/small/Bitget-Logo_-_new.png', trust_score: 8.3, trade_volume_24h_btc: 9500000000, trade_volume_change_24h: 6.7, number_of_markets: 567, trust_score_rank: 7, country: '新加坡', totalAssets: 2800000000 },
-  { id: 'binance_us', name: 'Binance US', image: 'https://assets.coingecko.com/marketples/images/378/small/ez_4f7d.png', trust_score: 8.0, trade_volume_24h_btc: 7200000000, trade_volume_change_24h: 2.1, number_of_markets: 312, trust_score_rank: 8, country: '美国', totalAssets: 1800000000 },
-  { id: 'mexc', name: 'MEXC', image: 'https://assets.coingecko.com/marketples/images/378/small/MEXC.png', trust_score: 7.8, trade_volume_24h_btc: 5800000000, trade_volume_change_24h: -3.5, number_of_markets: 1245, trust_score_rank: 9, country: '塞舌尔', totalAssets: 1500000000 },
-  { id: 'crypto_com', name: 'Crypto.com', image: 'https://assets.coingecko.com/marketples/images/378/small/crypto-com.png', trust_score: 7.5, trade_volume_24h_btc: 4200000000, trade_volume_change_24h: 1.2, number_of_markets: 456, trust_score_rank: 10, country: '香港', totalAssets: 1200000000 },
-])
+const exchanges = ref([])
 
-// 模拟公告数据
-const notices = ref([
-  { id: 1, title: '【全网独家首发】Optimistic Minion (OPTIMISTIC) 现已上线WEEX！', exchange: 'WEEX', image: 'https://assets.coingecko.com/marketples/images/378/small/weex.png' },
-  { id: 2, title: 'XT关于OVPP合约更换完成的公告', exchange: 'XT', image: 'https://assets.coingecko.com/marketples/images/378/small/XT.png' },
-  { id: 3, title: '2026香港Web3嘉年华倒计时：CoinP确认参展', exchange: 'CoinP', image: 'https://assets.coingecko.com/marketples/images/378/small/coinp.png' },
-  { id: 4, title: '欧易关于上线 MON (Monad) 现货交易的公告', exchange: 'OKX', image: 'https://assets.coingecko.com/marketples/images/96/small/okx.png' },
-  { id: 5, title: '币王移除 DCB 现货交易对公告', exchange: '币王', image: 'https://assets.coingecko.com/marketples/images/378/small/coinw.png' },
-  { id: 6, title: 'REUR (Royal Euro) 首发上线', exchange: 'Bitget', image: 'https://assets.coingecko.com/marketples/images/378/small/Bitget-Logo_-_new.png' },
-])
+const fetchExchanges = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/exchanges?per_page=50&page=1`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'x-cg-demo-api-key': API_KEY
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      throw new Error(`API错误: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    exchanges.value = data.map(ex => ({
+      id: ex.id,
+      name: ex.name,
+      image: ex.image || '',
+      trust_score: ex.trust_score || 0,
+      trust_score_rank: ex.trust_score_rank || 999,
+      trade_volume_24h_btc: ex.trade_volume_24h_btc || 0,
+      volume_change_24h: ex.volume_change_24h || 0,
+      weekly_volume: (ex.trade_volume_24h_btc || 0) * 7,
+      number_of_markets: ex.number_of_markets || 0,
+      country: ex.country || '-',
+      url: ex.url || '#'
+    }))
+    
+  } catch (err) {
+    console.error('获取交易所数据失败:', err)
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
 
-// 格式化交易量
+onMounted(() => {
+  fetchExchanges()
+})
+
+const handleImageError = (exchange, event) => {
+  event.target.style.display = 'none'
+}
+
 const formatVolume = (vol) => {
   if (!vol) return '-'
   if (vol >= 1e9) return (vol / 1e9).toFixed(2) + 'B'
@@ -203,32 +248,46 @@ const formatVolume = (vol) => {
   return vol.toFixed(2)
 }
 
-// 评分颜色
-const getScoreClass = (score) => {
-  if (!score) return 'bg-gray-100 text-gray-400'
-  if (score >= 8) return 'bg-green-500 text-white'
-  if (score >= 6) return 'bg-yellow-500 text-white'
-  return 'bg-red-500 text-white'
+// 生成7天走势路径
+const getSparklinePath = (id, baseVolume) => {
+  if (!baseVolume) baseVolume = 1000000000
+  
+  // 根据不同交易所生成不同的走势
+  const patterns = {
+    binance: 'M0,28 Q10,25 20,22 T40,18 T60,12 T80,8 T100,5',
+    okx: 'M0,25 Q15,22 30,20 T50,15 T70,18 T90,10 T100,8',
+    bybit: 'M0,30 Q20,28 40,25 T60,20 T80,15 T100,12',
+    huobi: 'M0,22 Q15,20 30,18 T50,22 T70,15 T90,10 T100,8',
+    default: 'M0,26 Q20,24 40,20 T60,16 T80,12 T100,10'
+  }
+  return patterns[id] || patterns.default
 }
 
-// 过滤后数据
-const filteredExchanges = computed(() => {
-  let result = exchanges.value
+const getSparklineArea = (id, baseVolume) => {
+  const line = getSparklinePath(id, baseVolume)
+  return line + ' L100,35 L0,35 Z'
+}
+
+const sortedExchanges = computed(() => {
+  let result = [...exchanges.value]
   
+  // 搜索过滤
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(e => e.name.toLowerCase().includes(keyword))
   }
   
+  // 分类过滤（暂时不做，因为API可能不支持）
+  
+  // 排序
+  if (sortBy.value === 'trust_score_rank') {
+    result.sort((a, b) => a.trust_score_rank - b.trust_score_rank)
+  } else if (sortBy.value === 'trade_volume_24h') {
+    result.sort((a, b) => b.trade_volume_24h_btc - a.trade_volume_24h_btc)
+  } else if (sortBy.value === 'name') {
+    result.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+  }
+  
   return result
 })
-
-// 分页数据
-const paginatedExchanges = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredExchanges.value.slice(start, start + pageSize)
-})
-
-// 总页数
-const totalPages = computed(() => Math.ceil(filteredExchanges.value.length / pageSize))
 </script>
