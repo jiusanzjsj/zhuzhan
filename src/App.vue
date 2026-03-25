@@ -4,8 +4,8 @@
     <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 h-14 flex items-center">
         <router-link to="/" class="flex items-center gap-2 group">
-          <img src="/src/assets/logo.jpg" class="w-8 h-8 rounded-full ring-2 ring-orange-500/30 group-hover:ring-orange-500/60 transition" />
-          <span class="text-xl font-bold text-orange-500">三叔.BTC</span>
+          <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-orange-500/30 group-hover:ring-orange-500/60 transition" />
+          <span class="text-xl font-bold text-orange-500">比特视界</span>
         </router-link>
         
         <nav class="flex ml-12 gap-1">
@@ -51,8 +51,8 @@
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex flex-col items-center">
           <div class="flex items-center gap-2 mb-4">
-            <img src="/src/assets/logo.jpg" class="w-6 h-6 rounded-full" />
-            <span class="text-sm font-medium text-gray-600">三叔.BTC</span>
+            <img src="/src/assets/bsj.png" class="w-6 h-6 rounded-full" />
+            <span class="text-sm font-medium text-gray-600">比特视界</span>
           </div>
           
           <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-gray-500 text-sm mb-4">
@@ -76,7 +76,7 @@
           </div>
           
           <div class="text-gray-400 text-xs text-center">
-            © 2026 三叔.BTC 专注加密货币行情数据
+            © 2026 比特视界 专注加密货币行情数据
           </div>
           <div class="text-gray-300 text-xs text-center max-w-2xl mt-2">
             免责声明：本网站所有区块链相关数据与资料仅供用户学习及研究之用，不构成任何投资建议。投资有风险，入市需谨慎。
