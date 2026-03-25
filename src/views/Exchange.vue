@@ -111,12 +111,12 @@
                   <img :src="exchange.image" :alt="exchange.name" class="w-10 h-10 rounded-lg" @error="handleImageError(exchange, $event)" />
                   <div>
                     <div class="flex items-center gap-2">
-                      <a :href="exchange.url || '#'" target="_blank" class="font-bold text-slate-800 group-hover:text-orange-600 transition-colors">
+                      <router-link 
+                        :to="'/exchange/' + exchange.id" 
+                        class="font-bold text-slate-800 group-hover:text-orange-600 transition-colors"
+                      >
                         {{ exchange.name }}
-                      </a>
-                      <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                      </svg>
+                      </router-link>
                     </div>
                     <div class="text-xs text-slate-400 mt-0.5">{{ exchange.country || '-' }}</div>
                   </div>
