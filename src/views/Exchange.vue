@@ -89,7 +89,7 @@
               <th class="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-16">#</th>
               <th class="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">交易所</th>
               <th class="px-4 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24">评分</th>
-              <th class="px-4 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">24h交易额($)</th>
+              <th class="px-4 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">24hBTC交易额</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -195,7 +195,7 @@ const fetchExchanges = async () => {
     error.value = null
     
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/exchanges?per_page=50&page=1`,
+      `https://api.coingecko.com/api/v3/exchanges?per_page=20&page=1`,
       {
         headers: {
           'Accept': 'application/json',
