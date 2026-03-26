@@ -31,7 +31,7 @@ async function translateToChinese(text) {
   }
 }
 
-// 批量翻译
+// 批量翻译（带延迟，避免限速）
 async function translateArticles(articles) {
   const translated = []
   
@@ -42,6 +42,8 @@ async function translateArticles(articles) {
       description: article.description ? await translateToChinese(article.description) : ''
     }
     translated.push(translatedArticle)
+    // 延迟2秒，避免触发MyMemory限速
+    await new Promise(resolve => setTimeout(resolve, 2000))
   }
   
   return translated
@@ -159,8 +161,9 @@ async function scrapeArticleContent(url) {
         : `${urlObj.protocol}//${urlObj.host}/${image}`
     }
     
-    // 翻译标题和内容
+    // 翻译标题和内容（带延迟避免限速）
     const translatedTitle = await translateToChinese(title)
+    await new Promise(resolve => setTimeout(resolve, 2000))
     const translatedContent = await translateToChinese(content)
     
     console.log('爬取成功，翻译完成')
