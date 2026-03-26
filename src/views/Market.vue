@@ -288,7 +288,14 @@ const initCharts = () => {
   if (pieChart.value) {
     pieChartInstance = echarts.init(pieChart.value)
     pieChartInstance.setOption({
-      tooltip: { trigger: 'item', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151', fontSize: 12 }, padding: [8, 12] },
+      tooltip: { 
+        trigger: 'item', 
+        backgroundColor: 'rgba(255,255,255,0.95)', 
+        borderColor: '#e5e7eb', 
+        textStyle: { color: '#374151', fontSize: 12 }, 
+        padding: [8, 12],
+        formatter: (params) => `${params.name}: <b style="color:${params.color}">${params.value}%</b>`
+      },
       series: [{
         type: 'pie',
         radius: ['50%', '80%'],
@@ -331,6 +338,14 @@ const updateCharts = () => {
   // 更新涨跌分布
   if (pieChartInstance) {
     pieChartInstance.setOption({
+      tooltip: { 
+        trigger: 'item', 
+        backgroundColor: 'rgba(255,255,255,0.95)', 
+        borderColor: '#e5e7eb', 
+        textStyle: { color: '#374151', fontSize: 12 }, 
+        padding: [8, 12],
+        formatter: (params) => `${params.name}: <b style="color:${params.color}">${params.value}%</b>`
+      },
       series: [{
         data: [
           { value: upPercent.value, name: '上涨', itemStyle: { color: '#22c55e' } },
