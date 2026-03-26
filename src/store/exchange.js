@@ -194,38 +194,38 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
 }
 
 /**
- * 获取交易对列表
+ * 获取交易对列表（使用 CoinCap API + CORS代理）
  */
 export async function fetchTradingPairs(exchangeId) {
   try {
+    // 使用 allorigins CORS 代理
+    const proxyUrl = 'https://api.allorigins.win/raw?url='
+    const targetUrl = encodeURIComponent(`https://api.coincap.io/v2/exchanges/${exchangeId}/markets?limit=50`)
+    
     const response = await fetchWithTimeout(
-      `https://api.coingecko.com/api/v3/exchanges/${exchangeId}/markets?per_page=50&page=1&sparkline=false`,
-      {
-        headers: {
-          'Accept': 'application/json',
-          'x-cg-demo-api-key': API_KEY
-        }
-      }
+      `${proxyUrl}${targetUrl}`,
+      { headers: { 'Accept': 'application/json' } }
     )
 
     if (!response.ok) {
       throw new Error(`获取交易对失败: ${response.status}`)
     }
 
-    const markets = await response.json()
+    const data = await response.json()
+    const markets = data.data
     
     if (!Array.isArray(markets)) {
       return []
     }
 
     return markets.slice(0, 20).map(m => ({
-      symbol: m.symbol?.toUpperCase() || '-',
-      coinIcon: m.image || '',
-      price: m.current_price ? `$${m.current_price.toLocaleString()}` : '-',
-      platformPrice: m.current_price ? `$${m.current_price.toLocaleString()}` : '-',
-      volume24h: formatLargeNumber(m.total_volume),
-      volume24hCny: `¥${formatLargeNumber((m.total_volume || 0) * 7.2)}`,
-      percent: m.price_change_percentage_24h ? m.price_change_percentage_24h.toFixed(2) : '0.00',
+      symbol: `${m.baseSymbol || '-'}/${m.quoteSymbol || '-'}`,
+      coinIcon: `https://assets.coincap.io/assets/icons/${(m.baseSymbol || '').toLowerCase()}@2x.png`,
+      price: m.price ? `$${Number(m.price).toLocaleString()}` : '-',
+      platformPrice: m.price ? `$${Number(m.price).toLocaleString()}` : '-',
+      volume24h: m.volumeUsd ? formatLargeNumber(Number(m.volumeUsd)) : '-',
+      volume24hCny: m.volumeUsd ? `¥${formatLargeNumber(Number(m.volumeUsd) * 7.2)}` : '-',
+      percent: m.pricePercent ? m.pricePercent.toFixed(2) : '0.00',
       updateTime: new Date().toLocaleTimeString()
     }))
 
@@ -342,51 +342,7 @@ export function clearTranslationCache() {
 const exchangeDescCache = new Map()
 
 /**
- * 方式1: 从 CryptoCompare 获取交易所描述
- */
-async function fetchFromCryptoCompare(exchangeId) {
-  try {
-    // CryptoCompare 的单个交易所详情接口
-    const response = await fetchWithTimeout(
-      `https://min-api.cryptocompare.com/data/exchange/{id}/info`.replace('{id}', exchangeId)
-    )
-    
-    if (response.ok) {
-      const data = await response.json()
-      // CryptoCompare 返回格式: { Response: "Success", Data: { Description: "...", About: "..." } }
-      if (data.Data) {
-        return data.Data.Description || data.Data.About || data.Data.SUMMARY || ''
-      }
-    }
-  } catch (err) {
-    console.warn('CryptoCompare 获取描述失败:', err.message)
-  }
-  return ''
-}
-
-/**
- * 方式2: 从后端代理获取交易所描述
- */
-async function fetchFromBackendProxy(exchangeId) {
-  try {
-    const response = await fetchWithTimeout(
-      `/api/exchange/description?exchange=${exchangeId}`
-    )
-    
-    if (response.ok) {
-      const data = await response.json()
-      if (data.success && data.description) {
-        return data.description
-      }
-    }
-  } catch (err) {
-    console.warn('后端代理获取描述失败:', err.message)
-  }
-  return ''
-}
-
-/**
- * 方式3: 从 CoinGecko 获取描述
+ * 从 CoinGecko 获取描述
  */
 async function fetchFromCoinGecko(exchangeId) {
   try {
@@ -426,26 +382,12 @@ export async function fetchExchangeDescription(exchangeId) {
   
   let description = ''
   
-  // 1. 优先从 CryptoCompare 获取
-  console.log('[Exchange] 尝试 CryptoCompare...')
-  description = await fetchFromCryptoCompare(exchangeId)
-  console.log('[Exchange] CryptoCompare 结果:', description ? description.substring(0, 50) + '...' : '无')
+  // 1. 优先从 CoinGecko 获取
+  console.log('[Exchange] 尝试 CoinGecko...')
+  description = await fetchFromCoinGecko(exchangeId)
+  console.log('[Exchange] CoinGecko 结果:', description ? description.substring(0, 50) + '...' : '无')
   
-  // 2. 如果没有，尝试后端代理
-  if (!description) {
-    console.log('[Exchange] 尝试后端代理...')
-    description = await fetchFromBackendProxy(exchangeId)
-    console.log('[Exchange] 后端代理结果:', description ? description.substring(0, 50) + '...' : '无')
-  }
-  
-  // 3. 如果还是没有，尝试 CoinGecko
-  if (!description) {
-    console.log('[Exchange] 尝试 CoinGecko...')
-    description = await fetchFromCoinGecko(exchangeId)
-    console.log('[Exchange] CoinGecko 结果:', description ? description.substring(0, 50) + '...' : '无')
-  }
-  
-  // 4. 最后使用预设描述
+  // 2. 如果没有，使用预设描述
   if (!description) {
     console.log('[Exchange] 使用预设描述...')
     description = getPresetDescription(exchangeId)
