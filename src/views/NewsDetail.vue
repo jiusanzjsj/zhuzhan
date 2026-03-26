@@ -7,7 +7,7 @@
           <div class="brand-icon">
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
               <circle cx="16" cy="16" r="14" fill="#F7931A"/>
-              <text x="16" y="21" text-anchor="middle" fill="white" font-size="14" font-weight="bold">₿</text>
+              <text x="16" y="21" text-anchor="middle" fill="white" font-size="14" font-weight="bold">B</text>
             </svg>
           </div>
           <span class="brand-name">528BTC</span>
@@ -15,7 +15,7 @@
         
         <div class="navbar-end">
           <router-link to="/" class="back-link">
-            ← 返回资讯
+            返回资讯
           </router-link>
         </div>
       </div>
@@ -25,21 +25,44 @@
     <main class="news-content" v-if="article">
       <div class="news-header">
         <span class="news-category" :class="article.tagClass">{{ article.tag }}</span>
-        <h1 class="news-title">{{ article.title }}</h1>
+        <h1 class="news-title">{{ contentData.title || article.title }}</h1>
         <div class="news-meta">
-          <span class="meta-item">🕐 {{ article.time }}</span>
-          <span class="meta-item">📰 {{ article.source }}</span>
+          <span class="meta-item">{{ article.time }}</span>
+          <span class="meta-item">{{ article.source }}</span>
         </div>
       </div>
       
       <!-- 封面图 -->
-      <div class="news-image" v-if="article.image">
-        <img :src="article.image" :alt="article.title">
+      <div class="news-image" v-if="article.image || contentData.image">
+        <img :src="article.image || contentData.image" :alt="contentData.title || article.title">
       </div>
       
       <div class="news-body">
-        <p class="news-description">{{ article.description }}</p>
-        <p class="news-tip">📖 阅读全文请点击下方链接</p>
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading-content">
+          <div class="spinner-small"></div>
+          <p>正在加载文章内容...</p>
+        </div>
+        
+        <!-- 文章正文 -->
+        <div v-else-if="contentData.content" class="article-content">
+          <p class="content-text">{{ contentData.content }}</p>
+        </div>
+        
+        <!-- 无内容 -->
+        <div v-else class="no-content">
+          <p>暂无详细内容</p>
+        </div>
+        
+        <div class="news-tags" v-if="article.tag">
+          <span class="tag-item" :class="article.tagClass">{{ article.tag }}</span>
+        </div>
+        
+        <div class="news-stats">
+          <span>阅读 {{ article.views }}</span>
+          <span>评论 {{ article.comments }}</span>
+        </div>
+        
         <a :href="article.url" target="_blank" class="read-original-btn">
           阅读原文 →
         </a>
@@ -47,7 +70,7 @@
     </main>
     
     <!-- 无数据 -->
-    <main class="news-content" v-else>
+    <main class="news-content" v-else-if="!loading">
       <div class="news-header">
         <h1 class="news-title">资讯不存在</h1>
         <p class="news-meta">该资讯可能已被移除或不存在</p>
@@ -58,7 +81,7 @@
     </main>
     
     <!-- 加载状态 -->
-    <div class="loading" v-if="loading">
+    <div class="loading" v-if="loading && !article">
       <div class="spinner"></div>
       <p>加载中...</p>
     </div>
@@ -73,11 +96,32 @@ import { useNewsStore } from '@/stores/newsStore'
 const route = useRoute()
 const newsStore = useNewsStore()
 const article = ref(null)
+const contentData = ref({ content: '', image: '' })
 const loading = ref(true)
+
+const fetchArticleContent = async (url) => {
+  try {
+    const response = await fetch(`/api/news/content?url=${encodeURIComponent(url)}`)
+    const result = await response.json()
+    
+    if (result.success && result.data) {
+      contentData.value = result.data
+    }
+  } catch (error) {
+    console.error('获取文章内容失败:', error)
+    contentData.value = { content: '暂无详细内容，请点击阅读原文查看', image: '' }
+  }
+}
 
 onMounted(() => {
   const newsId = route.params.id
   article.value = newsStore.getArticleById(newsId) || null
+  
+  if (article.value) {
+    // 同时获取文章正文
+    fetchArticleContent(article.value.url)
+  }
+  
   loading.value = false
 })
 </script>
@@ -149,7 +193,7 @@ body {
   margin-bottom: 16px;
 }
 
-.news-title { font-size: 28px; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.news-title { font-size: 28px; font-weight: 700; line-height: 1.4; margin-bottom: 16px; color: var(--slate-800); }
 
 .news-meta {
   display: flex;
@@ -178,8 +222,60 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.news-description { color: var(--slate-700); margin-bottom: 20px; line-height: 1.8; }
-.news-tip { color: var(--slate-400); font-size: 14px; margin-bottom: 20px; }
+.loading-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: var(--slate-500);
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--slate-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.article-content {
+  margin-bottom: 20px;
+}
+
+.content-text {
+  color: var(--slate-700);
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.no-content {
+  color: var(--slate-400);
+  padding: 20px 0;
+}
+
+.news-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tag-item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.news-stats {
+  display: flex;
+  gap: 20px;
+  color: var(--slate-500);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
 
 .read-original-btn {
   display: inline-block;

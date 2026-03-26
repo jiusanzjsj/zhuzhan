@@ -210,18 +210,17 @@ const newsList = ref([])
 const hotNews = ref([])
 const loading = ref(true)
 
-// NewsAPI Key - 请替换为你的API Key
+// NewsAPI Key
 const NEWS_API_KEY = '3908eafc986a4b75842bee9ac752cced'
 
 const estimateReadTime = (text) => {
   const wordsPerMinute = 200
-  const words = text.split(' ').length
+  const words = text.length
   return Math.ceil(words / wordsPerMinute) || 1
 }
 
 const fetchNews = async () => {
   try {
-    // 获取加密货币新闻
     const response = await fetch(
       `https://newsapi.org/v2/everything?q=crypto+OR+bitcoin+OR+ethereum&language=en&sortBy=publishedAt&pageSize=10&page=1&apiKey=${NEWS_API_KEY}`
     )
@@ -240,12 +239,12 @@ const fetchNews = async () => {
         image: item.urlToImage,
         description: item.description || '',
         source: item.source?.name || 'Unknown',
-        publishedAt: item.publishedAt || ''
+        content: item.description || ''
       }))
       
       hotNews.value = data.articles.slice(0, 5).map((item, index) => ({
         id: index + 1,
-        title: item.title || '无标题'
+        title: item.title?.slice(0, 30) + '...' || '无标题'
       }))
       
       // 保存到共享存储
@@ -253,7 +252,6 @@ const fetchNews = async () => {
     }
   } catch (error) {
     console.error('获取新闻失败:', error)
-    // 使用默认数据
     setDefaultNews()
   } finally {
     loading.value = false
