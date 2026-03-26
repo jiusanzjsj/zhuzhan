@@ -67,7 +67,7 @@
               <div class="flex items-center gap-3 sm:gap-4">
                 <img :src="exchangeInfo.logo" :alt="exchangeInfo.name" class="w-14 sm:w-20 h-14 sm:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-1">
                 <div class="flex-1 min-w-0">
-                  <h2 class="text-lg sm:text-2xl font-bold text-white mb-1 truncate">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</h2>
+                  <h2 class="text-lg sm:text-2xl font-bold text-black mb-1 truncate">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</h2>
                   <div class="flex flex-wrap items-center gap-2">
                     <span v-if="exchangeInfo.rank && exchangeInfo.rank !== '-'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm font-medium">
                       🏆 #{{ exchangeInfo.rank }}

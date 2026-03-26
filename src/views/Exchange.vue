@@ -99,7 +99,7 @@
               </span>
               <img :src="exchange.image" :alt="exchange.name" class="w-10 h-10 rounded-full object-cover" @error="(e) => e.target.style.display = 'none'" />
               <div class="flex-1 min-w-0">
-                <div class="font-semibold text-slate-800 group-hover:text-orange-600 transition truncate">
+                <div class="font-semibold text-black group-hover:text-orange-600 transition truncate">
                   {{ getExchangeNameZh(exchange.id) || exchange.name }}
                 </div>
                 <div class="text-xs text-slate-400">
@@ -146,7 +146,7 @@
                 @error="(e) => e.target.style.display = 'none'" 
               />
               <div>
-                <div class="font-semibold text-slate-800 group-hover:text-orange-600 transition">
+                <div class="font-semibold text-black group-hover:text-orange-600 transition">
                   {{ getExchangeNameZh(exchange.id) || exchange.name }}
                 </div>
                 <div class="text-xs text-slate-400 hidden lg:block">

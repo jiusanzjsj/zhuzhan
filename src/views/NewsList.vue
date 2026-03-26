@@ -39,9 +39,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6" v-else>
-        <!-- 左侧主内容区 -->
-        <div class="lg:col-span-2 space-y-5">
+      <div v-else class="space-y-6">
           <!-- 头部 -->
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
@@ -115,46 +113,6 @@
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- 右侧边栏 -->
-        <aside class="space-y-6">
-          <!-- 热门快讯 -->
-          <div class="bg-white rounded-2xl border border-gray-100/80 overflow-hidden shadow-lg shadow-orange-500/5">
-            <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4">
-              <div class="flex items-center gap-3">
-                <span class="text-2xl">🔥</span>
-                <h3 class="text-lg font-bold text-white">热门榜单</h3>
-              </div>
-              <p class="text-orange-100 text-xs mt-1">24小时热度排行</p>
-            </div>
-            
-            <div class="divide-y divide-gray-100">
-              <div 
-                v-for="(item, i) in translatedHotNews" 
-                :key="item.id" 
-                @click="navigateToDetail(item)"
-                class="flex items-center gap-4 px-5 py-4 hover:bg-gradient-to-r hover:from-orange-50/80 hover:to-amber-50/50 transition-all cursor-pointer group"
-              >
-                <div class="relative">
-                  <span 
-                    class="w-8 h-8 flex items-center justify-center font-bold text-sm rounded-xl text-white shadow-lg"
-                    :class="i === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500' : i === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-500' : i === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-700' : 'bg-gray-100 text-gray-500'"
-                  >
-                    {{ i + 1 }}
-                  </span>
-                  <span v-if="i < 3" class="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse" :class="i === 0 ? 'bg-yellow-400' : i === 1 ? 'bg-gray-400' : 'bg-amber-600'"></span>
-                </div>
-                
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-700 group-hover:text-orange-600 transition line-clamp-2 leading-relaxed">
-                    {{ item.title }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
           <!-- 分类导航 -->
           <div class="bg-white rounded-2xl border border-gray-100/80 p-5 shadow-lg">
             <div class="flex items-center gap-3 mb-4">
@@ -162,7 +120,7 @@
               <h3 class="font-bold text-gray-800">📑 分类浏览</h3>
             </div>
             
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-4 gap-3">
               <div class="bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-4 border border-red-100/50 hover:border-red-300 cursor-pointer transition group">
                 <div class="text-2xl mb-2">📊</div>
                 <p class="text-sm font-semibold text-gray-800">行情</p>
@@ -207,7 +165,6 @@
               </div>
             </div>
           </div>
-        </aside>
       </div>
     </div>
   </div>
@@ -224,6 +181,9 @@ const newsList = ref([])
 const hotNews = ref([])
 const loading = ref(true)
 const translating = ref(false)
+
+// 完整翻译后的热门新闻列表（异步调用Google API）
+const fullTranslatedHotNews = ref([])
 
 // 翻译后的新闻列表（本地词典快速翻译，即时响应）
 const translatedNewsList = computed(() => {
@@ -242,6 +202,11 @@ const translatedHotNews = computed(() => {
   }))
 })
 
+// 显示用热门新闻：优先完整翻译，否则快速翻译
+const displayHotNews = computed(() => {
+  return fullTranslatedHotNews.value.length > 0 ? fullTranslatedHotNews.value : translatedHotNews.value
+})
+
 // 显示列表：优先使用完整翻译结果，否则用快速翻译
 const displayNewsList = computed(() => {
   return fullTranslatedNewsList.value.length > 0 ? fullTranslatedNewsList.value : translatedNewsList.value
@@ -258,12 +223,32 @@ const loadNews = async (forceRefresh = false) => {
     hotNews.value = result.hotNews || []
     
     // 异步补充完整翻译
-    await translateNewsFull(result.articles || [])
+    await Promise.all([
+      translateNewsFull(result.articles || []),
+      translateHotNewsFull(result.hotNews || [])
+    ])
   } catch (err) {
     console.error('加载新闻失败:', err)
   } finally {
     loading.value = false
   }
+}
+
+// 异步补充热门新闻完整翻译
+const translateHotNewsFull = async (hotArticles) => {
+  if (!hotArticles.length) return
+  
+  const translated = []
+  
+  for (const item of hotArticles) {
+    const title = await smartTranslate(item.title, true)
+    translated.push({
+      ...item,
+      title
+    })
+  }
+  
+  fullTranslatedHotNews.value = translated
 }
 
 // 异步补充完整翻译

@@ -101,7 +101,9 @@ export async function fetchNewsList(forceRefresh = false) {
 
     const hotData = data.articles.slice(0, 5).map((item, index) => ({
       id: index + 1,
-      title: item.title?.slice(0, 30) + '...' || '无标题'
+      title: item.title || '无标题',
+      source: item.source?.name || '快讯',
+      time: formatTime(item.publishedAt)
     }))
 
     articles.value = articlesData

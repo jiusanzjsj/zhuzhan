@@ -369,44 +369,20 @@ async function fetchFromCoinGecko(exchangeId) {
 }
 
 /**
- * 获取交易所描述（多来源优先级 + 预设描述）
+ * 获取交易所描述（仅从本地获取，不调用API）
  */
 export async function fetchExchangeDescription(exchangeId) {
-  console.log('[Exchange] 开始获取描述:', exchangeId)
-  
   // 检查缓存
   if (exchangeDescCache.has(exchangeId)) {
-    console.log('[Exchange] 从缓存获取描述')
     return exchangeDescCache.get(exchangeId)
   }
   
-  let description = ''
-  
-  // 1. 优先从 CoinGecko 获取
-  console.log('[Exchange] 尝试 CoinGecko...')
-  description = await fetchFromCoinGecko(exchangeId)
-  console.log('[Exchange] CoinGecko 结果:', description ? description.substring(0, 50) + '...' : '无')
-  
-  // 2. 如果没有，使用预设描述
-  if (!description) {
-    console.log('[Exchange] 使用预设描述...')
-    description = getPresetDescription(exchangeId)
-    console.log('[Exchange] 预设描述:', description ? description.substring(0, 50) + '...' : '无')
-  } else {
-    // 如果获取到的是英文描述，尝试翻译
-    const translated = translateCommonDescription(description)
-    if (translated) {
-      description = translated
-      console.log('[Exchange] 英文描述已翻译:', description)
-    }
-  }
+  // 直接从本地获取
+  const description = getPresetDescription(exchangeId)
   
   // 缓存结果
   if (description) {
     exchangeDescCache.set(exchangeId, description)
-    console.log('[Exchange] 描述已缓存')
-  } else {
-    console.log('[Exchange] 所有来源均无描述')
   }
   
   return description
@@ -477,18 +453,18 @@ export function getExchangeInfoZh(exchangeId) {
   return EXCHANGE_INFO_ZH[id] || { name: '', desc: '' }
 }
 
-// 预设交易所描述（当API无数据时使用）
+// 预设交易所描述（本地写死，不从API获取）
 const EXCHANGE_DESCRIPTIONS = {
-  binance: '币安（Binance）是全球最大的加密货币交易所之一，提供币币交易、合约交易、法币交易等服务，拥有超过1.5亿用户。',
-  okx: 'OKX是一家全球领先的加密货币交易所，提供现货交易、合约交易、期权交易等多种加密资产服务。',
-  huobi: '火必（HTX）是全球知名的加密货币交易所，提供全面的数字资产交易服务。',
-  coinexchange: 'CoinExchange是一家专注于加密货币交易的平台。',
-  kraken: 'Kraken是美国的加密货币交易所，以安全性和合规性著称。',
-  kucoin: 'KuCoin是一家全球性的加密货币交易所，提供多种数字资产的交易服务。',
-  gateio: 'Gate.io是一家提供加密货币交易的全球平台。',
-  bitfinex: 'Bitfinex是历史悠久的加密货币交易所之一。',
-  coinbase: 'Coinbase是美国最大的加密货币交易所，在纳斯达克上市。',
-  bitstamp: 'Bitstamp是欧洲最古老的加密货币交易所之一。'
+  binance: '币安(Binance)，国际领先的区块链数字资产国际站，向全球提供广泛的数字货币交易、区块链教育、区块链项目孵化、区块链资产发行平台、区块链研究院以及区块链公益慈善等服务，目前用户覆盖全球180多个国家和地区，以140万单/秒的核心内存撮合技术，是全球加密货币交易速度最快的平台之一，也是全球加密货币交易量最大的平台之一。 币安始终坚持将用户利益放在第一位，致力于提供安全、公平、开放、高效的区块链数字资产交易环境。同时以区块链为核心，建立全方位的区块链生态系统，Binance将和Binance用户一起开创新的区块链世界，共同创造历史。',
+  bybit: 'Bybit成立于2018年3月，注册在英属维京群岛。是一家全球性的数字资产衍生品交易服务平台。用户遍布全球200多个国家，覆盖北美、欧洲、亚太等地区，为个人用户及专业机构提供专业的数字资产衍生品交易服务。 Bybit通过数字资产与传统金融的结合，引领数字资产的生态发展。提供一流的流动性，致力于打造业内最安全、公平、高效及人性化的交易服务平台。',
+  gate_io: 'Gate.io 成⽴于2013年，是全球领先的加密货币交易所，拥有2200万⽤⼾，币种交易量与流动性⻓期 稳居全球前三。Gate.io ⽬前24⼩时现货交易量排名全球第⼆，⽀持超过3800种加密货币的现货交易、 期货合约、杠杆交易及理财产品。平台提供多样化的数字资产交易及区块链应⽤相关服务，平台总储 备⾦超过 100 亿美元，位列全球第四，总储备⾦率⾼达 128.58%，并采⽤零知识技术以确保⽤⼾资产 的100%可验证性。 2025年，Gate.io正式启动品牌升级，中⽂名称焕新为"⼤⻔"，寓意信任、安全与未来的⼊⼝。此次 升级全⽅位涵盖平台的技术、服务与未来发展战略⽅向，Gate.io将始终以⽤⼾为核⼼，推动技术⾰新 与⽣态建设，与⽤⼾携⼿迈向加密领域的全新未来。',
+  coinbase: 'Coinbase Pro总部设立在美国，为用户提供安全的平台，方便用户进行各种数字资产投资。Coinbase Pro平台界面简洁易用，包括实时订单查询、图表工具、交易历史记录和简单的订单流程。',
+  okx: '欧易OKX是全球领先的加密生态建设者，成立于2017.5.31。拥有全球顶尖的加密资产交易平台、Web3.0入口-Web3 Wallet及旨在为下一代 Web3 应用提供安全可编程的智能合约平台的OKC，创立了统一交易账户等全球领先的Crypto交易系统。 欧易OKX面向全球用户提供比特币、以太坊等多种加密数字资产的现货、衍生品交易及金融产品等服务，帮助用户方便快捷地管理和投资加密数字资产；Web3 Wallet提供多链None-custody钱包、NFT市场、DEX、DApps等产品；OKC作为欧易的自研公链，生态建设也初露头角，能够满足用户多种加密数字资产业务需求。后续欧易OKX将持续向元宇宙、Web3.0、DeFi、GameFi等领域进发，欧易Blockdream Ventures已在全球投资了数百个区块链项目，推动加密经济的繁荣。 目前欧易OKX在全球拥有超2000万用户体量，覆盖超过200个国家和地区；全球拥有美国、马耳他、迪拜等8个地区办公室，员工达2200人；年营收突破10亿美元，累计交易量突破10万亿美元。',
+  kraken: '总部位于旧金山的Kraken成立于2011年，是欧元交易量最大的比特币国际站，也可用加拿大元、美元、英镑和日元交易。Kraken一直被独立新闻媒体评为最佳和最安全的比特币国际站。Kraken是第一个在彭博终端上显示交易价格和交易量的比特币国际站，第一个通过了加密验证的外汇储备审计，是第一家加密货币银行的合伙人。 2014年3月获300万美元天使轮融资，主要投资者为蜂鸟风险投资公司（Hummingbird Ventures）。目前，Kraken已跻身美国最活跃的数字货币国际站阵列，根据Bitcoin Charts目前的数据显示，Kraken平台的日成交量为4,579 BTC，这一数据超过了竞争对手ANX以及BTC-e。 优点： 交易费合理 提款费较低 全球化程度高 缺点： 支付手段有限 不适合新手',
+  bitget: 'Bitget 成立于2018年，是世界领先的加密货币交易所和 Web 3 公司。目前，Bitget 为全球200多个国家和地区提供服务，Bitget生态全球用户数已突破1亿，日均交易量达到 100亿美元，成为全球交易量排名第四的加密货币交易所。 Bitget 携手西班牙足球甲级联赛(LALIGA)、阿根廷传奇足球运动员梅西和电竞赛事官方组 织 PGL 等可靠合作伙伴，鼓励人们拥抱加密货币。',
+  mexc: 'MEXC中文名抹茶交易所成功打造了数字资产一站式交易服务，能够同时向用户提供包括现货、杠杆、ETF、合约在内的交易服务。安全方面，MEXC组建了业内顶尖的技术团队，同时与多家业内顶尖安全机构开展深度合作，保障用户资产安全。',
+  kucoin: 'KuCoin是全球知名的数字货币交易服务平台，KuCoin支持多种数字资产交易。成立于2017年9月，已成长为最受欢迎的数字货币交易服务平台之一，目前为全球207个国家和地区的500万用户提供币币，法币、合约、Pool-X、借贷等一站式服务。以"全民的交易服务平台"著称，KuCoin的运营地为塞舌尔，为用户提供多语言、7X24小时客服团队，同时，KuCoin在韩国、日本、西班牙、意大利、越南、土耳其、俄罗斯、印度等地建立了本地化社群，为各地用户提供最本地化的服务。2018年11月，KuCoin获得来自IDG资本和经纬创投的2000万美元A轮融资。',
+  crypto_com: 'Crypto.com最初于2016年6月在香港成立，3年后推出Crypto.com交易所。现在总部设在新加坡，该平台在90多个国家拥有超过5000万客户，包括欧洲、美国、加拿大、俄罗斯、澳大利亚、拉丁美洲和一些亚洲国家。 该公司为客户提供以下产品：移动应用程序、Crypto.com Visa卡、移动钱包、Crypto.com Earn、Crypto.com Pay、Crypto.com NFT、Crypto.com Credit。集中式交易所（CEX）提供现货交易、保证金交易和衍生品交易。Crypto.com还提供DeFi产品，如DeFi钱包和Crypto.org链上由其原生代币Cronos（CRO）驱动的生态系统。'
 }
 
 // 常见英文描述的翻译映射

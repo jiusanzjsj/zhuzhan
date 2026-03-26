@@ -1,31 +1,35 @@
 <template>
   <div class="news-detail-container">
-    <!-- 精美顶部导航 -->
-    <header class="bg-gradient-to-r from-orange-500 to-amber-400 sticky top-0 z-50 shadow-lg shadow-orange-200/50">
-      <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-        <router-link to="/news" class="flex items-center gap-2 text-white hover:text-orange-50 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
-          <span class="font-medium hidden sm:inline">返回资讯</span>
-        </router-link>
-        <router-link to="/" class="flex items-center gap-2">
-          <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-white/50">
-          <span class="font-bold text-white hidden sm:block drop-shadow-sm">比特视界</span>
-        </router-link>
-        <div class="w-20"></div>
+    <!-- 顶部导航 -->
+    <header class="bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 shadow-lg shadow-orange-200/50">
+      <div class="max-w-4xl mx-auto px-4 py-4">
+        <div class="flex items-center gap-3">
+          <!-- 返回按钮 -->
+          <router-link to="/news" class="text-white hover:text-orange-50 transition p-1 -ml-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </router-link>
+          
+          <!-- 标题区域 -->
+          <div class="flex-1">
+            <h1 class="text-lg font-bold text-white drop-shadow-sm flex items-center gap-2">
+              <span>📰</span>
+              <span>加密货币快讯</span>
+            </h1>
+            <p class="text-orange-100 text-xs mt-0.5">追踪最新资讯动态</p>
+          </div>
+        </div>
       </div>
     </header>
 
     <!-- 资讯详情 -->
     <main class="news-content px-4 sm:px-6" v-if="article">
       <div class="news-header">
-        <span class="news-category text-xs sm:text-sm" :class="article.tagClass">{{ article.tag }}</span>
         <h1 class="news-title text-xl sm:text-2xl lg:text-3xl">{{ displayTitle }}</h1>
         <div class="news-meta flex flex-wrap gap-2 sm:gap-4">
           <span class="meta-item text-xs sm:text-sm">{{ article.time }}</span>
           <span class="meta-item text-xs sm:text-sm hidden sm:inline">{{ article.source }}</span>
-          <span class="meta-item text-xs sm:text-sm">阅读 {{ article.views }}</span>
         </div>
       </div>
       
@@ -52,13 +56,9 @@
           <p>暂无详细内容</p>
         </div>
         
-        <div class="news-tags mt-4" v-if="article.tag">
-          <span class="tag-item text-xs" :class="article.tagClass">{{ article.tag }}</span>
-        </div>
         
-        <a :href="article.url" target="_blank" class="read-original-btn text-sm sm:text-base">
-          阅读原文 →
-        </a>
+        
+        
       </div>
     </main>
     
