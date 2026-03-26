@@ -1,14 +1,12 @@
 /**
  * 新闻数据状态管理
- * 确保数据获取的前提下进行速率优化
  */
 
 import { ref } from 'vue'
 import { apiCache } from '../utils/apiCache'
 
 const NEWS_API_KEY = '3908eafc986a4b75842bee9ac752cced'
-const REQUEST_TIMEOUT = 10000 // 10秒超时
-const TRANSLATION_TIMEOUT = 5000 // 翻译超时
+const REQUEST_TIMEOUT = 10000
 
 // 状态
 const articles = ref([])
@@ -16,7 +14,6 @@ const hotNews = ref([])
 const articleDetailCache = ref({})
 const loading = ref(false)
 const error = ref(null)
-const translating = ref(false)
 
 // 导航数据
 const navigationData = ref(null)
@@ -31,7 +28,7 @@ export function getNavigationArticle() {
   return data
 }
 
-// 带超时的fetch（只定义一次）
+// 带超时的fetch
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
@@ -50,85 +47,15 @@ async function fetchWithTimeout(url, options = {}) {
 }
 
 /**
- * 翻译文本（带超时和缓存）
- */
-const translationCache = new Map()
-
-export async function translateText(text, force = false) {
-  if (!text) return ''
-  
-  if (!force && translationCache.has(text)) {
-    return translationCache.get(text)
-  }
-  
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), TRANSLATION_TIMEOUT)
-    
-    const res = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=en|zh`,
-      { signal: controller.signal }
-    )
-    
-    clearTimeout(timeoutId)
-    
-    if (!res.ok) throw new Error('翻译API错误')
-    
-    const data = await res.json()
-    const translated = data.responseData?.translatedText || text
-    
-    translationCache.set(text, translated)
-    return translated
-  } catch (err) {
-    console.warn('翻译失败:', err.message)
-    return text
-  }
-}
-
-/**
- * 批量翻译（并发控制）
- */
-export async function translateBatch(items, fields = ['title', 'description']) {
-  if (!items || items.length === 0) return
-  
-  translating.value = true
-  
-  try {
-    const batchSize = 5
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize)
-      await Promise.all(
-        batch.map(async (item) => {
-          for (const field of fields) {
-            if (item[field] && !item[field + 'Zh']) {
-              try {
-                item[field + 'Zh'] = await translateText(item[field])
-              } catch {
-                item[field + 'Zh'] = item[field] // 失败使用原文
-              }
-              await new Promise(r => setTimeout(r, 100))
-            }
-          }
-        })
-      )
-    }
-  } catch (err) {
-    console.error('批量翻译失败:', err)
-  } finally {
-    translating.value = false
-  }
-}
-
-/**
- * 获取新闻列表（带缓存）
+ * 获取新闻列表
  */
 export async function fetchNewsList(forceRefresh = false) {
-  // 1. 内存缓存优先
+  // 内存缓存优先
   if (!forceRefresh && articles.value.length > 0) {
     return { articles: articles.value, hotNews: hotNews.value }
   }
 
-  // 2. API缓存
+  // API缓存
   if (!forceRefresh) {
     const cached = apiCache.get('news_list')
     if (cached && cached.articles) {
@@ -177,11 +104,9 @@ export async function fetchNewsList(forceRefresh = false) {
       title: item.title?.slice(0, 30) + '...' || '无标题'
     }))
 
-    // 更新内存
     articles.value = articlesData
     hotNews.value = hotData
 
-    // 缓存
     apiCache.set('news_list', { articles: articlesData, hotNews: hotData })
 
     return { articles: articlesData, hotNews: hotData }
@@ -269,4 +194,4 @@ function formatTime(dateStr) {
 }
 
 // 导出状态
-export { articles, hotNews, articleDetailCache, loading, error, translating }
+export { articles, hotNews, articleDetailCache, loading, error }
