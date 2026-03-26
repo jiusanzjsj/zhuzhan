@@ -9,6 +9,7 @@
     <!-- 错误状态 -->
     <div v-else-if="error" class="error-state">
       <p>加载失败: {{ error }}</p>
+      <button @click="$router.back()" class="retry-btn">返回</button>
     </div>
 
     <!-- 交易所详情 -->
@@ -23,17 +24,13 @@
             <div class="stat-item">
               <span class="stat-label">24h成交额</span>
               <span class="stat-value">{{ exchangeInfo.volume24h }}</span>
-              <span class="stat-change" :class="exchangeInfo.volumeChange >= 0 ? 'up' : 'down'">
-                {{ exchangeInfo.volumeChange >= 0 ? '+' : '' }}{{ exchangeInfo.volumeChange }}%
-              </span>
             </div>
             <div class="stat-item">
               <span class="stat-label">非小号全球排名</span>
               <span class="stat-value rank">No.{{ exchangeInfo.rank }}</span>
             </div>
             <div class="stat-item">
-              <span class="follow-count">{{ exchangeInfo.followCount }} 已关注</span>
-              <button class="follow-btn">{{ exchangeInfo.isFollowed ? '已关注' : '关注' }}</button>
+              <span class="follow-count">{{ exchangeInfo.followers || 0 }} 已关注</span>
             </div>
           </div>
         </div>
@@ -43,15 +40,10 @@
     <!-- 简介 -->
     <div class="detail-section">
       <p class="exchange-desc">
-        {{ exchangeInfo.description }}
-        <a href="#" @click.prevent="showFullDesc = !showFullDesc" class="expand-btn">
-          {{ showFullDesc ? '收起' : '展开' }}
-        </a>
+        {{ exchangeInfo.description || '暂无描述' }}
       </p>
       <div class="exchange-links">
         <a :href="exchangeInfo.officialUrl" target="_blank" class="link-btn">查看官网</a>
-        <a :href="exchangeInfo.downloadUrl" target="_blank" class="link-btn">下载地址</a>
-        <a :href="exchangeInfo.backupUrl" target="_blank" class="link-btn">备用地址</a>
       </div>
       <div class="social-links">
         <a v-if="exchangeInfo.twitter" :href="exchangeInfo.twitter" target="_blank" class="social-link" title="Twitter">
@@ -85,79 +77,41 @@
         <span class="info-label">量化接口</span>
         <span class="info-value">{{ exchangeInfo.apiEnabled ? '是' : '否' }}</span>
       </div>
-      <div class="info-item">
-        <span class="info-label">风险准备金</span>
-        <span class="info-value">{{ exchangeInfo.reserveFund }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">资产实力</span>
-        <span class="info-value">{{ exchangeInfo.assetStrength }}</span>
-      </div>
-      <div class="info-item full-width">
-        <span class="info-label">手续费用</span>
-        <a :href="exchangeInfo.feeUrl" target="_blank" class="info-link">去查看</a>
-      </div>
-    </div>
-
-    <!-- 行情 -->
-    <div class="detail-section">
-      <h2 class="section-title">{{ exchangeInfo.name }}行情</h2>
-      <div class="volume-tabs">
-        <button class="tab-btn active">成交额</button>
-        <button class="tab-btn">资产披露</button>
-      </div>
-      <div class="volume-info">
-        <span class="volume-label">24H成交额:</span>
-        <span class="volume-value">{{ volumeData.volume24h }}</span>
-      </div>
-      <div class="volume-chart" ref="volumeChartRef"></div>
-      <div class="time-range-btns">
-        <button class="time-btn active">7天</button>
-        <button class="time-btn">30天</button>
-        <button class="time-btn">1年</button>
-        <button class="time-btn">所有</button>
-      </div>
     </div>
 
     <!-- 交易对列表 -->
     <div class="detail-section">
       <h2 class="section-title">{{ exchangeInfo.name }}交易对</h2>
-      <div class="market-type-tabs">
-        <button class="tab-btn active">现货</button>
-        <button class="tab-btn">期货</button>
-      </div>
       <div class="filter-bar">
-        <div class="filter-item">
-          <span class="filter-label">币种:</span>
-          <select v-model="filters.coin" class="filter-select">
-            <option value="">全部</option>
-          </select>
-        </div>
         <div class="filter-item">
           <span class="filter-label">类型:</span>
           <select v-model="filters.type" class="filter-select">
-            <option value="cny">人民币</option>
             <option value="usd">美元</option>
+            <option value="cny">人民币</option>
           </select>
         </div>
       </div>
-      <div class="trading-table-wrapper">
+      
+      <!-- 加载交易对 -->
+      <div v-if="pairsLoading" class="loading-pairs">
+        <div class="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+      </div>
+      
+      <div v-else class="trading-table-wrapper">
         <table class="trading-table">
           <thead>
             <tr>
               <th>#</th>
               <th>交易对</th>
-              <th>最新价(¥)</th>
-              <th>平台价</th>
+              <th>最新价</th>
               <th>24H成交量</th>
-              <th>24H成交额(¥)</th>
-              <th>占比</th>
-              <th>更新时间</th>
+              <th>24H成交额</th>
+              <th>24H涨跌</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="tradingPairs.length === 0">
-              <td colspan="8" class="no-data">暂无数据</td>
+              <td colspan="6" class="no-data">暂无数据</td>
             </tr>
             <tr v-for="(pair, index) in tradingPairs" :key="pair.symbol">
               <td>{{ index + 1 }}</td>
@@ -166,16 +120,13 @@
                 <span>{{ pair.symbol }}</span>
               </td>
               <td>{{ pair.price }}</td>
-              <td>{{ pair.platformPrice }}</td>
               <td>{{ pair.volume24h }}</td>
-              <td>{{ pair.volume24hCny }}</td>
+              <td>{{ filters.type === 'cny' ? pair.volume24hCny : '$' + pair.volume24h }}</td>
               <td :class="Number(pair.percent) >= 0 ? 'price-up' : 'price-down'">{{ pair.percent }}%</td>
-              <td>{{ pair.updateTime }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <a href="#" @click.prevent="goToFullMarket" class="view-more">查看全部</a>
     </div>
     </template>
   </div>
@@ -184,212 +135,119 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-
-// 翻译函数（使用 MyMemory API）
-const translateToZh = async (text) => {
-  if (!text || text.length === 0) return '暂无描述'
-  try {
-    const res = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh`
-    )
-    const data = await res.json()
-    return data.responseData?.translatedText || text
-  } catch (err) {
-    console.error('翻译失败:', err)
-    return text
-  }
-}
-
-const API_KEY = 'CG-42Ty4UXdyANMSugcsqZSEU7Y'
+import { fetchExchangeDetail, fetchTradingPairs, translateToZh, getNavigationExchange } from '../store/exchange'
 
 const router = useRouter()
 const route = useRoute()
 
 const loading = ref(true)
 const error = ref(null)
-const showFullDesc = ref(false)
-const volumeChartRef = ref(null)
+const pairsLoading = ref(true)
 
-// 交易所信息
 const exchangeInfo = reactive({
   name: '',
   logo: '',
-  volume24h: '-',
-  volumeChange: 0,
   rank: '-',
-  followCount: 0,
-  isFollowed: false,
-  description: '暂无描述',
+  followers: 0,
+  description: '',
   officialUrl: '#',
-  downloadUrl: '#',
-  backupUrl: '#',
   twitter: '',
-  facebook: '',
   telegram: '',
-  kyc: false,
   region: '-',
   tradingPairs: '-',
   apiEnabled: false,
-  reserveFund: '-',
-  assetStrength: '-',
-  feeUrl: '#'
-})
-
-// 成交额数据
-const volumeData = reactive({
+  kyc: false,
   volume24h: '-'
 })
 
-// 筛选条件
 const filters = reactive({
-  coin: '',
   type: 'usd'
 })
 
-// 交易对列表
 const tradingPairs = ref([])
 
-// 加载交易所详情
-const fetchExchangeDetail = async (exchangeId) => {
-  try {
-    loading.value = true
-    error.value = null
+// 加载数据（确保至少能显示部分内容）
+const loadExchangeData = async (exchangeId) => {
+  loading.value = true
+  error.value = null
+  pairsLoading.value = true
 
-    // 获取交易所详情
-    const detailRes = await fetch(
-      `https://api.coingecko.com/api/v3/exchanges/${exchangeId}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-          'x-cg-demo-api-key': API_KEY
-        }
-      }
-    )
-
-    if (!detailRes.ok) {
-      throw new Error(`获取交易所详情失败: ${detailRes.status}`)
-    }
-
-    const detail = await detailRes.json()
-
-    // 填充交易所信息
-    exchangeInfo.name = detail.name || '未知交易所'
-    exchangeInfo.logo = detail.image || ''
-    exchangeInfo.rank = detail.trust_score_rank || '-'
-    exchangeInfo.followCount = detail.followers || 0
-    
-    // 翻译描述为中文
-    if (detail.description && detail.description.length > 0) {
-      exchangeInfo.description = await translateToZh(detail.description)
-    } else {
-      exchangeInfo.description = '暂无描述'
-    }
-    
-    exchangeInfo.officialUrl = detail.url || '#'
-    exchangeInfo.twitter = detail.twitter_screen_name 
-      ? `https://twitter.com/${detail.twitter_screen_name}` 
-      : ''
-    exchangeInfo.telegram = detail.telegram_screen_name 
-      ? `https://t.me/${detail.telegram_screen_name}` 
-      : ''
-    exchangeInfo.region = detail.country || '-'
-    exchangeInfo.tradingPairs = detail.number_of_markets || '-'
-    exchangeInfo.apiEnabled = detail.has_trading_incentive || false
-    exchangeInfo.kyc = detail.kyc_level ? true : false
-
-    // 格式化24h成交额
-    if (detail.trade_volume_24h_btc) {
-      const btcPriceRes = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd`,
-        { headers: { 'x-cg-demo-api-key': API_KEY } }
-      )
-      const btcPriceData = await btcPriceRes.json()
-      const btcPrice = btcPriceData.bitcoin?.usd || 50000
-      const volumeUsd = detail.trade_volume_24h_btc * btcPrice
-      exchangeInfo.volume24h = '$' + formatLargeNumber(volumeUsd)
-      volumeData.volume24h = '$' + formatLargeNumber(volumeUsd)
-    }
-
-  } catch (err) {
-    console.error('获取交易所详情失败:', err)
-    error.value = err.message
+  // 1. 先尝试从导航状态快速显示（列表页传递的数据）
+  const navExchange = getNavigationExchange()
+  if (navExchange) {
+    exchangeInfo.name = navExchange.name || '加载中...'
+    exchangeInfo.logo = navExchange.image || ''
+    exchangeInfo.rank = navExchange.trust_score_rank || '-'
+    exchangeInfo.tradingPairs = navExchange.number_of_markets || '-'
+    exchangeInfo.volume24h = '$' + formatVolume(navExchange.trade_volume_24h_btc)
   }
-}
 
-// 加载交易对列表
-const fetchTradingPairs = async (exchangeId) => {
   try {
-    // 获取交易对（使用markets接口）
-    const marketsRes = await fetch(
-      `https://api.coingecko.com/api/v3/exchanges/${exchangeId}/markets?per_page=50&page=1&sparkline=false`,
-      {
-        headers: {
-          'Accept': 'application/json',
-          'x-cg-demo-api-key': API_KEY
-        }
-      }
-    )
-
-    if (!marketsRes.ok) {
-      throw new Error(`获取交易对失败: ${marketsRes.status}`)
-    }
-
-    const markets = await marketsRes.json()
-
-    tradingPairs.value = markets.slice(0, 20).map((m, idx) => ({
-      symbol: m.symbol?.toUpperCase() || '-',
-      coinIcon: m.image || '',
-      price: m.current_price ? `$${m.current_price.toLocaleString()}` : '-',
-      platformPrice: m.current_price ? `$${m.current_price.toLocaleString()}` : '-',
-      volume24h: m.total_volume ? formatLargeNumber(m.total_volume) : '-',
-      volume24hCny: m.total_volume ? `¥${formatLargeNumber(m.total_volume * 7.2)}` : '-',
-      percent: m.price_change_percentage_24h 
-        ? m.price_change_percentage_24h.toFixed(2) 
-        : '0.00',
-      updateTime: new Date().toLocaleTimeString()
-    }))
-
-  } catch (err) {
-    console.error('获取交易对失败:', err)
-  }
-}
-
-// 格式化大数字
-const formatLargeNumber = (num) => {
-  if (!num) return '-'
-  if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B'
-  if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M'
-  if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K'
-  return num.toFixed(2)
-}
-
-// 页面加载时获取数据
-onMounted(async () => {
-  const exchangeId = route.params.id
-  if (exchangeId) {
-    await Promise.all([
+    // 2. 并行加载详情和交易对（使用Settled确保一个失败不影响另一个）
+    const results = await Promise.allSettled([
       fetchExchangeDetail(exchangeId),
       fetchTradingPairs(exchangeId)
     ])
+
+    // 处理详情结果
+    if (results[0].status === 'fulfilled') {
+      const detail = results[0].value
+      Object.assign(exchangeInfo, detail)
+      
+      // 翻译描述（非阻塞）
+      if (detail.description) {
+        translateToZh(detail.description).then(zh => {
+          exchangeInfo.description = zh
+        }).catch(() => {
+          // 翻译失败用原文
+        })
+      }
+    } else {
+      console.warn('详情加载失败:', results[0].reason)
+      if (!exchangeInfo.name) {
+        error.value = '无法加载交易所详情'
+      }
+    }
+
+    // 处理交易对结果
+    if (results[1].status === 'fulfilled') {
+      tradingPairs.value = results[1].value
+    } else {
+      console.warn('交易对加载失败:', results[1].reason)
+    }
+
+  } catch (err) {
+    console.error('加载交易所数据失败:', err)
+    error.value = '数据加载失败，请检查网络'
+  } finally {
+    loading.value = false
+    pairsLoading.value = false
+  }
+}
+
+onMounted(() => {
+  const exchangeId = route.params.id
+  if (exchangeId) {
+    loadExchangeData(exchangeId)
+  } else {
+    error.value = '缺少交易所ID'
     loading.value = false
   }
 })
 
-// 监听路由变化
-watch(() => route.params.id, async (newId) => {
+watch(() => route.params.id, (newId) => {
   if (newId) {
-    loading.value = true
-    await Promise.all([
-      fetchExchangeDetail(newId),
-      fetchTradingPairs(newId)
-    ])
-    loading.value = false
+    loadExchangeData(newId)
   }
 })
 
-// 跳转完整行情页
-const goToFullMarket = () => {
-  router.push(`/exchange/${route.params.id}/market.html?marketType=0`)
+// 格式化交易量
+const formatVolume = (vol) => {
+  if (!vol) return '-'
+  if (vol >= 1e9) return (vol / 1e9).toFixed(2) + 'B'
+  if (vol >= 1e6) return (vol / 1e6).toFixed(2) + 'M'
+  if (vol >= 1e3) return (vol / 1e3).toFixed(2) + 'K'
+  return vol.toFixed(2)
 }
 </script>
 
@@ -426,6 +284,15 @@ const goToFullMarket = () => {
 
 .error-state {
   color: #f6465d;
+}
+
+.retry-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: #f0b90b;
+  color: #000;
+  border: none;
+  cursor: pointer;
 }
 
 .detail-header {
@@ -481,39 +348,9 @@ const goToFullMarket = () => {
   color: #f0b90b;
 }
 
-.stat-change {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.stat-change.up {
-  color: #0ecb81;
-}
-
-.stat-change.down {
-  color: #f6465d;
-}
-
 .follow-count {
   font-size: 14px;
   color: #8a919e;
-}
-
-.follow-btn {
-  margin-top: 4px;
-  padding: 6px 16px;
-  border-radius: 6px;
-  border: 1px solid #f0b90b;
-  background: transparent;
-  color: #f0b90b;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.follow-btn:hover {
-  background: #f0b90b;
-  color: #000;
 }
 
 .detail-section {
@@ -535,12 +372,6 @@ const goToFullMarket = () => {
   color: #8a919e;
   line-height: 1.8;
   margin-bottom: 16px;
-}
-
-.expand-btn {
-  color: #3b82f6;
-  text-decoration: none;
-  margin-left: 8px;
 }
 
 .exchange-links {
@@ -593,10 +424,6 @@ const goToFullMarket = () => {
   gap: 6px;
 }
 
-.info-item.full-width {
-  grid-column: span 2;
-}
-
 .info-label {
   font-size: 12px;
   color: #8a919e;
@@ -608,85 +435,10 @@ const goToFullMarket = () => {
   color: #fff;
 }
 
-.info-link {
-  font-size: 14px;
-  color: #3b82f6;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.volume-tabs,
-.market-type-tabs {
+.loading-pairs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.tab-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-  background: #1e222d;
-  color: #8a919e;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.tab-btn.active {
-  background: #f0b90b;
-  color: #000;
-}
-
-.volume-info {
-  margin-bottom: 16px;
-}
-
-.volume-label {
-  font-size: 14px;
-  color: #8a919e;
-  margin-right: 8px;
-}
-
-.volume-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.volume-chart {
-  height: 200px;
-  background: #1e222d;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  color: #8a919e;
-  font-size: 14px;
-}
-
-.time-range-btns {
-  display: flex;
-  gap: 8px;
-}
-
-.time-btn {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #2a2e39;
-  background: transparent;
-  color: #8a919e;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.time-btn.active {
-  border-color: #f0b90b;
-  color: #f0b90b;
+  padding: 40px;
 }
 
 .filter-bar {
@@ -759,23 +511,6 @@ const goToFullMarket = () => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-}
-
-.view-more {
-  display: block;
-  text-align: center;
-  margin-top: 16px;
-  padding: 10px;
-  border-radius: 6px;
-  background: #1e222d;
-  color: #3b82f6;
-  text-decoration: none;
-  font-size: 14px;
-  transition: background 0.2s;
-}
-
-.view-more:hover {
-  background: #2a2e39;
 }
 
 .price-up {

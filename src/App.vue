@@ -44,7 +44,11 @@
     </header>
 
     <!-- 主内容 -->
-    <router-view />
+    <router-view v-slot="{ Component, route }">
+      <keep-alive :include="['Exchange']">
+        <component :is="Component" :key="route.fullPath" />
+      </keep-alive>
+    </router-view>
     
     <!-- 底部信息 -->
     <footer class="bg-white border-t border-gray-200/50 py-8 mt-auto">

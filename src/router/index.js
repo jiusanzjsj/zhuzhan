@@ -19,8 +19,18 @@ const routes = [
   { path: '/tools', name: 'Tools', component: Tools },
   { path: '/topics', name: 'Topics', component: Topics },
   { path: '/flash', name: 'Flash', component: Flash },
-  { path: '/exchange', name: 'Exchange', component: Exchange },
-  { path: '/exchange/:id', name: 'ExchangeDetail', component: ExchangeDetail }
+  { 
+    path: '/exchange', 
+    name: 'Exchange', 
+    component: Exchange,
+    meta: { keepAlive: true }
+  },
+  { 
+    path: '/exchange/:id', 
+    name: 'ExchangeDetail', 
+    component: ExchangeDetail,
+    meta: { keepAlive: false }
+  }
 ]
 
 const router = createRouter({
