@@ -45,7 +45,7 @@
 
     <!-- 主内容 -->
     <router-view v-slot="{ Component, route }">
-      <keep-alive :include="['Exchange']">
+      <keep-alive :include="['Exchange', 'NewsList']">
         <component :is="Component" :key="route.fullPath" />
       </keep-alive>
     </router-view>

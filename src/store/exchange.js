@@ -236,31 +236,349 @@ export async function fetchTradingPairs(exchangeId) {
 }
 
 /**
- * 翻译函数（失败时返回原文）
+ * 翻译缓存
  */
-export async function translateToZh(text) {
-  if (!text || text.length === 0) return '暂无描述'
+const translationCache = new Map()
+
+/**
+ * 翻译函数（多引擎，带缓存、超时、错误处理）
+ */
+export async function translateToZh(text, cacheKey = null) {
+  // 空文本处理
+  if (!text || text.length === 0) return ''
   
+  // 清理HTML实体和特殊字符
+  const cleanText = text
+    .replace(/<[^>]*>/g, '')  // 移除HTML标签
+    .replace(/&[a-z]+;/gi, ' ') // 移除HTML实体
+    .replace(/\s+/g, ' ')       // 合并空白
+    .trim()
+    .substring(0, 500)           // 限制长度
+  
+  if (!cleanText) return ''
+  
+  // 检查缓存
+  const key = cacheKey || cleanText
+  if (translationCache.has(key)) {
+    return translationCache.get(key)
+  }
+  
+  // 尝试多个翻译引擎
+  const engines = [
+    // MyMemory (免费但有限制)
+    async () => {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      try {
+        const res = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=en|zh`,
+          { signal: controller.signal }
+        )
+        clearTimeout(timeoutId)
+        if (!res.ok) return null
+        const data = await res.json()
+        return data.responseData?.translatedText || null
+      } catch {
+        clearTimeout(timeoutId)
+        return null
+      }
+    },
+    // LibreTranslate (免费开源)
+    async () => {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      try {
+        const res = await fetch(
+          'https://libretranslate.com/translate',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              q: cleanText,
+              source: 'en',
+              target: 'zh'
+            }),
+            signal: controller.signal
+          }
+        )
+        clearTimeout(timeoutId)
+        if (!res.ok) return null
+        const data = await res.json()
+        return data.translatedText || null
+      } catch {
+        clearTimeout(timeoutId)
+        return null
+      }
+    }
+  ]
+  
+  // 尝试各个翻译引擎
+  for (const engine of engines) {
+    try {
+      const result = await engine()
+      if (result && !result.includes('<') && result.length > 0 && result !== cleanText) {
+        translationCache.set(key, result)
+        console.log('[翻译成功]', result.substring(0, 30))
+        return result
+      }
+    } catch (err) {
+      console.warn('[翻译引擎失败]', err.message)
+    }
+  }
+  
+  // 所有引擎都失败，返回原文
+  console.warn('[翻译失败] 使用原文')
+  return cleanText
+}
+
+/**
+ * 清理翻译缓存
+ */
+export function clearTranslationCache() {
+  translationCache.clear()
+}
+
+// 交易所描述缓存
+const exchangeDescCache = new Map()
+
+/**
+ * 方式1: 从 CryptoCompare 获取交易所描述
+ */
+async function fetchFromCryptoCompare(exchangeId) {
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
-    
-    const res = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0, 500))}&langpair=en|zh`,
-      { signal: controller.signal }
+    // CryptoCompare 的单个交易所详情接口
+    const response = await fetchWithTimeout(
+      `https://min-api.cryptocompare.com/data/exchange/{id}/info`.replace('{id}', exchangeId)
     )
     
-    clearTimeout(timeoutId)
-    
-    if (!res.ok) throw new Error('翻译API错误')
-    
-    const data = await res.json()
-    return data.responseData?.translatedText || text
-    
+    if (response.ok) {
+      const data = await response.json()
+      // CryptoCompare 返回格式: { Response: "Success", Data: { Description: "...", About: "..." } }
+      if (data.Data) {
+        return data.Data.Description || data.Data.About || data.Data.SUMMARY || ''
+      }
+    }
   } catch (err) {
-    console.error('翻译失败:', err)
-    return text // 失败时返回原文
+    console.warn('CryptoCompare 获取描述失败:', err.message)
   }
+  return ''
+}
+
+/**
+ * 方式2: 从后端代理获取交易所描述
+ */
+async function fetchFromBackendProxy(exchangeId) {
+  try {
+    const response = await fetchWithTimeout(
+      `/api/exchange/description?exchange=${exchangeId}`
+    )
+    
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.description) {
+        return data.description
+      }
+    }
+  } catch (err) {
+    console.warn('后端代理获取描述失败:', err.message)
+  }
+  return ''
+}
+
+/**
+ * 方式3: 从 CoinGecko 获取描述
+ */
+async function fetchFromCoinGecko(exchangeId) {
+  try {
+    const response = await fetchWithTimeout(
+      `https://api.coingecko.com/api/v3/exchanges/${exchangeId}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'x-cg-demo-api-key': API_KEY
+        }
+      }
+    )
+    
+    if (response.ok) {
+      const data = await response.json()
+      if (data.description && data.description.length > 20) {
+        return data.description
+      }
+    }
+  } catch (err) {
+    console.warn('CoinGecko 获取描述失败:', err.message)
+  }
+  return ''
+}
+
+/**
+ * 获取交易所描述（多来源优先级 + 预设描述）
+ */
+export async function fetchExchangeDescription(exchangeId) {
+  console.log('[Exchange] 开始获取描述:', exchangeId)
+  
+  // 检查缓存
+  if (exchangeDescCache.has(exchangeId)) {
+    console.log('[Exchange] 从缓存获取描述')
+    return exchangeDescCache.get(exchangeId)
+  }
+  
+  let description = ''
+  
+  // 1. 优先从 CryptoCompare 获取
+  console.log('[Exchange] 尝试 CryptoCompare...')
+  description = await fetchFromCryptoCompare(exchangeId)
+  console.log('[Exchange] CryptoCompare 结果:', description ? description.substring(0, 50) + '...' : '无')
+  
+  // 2. 如果没有，尝试后端代理
+  if (!description) {
+    console.log('[Exchange] 尝试后端代理...')
+    description = await fetchFromBackendProxy(exchangeId)
+    console.log('[Exchange] 后端代理结果:', description ? description.substring(0, 50) + '...' : '无')
+  }
+  
+  // 3. 如果还是没有，尝试 CoinGecko
+  if (!description) {
+    console.log('[Exchange] 尝试 CoinGecko...')
+    description = await fetchFromCoinGecko(exchangeId)
+    console.log('[Exchange] CoinGecko 结果:', description ? description.substring(0, 50) + '...' : '无')
+  }
+  
+  // 4. 最后使用预设描述
+  if (!description) {
+    console.log('[Exchange] 使用预设描述...')
+    description = getPresetDescription(exchangeId)
+    console.log('[Exchange] 预设描述:', description ? description.substring(0, 50) + '...' : '无')
+  } else {
+    // 如果获取到的是英文描述，尝试翻译
+    const translated = translateCommonDescription(description)
+    if (translated) {
+      description = translated
+      console.log('[Exchange] 英文描述已翻译:', description)
+    }
+  }
+  
+  // 缓存结果
+  if (description) {
+    exchangeDescCache.set(exchangeId, description)
+    console.log('[Exchange] 描述已缓存')
+  } else {
+    console.log('[Exchange] 所有来源均无描述')
+  }
+  
+  return description
+}
+
+/**
+ * 清除交易所描述缓存
+ */
+export function clearExchangeDescCache() {
+  exchangeDescCache.clear()
+}
+
+// 预设交易所完整信息（名称+描述）
+const EXCHANGE_INFO_ZH = {
+  binance: { name: '币安', desc: '全球最大加密货币交易所，支持币币、合约、法币交易' },
+  okx: { name: 'OKX交易所', desc: '全球领先的加密货币交易所，现货、合约、期权交易' },
+  huobi: { name: '火必', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' },
+  kraken: { name: 'Kraken', desc: '美国头部加密货币交易所，以安全性和合规性著称' },
+  kucoin: { name: '库币', desc: '全球性加密货币交易所，支持多种数字资产交易' },
+  gateio: { name: '芝麻开门', desc: '全球加密货币交易平台，提供现货和合约交易' },
+  bitfinex: { name: 'Bitfinex', desc: '历史悠久的加密货币交易所，提供高级交易服务' },
+  coinbase: { name: 'Coinbase', desc: '美国最大加密货币交易所，纳斯达克上市企业' },
+  bitstamp: { name: 'Bitstamp', desc: '欧洲最古老的加密货币交易所之一' },
+  mexc: { name: 'MEXC', desc: '全球加密货币交易所，专注现货和合约交易' },
+  bitget: { name: 'Bitget', desc: '全球领先的合约跟单交易所' },
+  bybit: { name: 'Bybit', desc: '全球加密货币交易所，专注衍生品交易' },
+  deribit: { name: 'Deribit', desc: '加密货币衍生品交易所，专注期权合约' },
+  cryptocom: { name: 'Crypto.com', desc: '全球加密货币平台，提供交易、支付服务' },
+  lbank: { name: 'LBank', desc: '全球加密货币交易平台' },
+  poloniex: { name: 'Poloniex', desc: '加密货币交易所，提供多种代币交易' },
+  upbit: { name: 'Upbit', desc: '韩国头部加密货币交易所' },
+  bithumb: { name: 'Bithumb', desc: '韩国知名加密货币交易所' },
+  coinone: { name: 'Coinone', desc: '韩国加密货币交易所' },
+  korbit: { name: 'Korbit', desc: '韩国早期加密货币交易所' },
+  bitflyer: { name: 'BitFlyer', desc: '日本合规加密货币交易所' },
+  liquid: { name: 'Liquid', desc: '全球加密货币交易平台' },
+  coinsbit: { name: 'Coinsbit', desc: '加密货币交易平台' },
+  probit: { name: 'ProBit', desc: '全球加密货币交易所' },
+  exmo: { name: 'EXMO', desc: '欧洲加密货币交易所' },
+  bittrex: { name: 'Bittrex', desc: '美国加密货币交易所，以安全性著称' },
+  coinexchange: { name: 'CoinExchange', desc: '专注于加密货币交易的平台' }
+}
+
+/**
+ * 获取交易所中文名称
+ */
+export function getExchangeNameZh(exchangeId) {
+  if (!exchangeId) return ''
+  const id = exchangeId.toLowerCase()
+  return EXCHANGE_INFO_ZH[id]?.name || ''
+}
+
+/**
+ * 获取交易所中文描述（用于列表页展示）
+ */
+export function getExchangeDescZh(exchangeId) {
+  if (!exchangeId) return ''
+  const id = exchangeId.toLowerCase()
+  return EXCHANGE_INFO_ZH[id]?.desc || ''
+}
+
+/**
+ * 获取交易所完整中文信息
+ */
+export function getExchangeInfoZh(exchangeId) {
+  if (!exchangeId) return { name: '', desc: '' }
+  const id = exchangeId.toLowerCase()
+  return EXCHANGE_INFO_ZH[id] || { name: '', desc: '' }
+}
+
+// 预设交易所描述（当API无数据时使用）
+const EXCHANGE_DESCRIPTIONS = {
+  binance: '币安（Binance）是全球最大的加密货币交易所之一，提供币币交易、合约交易、法币交易等服务，拥有超过1.5亿用户。',
+  okx: 'OKX是一家全球领先的加密货币交易所，提供现货交易、合约交易、期权交易等多种加密资产服务。',
+  huobi: '火必（HTX）是全球知名的加密货币交易所，提供全面的数字资产交易服务。',
+  coinexchange: 'CoinExchange是一家专注于加密货币交易的平台。',
+  kraken: 'Kraken是美国的加密货币交易所，以安全性和合规性著称。',
+  kucoin: 'KuCoin是一家全球性的加密货币交易所，提供多种数字资产的交易服务。',
+  gateio: 'Gate.io是一家提供加密货币交易的全球平台。',
+  bitfinex: 'Bitfinex是历史悠久的加密货币交易所之一。',
+  coinbase: 'Coinbase是美国最大的加密货币交易所，在纳斯达克上市。',
+  bitstamp: 'Bitstamp是欧洲最古老的加密货币交易所之一。'
+}
+
+// 常见英文描述的翻译映射
+const DESCRIPTION_TRANSLATIONS = {
+  "one of the world's largest cryptocurrency exchange": '全球最大的加密货币交易所之一',
+  "a secure bitcoin trading platform": '安全的比特币交易平台',
+  "leading cryptocurrency exchange": '领先的加密货币交易所',
+  "global cryptocurrency exchange": '全球加密货币交易所',
+  "professional cryptocurrency exchange": '专业加密货币交易所',
+  "trusted cryptocurrency exchange": '可信赖的加密货币交易所'
+}
+
+/**
+ * 翻译常见英文描述
+ */
+function translateCommonDescription(text) {
+  if (!text) return ''
+  const lower = text.toLowerCase().trim()
+  for (const [en, zh] of Object.entries(DESCRIPTION_TRANSLATIONS)) {
+    if (lower.includes(en) || en.includes(lower)) {
+      return zh
+    }
+  }
+  return ''
+}
+
+/**
+ * 获取预设交易所描述
+ */
+export function getPresetDescription(exchangeId) {
+  const id = exchangeId?.toLowerCase()
+  return EXCHANGE_DESCRIPTIONS[id] || ''
 }
 
 /**

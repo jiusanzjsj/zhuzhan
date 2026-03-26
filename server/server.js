@@ -294,8 +294,73 @@ app.get('/api/news/important', (req, res) => {
   })
 })
 
+// 获取交易所描述
+app.get('/api/exchange/description', async (req, res) => {
+  const { exchange } = req.query
+  
+  if (!exchange) {
+    return res.status(400).json({ success: false, message: '缺少exchange参数' })
+  }
+  
+  try {
+    // 1. 尝试从 CryptoCompare 获取 (服务端-side，避免CORS)
+    const cryptoCompareRes = await axios.get(
+      `https://min-api.cryptocompare.com/data/exchange/${exchange}/info`,
+      { timeout: 10000 }
+    )
+    
+    if (cryptoCompareRes.data && cryptoCompareRes.data.Data) {
+      const data = cryptoCompareRes.data.Data
+      let description = data.Description || data.About || data.SUMMARY || ''
+      
+      if (description && description.length > 10) {
+        // 翻译成中文
+        const translated = await translateToChinese(description)
+        return res.json({
+          success: true,
+          description: translated,
+          source: 'cryptocompare'
+        })
+      }
+    }
+    
+    // 2. 尝试从 CoinGecko 获取
+    const coinGeckoRes = await axios.get(
+      `https://api.coingecko.com/api/v3/exchanges/${exchange}`,
+      {
+        headers: { 'x-cg-demo-api-key': 'CG-42Ty4UXdyANMSugcsqZSEU7Y' },
+        timeout: 10000
+      }
+    )
+    
+    if (coinGeckoRes.data && coinGeckoRes.data.description && coinGeckoRes.data.description.length > 20) {
+      return res.json({
+        success: true,
+        description: coinGeckoRes.data.description,
+        source: 'coingecko'
+      })
+    }
+    
+    // 3. 返回空
+    return res.json({
+      success: true,
+      description: '',
+      source: 'none'
+    })
+    
+  } catch (error) {
+    console.error('获取交易所描述失败:', error.message)
+    return res.json({
+      success: false,
+      description: '',
+      error: error.message
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`API服务已启动: http://localhost:${PORT}`)
   console.log(`获取快讯: http://localhost:${PORT}/api/news`)
   console.log(`获取文章内容: http://localhost:${PORT}/api/news/content?url=原文链接`)
+  console.log(`获取交易所描述: http://localhost:${PORT}/api/exchange/description?exchange=binance`)
 })

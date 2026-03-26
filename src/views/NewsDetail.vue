@@ -14,7 +14,7 @@
         </router-link>
         
         <div class="navbar-end">
-          <router-link to="/" class="back-link">
+          <router-link to="/news" class="back-link">
             返回资讯
           </router-link>
         </div>
@@ -29,6 +29,8 @@
         <div class="news-meta">
           <span class="meta-item">{{ article.time }}</span>
           <span class="meta-item">{{ article.source }}</span>
+          <span class="meta-item">阅读 {{ article.views }}</span>
+          <span class="meta-item">评论 {{ article.comments }}</span>
         </div>
       </div>
       
@@ -39,7 +41,7 @@
       
       <div class="news-body">
         <!-- 加载状态 -->
-        <div v-if="loading" class="loading-content">
+        <div v-if="contentLoading" class="loading-content">
           <div class="spinner-small"></div>
           <p>正在加载文章内容...</p>
         </div>
@@ -58,11 +60,6 @@
           <span class="tag-item" :class="article.tagClass">{{ article.tag }}</span>
         </div>
         
-        <div class="news-stats">
-          <span>阅读 {{ article.views }}</span>
-          <span>评论 {{ article.comments }}</span>
-        </div>
-        
         <a :href="article.url" target="_blank" class="read-original-btn">
           阅读原文 →
         </a>
@@ -75,13 +72,13 @@
         <h1 class="news-title">资讯不存在</h1>
         <p class="news-meta">该资讯可能已被移除或不存在</p>
       </div>
-      <router-link to="/" class="back-home-btn">
+      <router-link to="/news" class="back-home-btn">
         返回资讯列表
       </router-link>
     </main>
     
     <!-- 加载状态 -->
-    <div class="loading" v-if="loading && !article">
+    <div class="loading" v-if="loading">
       <div class="spinner"></div>
       <p>加载中...</p>
     </div>
@@ -89,40 +86,62 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useNewsStore } from '@/stores/newsStore'
+import { fetchArticleContent, getNavigationArticle, getArticleById } from '../stores/newsStore'
 
 const route = useRoute()
-const newsStore = useNewsStore()
 const article = ref(null)
 const contentData = ref({ content: '', image: '' })
 const loading = ref(true)
+const contentLoading = ref(false)
 
-const fetchArticleContent = async (url) => {
-  try {
-    const response = await fetch(`/api/news/content?url=${encodeURIComponent(url)}`)
-    const result = await response.json()
-    
-    if (result.success && result.data) {
-      contentData.value = result.data
-    }
-  } catch (error) {
-    console.error('获取文章内容失败:', error)
-    contentData.value = { content: '暂无详细内容，请点击阅读原文查看', image: '' }
+const loadArticle = async () => {
+  loading.value = true
+  contentLoading.value = false
+  article.value = null
+  contentData.value = { content: '', image: '' }
+
+  // 1. 先尝试从导航数据获取（列表页传递）
+  const navArticle = getNavigationArticle()
+  if (navArticle) {
+    article.value = navArticle
+    // 并行加载文章内容
+    contentLoading.value = true
+    fetchArticleContent(navArticle.url).then(result => {
+      contentData.value = result
+      contentLoading.value = false
+    }).catch(() => {
+      contentData.value = { content: '暂无详细内容，请点击阅读原文查看', image: '' }
+      contentLoading.value = false
+    })
   }
+
+  // 2. 从store获取（缓存）
+  if (!article.value) {
+    const storeArticle = getArticleById(route.params.id)
+    if (storeArticle) {
+      article.value = storeArticle
+      contentLoading.value = true
+      fetchArticleContent(storeArticle.url).then(result => {
+        contentData.value = result
+        contentLoading.value = false
+      }).catch(() => {
+        contentData.value = { content: '暂无详细内容，请点击阅读原文查看', image: '' }
+        contentLoading.value = false
+      })
+    }
+  }
+
+  loading.value = false
 }
 
 onMounted(() => {
-  const newsId = route.params.id
-  article.value = newsStore.getArticleById(newsId) || null
-  
-  if (article.value) {
-    // 同时获取文章正文
-    fetchArticleContent(article.value.url)
-  }
-  
-  loading.value = false
+  loadArticle()
+})
+
+watch(() => route.params.id, () => {
+  loadArticle()
 })
 </script>
 
@@ -267,14 +286,6 @@ body {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
-}
-
-.news-stats {
-  display: flex;
-  gap: 20px;
-  color: var(--slate-500);
-  font-size: 14px;
-  margin-bottom: 20px;
 }
 
 .read-original-btn {

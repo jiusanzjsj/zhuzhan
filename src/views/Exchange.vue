@@ -95,11 +95,12 @@
             <!-- 交易所信息 -->
             <div class="flex-1 min-w-0">
               <div class="font-bold text-slate-800 group-hover:text-orange-600 transition-colors text-lg block truncate">
-                {{ exchange.name }}
+                {{ getExchangeNameZh(exchange.id) || exchange.name }}
               </div>
-              <div class="flex items-center gap-3 mt-1">
-                <span class="text-xs text-slate-400">{{ exchange.country || '-' }}</span>
-                <span v-if="exchange.number_of_markets" class="text-xs text-slate-400">| {{ exchange.number_of_markets }} 市场</span>
+              <div class="mt-1">
+                <span class="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                  {{ getExchangeDescZh(exchange.id) || exchange.country || '-' }}
+                </span>
               </div>
             </div>
             
@@ -136,7 +137,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchExchanges, fetchExchangeDetail, setNavigationExchange } from '../store/exchange'
+import { fetchExchanges, fetchExchangeDetail, setNavigationExchange, getExchangeNameZh, getExchangeDescZh } from '../store/exchange'
 
 const router = useRouter()
 

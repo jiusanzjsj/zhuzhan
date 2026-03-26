@@ -13,8 +13,18 @@ import ExchangeDetail from '../views/ExchangeDetail.vue'
 const routes = [
   { path: '/', name: 'Market', component: Market },
   { path: '/chart/:symbol', name: 'Chart', component: Chart },
-  { path: '/news', name: 'NewsList', component: NewsList },
-  { path: '/news/:id', name: 'NewsDetail', component: NewsDetail },
+  { 
+    path: '/news', 
+    name: 'NewsList', 
+    component: NewsList,
+    meta: { keepAlive: true }
+  },
+  { 
+    path: '/news/:id', 
+    name: 'NewsDetail', 
+    component: NewsDetail,
+    meta: { keepAlive: false }
+  },
   { path: '/kline', name: 'Kline', component: Kline },
   { path: '/tools', name: 'Tools', component: Tools },
   { path: '/topics', name: 'Topics', component: Topics },
