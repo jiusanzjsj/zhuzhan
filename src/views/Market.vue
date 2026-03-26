@@ -364,8 +364,108 @@ const upPercent = ref(50)
 const downPercent = ref(50)
 const statsLoading = ref(true)
 
-const fetchStats = async () => {
+// 缓存键名
+const CACHE_KEY = 'market_stats_cache'
+const CACHE_EXPIRY_KEY = 'market_stats_expiry'
+
+// 获取缓存过期时间 (次日零点)
+const getNextMidnight = () => {
+  const now = new Date()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
+  return tomorrow.getTime()
+}
+
+// 检查缓存是否有效
+const isCacheValid = () => {
+  try {
+    const expiry = localStorage.getItem(CACHE_EXPIRY_KEY)
+    if (!expiry) return false
+    const expiryTime = parseInt(expiry)
+    return Date.now() < expiryTime
+  } catch {
+    return false
+  }
+}
+
+// 从缓存加载数据
+const loadFromCache = () => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY)
+    if (cached) {
+      const data = JSON.parse(cached)
+      totalVolume24h.value = data.volume || 0
+      totalMarketCap.value = data.marketCap || 0
+      fearGreedIndex.value = data.fearIndex || 50
+      upPercent.value = data.upPercent || 50
+      downPercent.value = data.downPercent || 50
+      return true
+    }
+  } catch {}
+  return false
+}
+
+// 保存数据到缓存
+const saveToCache = () => {
+  try {
+    const data = {
+      volume: totalVolume24h.value,
+      marketCap: totalMarketCap.value,
+      fearIndex: fearGreedIndex.value,
+      upPercent: upPercent.value,
+      downPercent: downPercent.value,
+      savedAt: Date.now()
+    }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    localStorage.setItem(CACHE_EXPIRY_KEY, getNextMidnight().toString())
+    console.log('[Market] 统计数据已缓存')
+  } catch (e) {
+    console.error('缓存失败:', e)
+  }
+}
+
+// 定时器ID
+let hourlyTimer = null
+
+// 获取下一个整点时间戳
+const getNextHour = () => {
+  const now = new Date()
+  const nextHour = new Date(now)
+  nextHour.setMinutes(0, 0, 0)
+  nextHour.setHours(nextHour.getHours() + 1)
+  return nextHour.getTime()
+}
+
+// 设置每小时整点定时刷新
+const setupHourlyRefresh = () => {
+  if (hourlyTimer) clearTimeout(hourlyTimer)
+  
+  const now = Date.now()
+  const nextHourTime = getNextHour()
+  const msUntilNextHour = nextHourTime - now
+  
+  const minutes = Math.round(msUntilNextHour / 1000 / 60)
+  console.log(`[Market] 距离下次刷新: ${minutes} 分钟 (${new Date(nextHourTime).toLocaleTimeString()})`)
+  
+  hourlyTimer = setTimeout(() => {
+    console.log('[Market] 整点定时刷新...')
+    fetchStats(true) // 强制刷新
+    setupHourlyRefresh() // 重新设置下次定时器
+  }, msUntilNextHour)
+}
+
+const fetchStats = async (forceRefresh = false) => {
+  // 检查缓存
+  if (!forceRefresh && isCacheValid() && loadFromCache()) {
+    console.log('[Market] 从缓存加载统计数据')
+    updateCharts()
+    statsLoading.value = false
+    return
+  }
+  
   statsLoading.value = true
+  
   try {
     // 从Binance获取24h交易量
     const res = await fetch('https://api.binance.com/api/v3/ticker/24hr')
@@ -401,6 +501,9 @@ const fetchStats = async () => {
   
   // 估算总市值 (前100币种)
   totalMarketCap.value = coinList.value.reduce((sum, c) => sum + (c.market || 0), 0)
+  
+  // 保存到缓存
+  saveToCache()
   
   // 更新图表
   updateCharts()
@@ -466,17 +569,34 @@ const fetchChange = async () => {
 }
 
 onMounted(() => {
-  connectWS()
-  fetchChange()
-  fetchStats().then(() => {
+  // 先从缓存加载显示，再后台刷新
+  if (loadFromCache()) {
+    console.log('[Market] 页面加载: 从缓存渲染')
     nextTick(() => {
       initCharts()
     })
-  })
+    // 后台异步刷新
+    fetchStats()
+  } else {
+    // 无缓存，正常加载
+    fetchStats().then(() => {
+      nextTick(() => {
+        initCharts()
+      })
+    })
+  }
+  
+  // 设置每小时整点定时刷新
+  setupHourlyRefresh()
+  
+  // WebSocket连接
+  connectWS()
+  fetchChange()
 })
 
 onUnmounted(() => { 
   ws?.close()
+  if (hourlyTimer) clearTimeout(hourlyTimer)
   volumeChartInstance?.dispose()
   marketChartInstance?.dispose()
   fearChartInstance?.dispose()

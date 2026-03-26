@@ -1,36 +1,31 @@
 <template>
   <div class="news-detail-container">
-    <!-- 顶部导航 -->
-    <header class="navbar">
-      <div class="navbar-inner">
-        <router-link to="/" class="navbar-brand">
-          <div class="brand-icon">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="14" fill="#F7931A"/>
-              <text x="16" y="21" text-anchor="middle" fill="white" font-size="14" font-weight="bold">B</text>
-            </svg>
-          </div>
-          <span class="brand-name">528BTC</span>
+    <!-- 精美顶部导航 -->
+    <header class="bg-gradient-to-r from-orange-500 to-amber-400 sticky top-0 z-50 shadow-lg shadow-orange-200/50">
+      <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+        <router-link to="/news" class="flex items-center gap-2 text-white hover:text-orange-50 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="font-medium hidden sm:inline">返回资讯</span>
         </router-link>
-        
-        <div class="navbar-end">
-          <router-link to="/news" class="back-link">
-            返回资讯
-          </router-link>
-        </div>
+        <router-link to="/" class="flex items-center gap-2">
+          <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-white/50">
+          <span class="font-bold text-white hidden sm:block drop-shadow-sm">比特视界</span>
+        </router-link>
+        <div class="w-20"></div>
       </div>
     </header>
 
     <!-- 资讯详情 -->
-    <main class="news-content" v-if="article">
+    <main class="news-content px-4 sm:px-6" v-if="article">
       <div class="news-header">
-        <span class="news-category" :class="article.tagClass">{{ article.tag }}</span>
-        <h1 class="news-title">{{ contentData.title || article.title }}</h1>
-        <div class="news-meta">
-          <span class="meta-item">{{ article.time }}</span>
-          <span class="meta-item">{{ article.source }}</span>
-          <span class="meta-item">阅读 {{ article.views }}</span>
-          <span class="meta-item">评论 {{ article.comments }}</span>
+        <span class="news-category text-xs sm:text-sm" :class="article.tagClass">{{ article.tag }}</span>
+        <h1 class="news-title text-xl sm:text-2xl lg:text-3xl">{{ contentData.title || article.title }}</h1>
+        <div class="news-meta flex flex-wrap gap-2 sm:gap-4">
+          <span class="meta-item text-xs sm:text-sm">{{ article.time }}</span>
+          <span class="meta-item text-xs sm:text-sm hidden sm:inline">{{ article.source }}</span>
+          <span class="meta-item text-xs sm:text-sm">阅读 {{ article.views }}</span>
         </div>
       </div>
       
@@ -43,12 +38,12 @@
         <!-- 加载状态 -->
         <div v-if="contentLoading" class="loading-content">
           <div class="spinner-small"></div>
-          <p>正在加载文章内容...</p>
+          <p class="text-sm">正在加载文章内容...</p>
         </div>
         
         <!-- 文章正文 -->
         <div v-else-if="contentData.content" class="article-content">
-          <p class="content-text">{{ contentData.content }}</p>
+          <p class="content-text text-sm sm:text-base">{{ contentData.content }}</p>
         </div>
         
         <!-- 无内容 -->
@@ -56,20 +51,20 @@
           <p>暂无详细内容</p>
         </div>
         
-        <div class="news-tags" v-if="article.tag">
-          <span class="tag-item" :class="article.tagClass">{{ article.tag }}</span>
+        <div class="news-tags mt-4" v-if="article.tag">
+          <span class="tag-item text-xs" :class="article.tagClass">{{ article.tag }}</span>
         </div>
         
-        <a :href="article.url" target="_blank" class="read-original-btn">
+        <a :href="article.url" target="_blank" class="read-original-btn text-sm sm:text-base">
           阅读原文 →
         </a>
       </div>
     </main>
     
     <!-- 无数据 -->
-    <main class="news-content" v-else-if="!loading">
+    <main class="news-content px-4" v-else-if="!loading">
       <div class="news-header">
-        <h1 class="news-title">资讯不存在</h1>
+        <h1 class="news-title text-xl">资讯不存在</h1>
         <p class="news-meta">该资讯可能已被移除或不存在</p>
       </div>
       <router-link to="/news" class="back-home-btn">
@@ -148,6 +143,11 @@ watch(() => route.params.id, () => {
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+.news-detail-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f9fafb, #ffffff);
+}
+
 :root {
   --primary: #F7931A;
   --slate-50: #F8FAFC;
@@ -198,38 +198,38 @@ body {
 .back-link { color: var(--primary); text-decoration: none; font-weight: 500; padding: 8px 16px; background: rgba(247,147,26,0.1); border-radius: var(--radius-md); }
 .back-link:hover { background: rgba(247,147,26,0.2); }
 
-.news-content { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
-.news-header { margin-bottom: 24px; }
+.news-content { max-width: 900px; margin: 0 auto; padding: 16px 0 32px 0; }
+.news-header { margin-bottom: 16px; }
 
 .news-category {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 4px 10px;
   background: var(--primary);
   color: white;
   font-size: 12px;
   font-weight: 600;
   border-radius: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.news-title { font-size: 28px; font-weight: 700; line-height: 1.4; margin-bottom: 16px; color: var(--slate-800); }
+.news-title { font-size: 20px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; color: var(--slate-800); }
 
 .news-meta {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   color: var(--slate-500);
   font-size: 14px;
 }
 
 .news-image {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .news-image img {
   width: 100%;
-  max-height: 400px;
+  max-height: 300px;
   object-fit: cover;
 }
 
@@ -237,8 +237,25 @@ body {
   background: var(--white);
   border: 1px solid var(--slate-200);
   border-radius: var(--radius-md);
-  padding: 32px;
+  padding: 16px;
   box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 640px) {
+  .news-content { padding: 24px 0 40px 0; }
+  .news-header { margin-bottom: 24px; }
+  .news-title { font-size: 24px; margin-bottom: 16px; }
+  .news-meta { gap: 20px; }
+  .news-image { margin-bottom: 24px; }
+  .news-image img { max-height: 400px; }
+  .news-body { padding: 24px; }
+}
+
+@media (min-width: 1024px) {
+  .news-content { padding: 32px 0 48px 0; }
+  .news-title { font-size: 28px; }
+  .news-category { padding: 4px 12px; margin-bottom: 16px; }
+  .news-body { padding: 32px; }
 }
 
 .loading-content {

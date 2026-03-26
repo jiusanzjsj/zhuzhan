@@ -1,137 +1,140 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-slate-50 via-orange-50/20 to-white">
-    <!-- Banner -->
-    <div class="relative h-40 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 overflow-hidden">
-      <div class="absolute inset-0">
-        <div class="absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
-      </div>
-      <div class="relative h-full flex items-center justify-center">
-        <div class="text-center">
-          <div class="flex items-center justify-center gap-3 mb-2">
-            <svg class="w-8 h-8 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <!-- 精美横幅 -->
+    <div class="bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 shadow-lg shadow-orange-200/50">
+      <div class="max-w-7xl mx-auto px-4 py-5">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-300/30 transform rotate-3">
+            <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
             </svg>
-            <h1 class="text-3xl font-bold text-white">交易所详情</h1>
           </div>
-          <p class="text-orange-100 text-sm">全球加密货币交易所详细信息</p>
+          <div class="flex-1">
+            <h1 class="text-xl font-bold text-white drop-shadow-sm">交易所详情</h1>
+            <p class="text-orange-100 text-sm mt-0.5">全球加密货币交易所详细信息</p>
+          </div>
+          <div class="hidden sm:flex items-center gap-2">
+            <span class="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
+              🔍 深度分析
+            </span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading && !exchangeInfo.name" class="max-w-7xl mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div v-for="i in 3" :key="i" class="bg-white rounded-2xl p-6 shadow-lg animate-pulse">
-          <div class="flex items-center gap-4 mb-4">
-            <div class="w-16 h-16 bg-gray-200 rounded-2xl"></div>
+    <div v-if="loading && !exchangeInfo.name" class="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div v-for="i in 3" :key="i" class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-md sm:shadow-lg animate-pulse">
+          <div class="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div class="w-12 sm:w-16 h-12 sm:h-16 bg-gray-200 rounded-xl sm:rounded-2xl"></div>
             <div class="flex-1">
-              <div class="h-6 bg-gray-200 rounded w-32 mb-2"></div>
-              <div class="h-4 bg-gray-200 rounded w-20"></div>
+              <div class="h-5 sm:h-6 bg-gray-200 rounded w-24 sm:w-32 mb-2"></div>
+              <div class="h-3 sm:h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
             </div>
           </div>
           <div class="space-y-2">
-            <div class="h-4 bg-gray-200 rounded"></div>
-            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div class="h-3 sm:h-4 bg-gray-200 rounded"></div>
+            <div class="h-3 sm:h-4 bg-gray-200 rounded w-3/4"></div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 错误状态 -->
-    <div v-else-if="error && !exchangeInfo.name" class="max-w-7xl mx-auto px-4 py-16 text-center">
-      <div class="bg-white rounded-2xl p-12 shadow-lg inline-block">
+    <div v-else-if="error && !exchangeInfo.name" class="max-w-7xl mx-auto px-4 py-12 sm:py-16 text-center">
+      <div class="bg-white rounded-xl sm:rounded-2xl p-8 sm:p-12 shadow-md sm:shadow-lg inline-block">
         <div class="text-red-500 mb-4">
-          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-12 sm:w-16 h-12 sm:h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
           </svg>
         </div>
         <p class="text-gray-600 mb-4">{{ error }}</p>
-        <button @click="$router.back()" class="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition shadow-lg">
+        <button @click="$router.back()" class="px-4 sm:px-6 py-2 sm:py-3 bg-orange-500 text-white rounded-lg sm:rounded-xl hover:bg-orange-600 transition shadow-md sm:shadow-lg">
           返回列表
         </button>
       </div>
     </div>
 
     <!-- 交易所详情 -->
-    <div v-else-if="exchangeInfo.name" class="max-w-7xl mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-else-if="exchangeInfo.name" class="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- 左侧主内容 -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-4 sm:space-y-6">
           <!-- 交易所概览卡片 -->
-          <div class="bg-white rounded-2xl shadow-xl shadow-orange-500/10 border border-gray-100/80 overflow-hidden">
-            <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-5">
-              <div class="flex items-center gap-4">
-                <img :src="exchangeInfo.logo" :alt="exchangeInfo.name" class="w-20 h-20 rounded-2xl bg-white shadow-lg p-1">
-                <div>
-                  <h2 class="text-2xl font-bold text-white mb-1">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</h2>
-                  <div class="flex items-center gap-3">
-                    <span v-if="exchangeInfo.rank && exchangeInfo.rank !== '-'" class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-sm font-medium">
-                      🏆 全球排名 #{{ exchangeInfo.rank }}
+          <div class="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-xl border border-gray-100/80 overflow-hidden">
+            <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-4 sm:px-6 py-4 sm:py-5">
+              <div class="flex items-center gap-3 sm:gap-4">
+                <img :src="exchangeInfo.logo" :alt="exchangeInfo.name" class="w-14 sm:w-20 h-14 sm:h-20 rounded-xl sm:rounded-2xl bg-white shadow-lg p-1">
+                <div class="flex-1 min-w-0">
+                  <h2 class="text-lg sm:text-2xl font-bold text-white mb-1 truncate">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</h2>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span v-if="exchangeInfo.rank && exchangeInfo.rank !== '-'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm font-medium">
+                      🏆 #{{ exchangeInfo.rank }}
                     </span>
-                    <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-sm">
-                      👥 {{ exchangeInfo.followers || 0 }} 关注
+                    <span class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm">
+                      👥 {{ exchangeInfo.followers || 0 }}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               <!-- 核心数据 -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-100/50">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-3 sm:p-4 border border-orange-100/50">
                   <p class="text-xs text-gray-500 mb-1">24h成交额</p>
-                  <p class="text-xl font-bold text-gray-800">{{ exchangeInfo.volume24h }}</p>
+                  <p class="text-base sm:text-xl font-bold text-gray-800 truncate">{{ exchangeInfo.volume24h }}</p>
                 </div>
-                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100/50">
-                  <p class="text-xs text-gray-500 mb-1">交易对数量</p>
-                  <p class="text-xl font-bold text-gray-800">{{ exchangeInfo.tradingPairs }}</p>
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 sm:p-4 border border-green-100/50">
+                  <p class="text-xs text-gray-500 mb-1">交易对</p>
+                  <p class="text-base sm:text-xl font-bold text-gray-800">{{ exchangeInfo.tradingPairs }}</p>
                 </div>
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100/50">
-                  <p class="text-xs text-gray-500 mb-1">注册地区</p>
-                  <p class="text-xl font-bold text-gray-800">{{ exchangeInfo.region }}</p>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-blue-100/50">
+                  <p class="text-xs text-gray-500 mb-1">地区</p>
+                  <p class="text-base sm:text-xl font-bold text-gray-800 truncate">{{ exchangeInfo.region }}</p>
                 </div>
-                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100/50">
-                  <p class="text-xs text-gray-500 mb-1">KYC认证</p>
-                  <p class="text-xl font-bold text-gray-800">{{ exchangeInfo.kyc ? '✅ 支持' : '❌ 不支持' }}</p>
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 sm:p-4 border border-purple-100/50">
+                  <p class="text-xs text-gray-500 mb-1">KYC</p>
+                  <p class="text-base sm:text-xl font-bold text-gray-800">{{ exchangeInfo.kyc ? '✅' : '❌' }}</p>
                 </div>
               </div>
               
               <!-- 简介 -->
-              <div class="mb-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span class="w-1.5 h-6 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></span>
+              <div class="mb-4 sm:mb-6">
+                <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-2 sm:mb-3 flex items-center gap-2">
+                  <span class="w-1 h-5 sm:h-6 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></span>
                   交易所简介
                 </h3>
-                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[80px]">
+                <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100 min-h-[60px] sm:min-h-[80px]">
                   <!-- 预设中文描述优先显示 -->
-                  <p v-if="getExchangeDescZh(exchangeInfo.id)" class="text-gray-600 leading-relaxed">
+                  <p v-if="getExchangeDescZh(exchangeInfo.id)" class="text-gray-600 text-sm sm:text-base leading-relaxed">
                     {{ getExchangeDescZh(exchangeInfo.id) }}
                   </p>
                   <!-- 翻译加载中 -->
-                  <div v-else-if="translating" class="flex items-center gap-3">
-                    <div class="animate-spin w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full"></div>
-                    <span class="text-gray-400 text-sm">正在翻译...</span>
+                  <div v-else-if="translating" class="flex items-center gap-2 sm:gap-3">
+                    <div class="animate-spin w-4 h-4 sm:w-5 sm:h-5 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                    <span class="text-gray-400 text-xs sm:text-sm">正在翻译...</span>
                   </div>
                   <!-- 翻译结果 -->
-                  <p v-else-if="translatedDescription" class="text-gray-600 leading-relaxed">
+                  <p v-else-if="translatedDescription" class="text-gray-600 text-sm sm:text-base leading-relaxed">
                     {{ translatedDescription }}
                   </p>
                   <!-- 原文 -->
-                  <p v-else-if="exchangeInfo.description" class="text-gray-600 leading-relaxed">
+                  <p v-else-if="exchangeInfo.description" class="text-gray-600 text-sm sm:text-base leading-relaxed">
                     {{ exchangeInfo.description }}
                   </p>
                   <!-- 无描述 -->
-                  <p v-else class="text-gray-400 italic">
-                    该交易所暂无详细描述，暂无详细描述可访问官网了解更多。
+                  <p v-else class="text-gray-400 italic text-sm">
+                    该交易所暂无详细描述，可访问官网了解更多。
                   </p>
                 </div>
               </div>
               
               <!-- 链接 -->
-              <div class="flex flex-wrap gap-3">
-                <a :href="exchangeInfo.officialUrl" target="_blank" class="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition flex items-center gap-2 font-medium">
+              <div class="flex flex-wrap gap-2 sm:gap-3">
+                <a :href="exchangeInfo.officialUrl" target="_blank" class="px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition flex items-center gap-2 text-sm font-medium">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                   </svg>
@@ -150,48 +153,76 @@
           </div>
 
           <!-- 交易对列表 -->
-          <div class="bg-white rounded-2xl shadow-xl shadow-orange-500/10 border border-gray-100/80 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <span class="w-1.5 h-6 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></span>
-                {{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }} 交易对
+          <div class="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-xl border border-gray-100/80 overflow-hidden">
+            <div class="px-4 sm:px-6 py-3 sm:py-5 border-b border-gray-100 flex items-center justify-between gap-2">
+              <h3 class="text-sm sm:text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span class="w-1 h-5 sm:h-6 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></span>
+                <span class="hidden xs:inline">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</span>
+                <span class="xs:hidden">交易对</span>
               </h3>
-              <select v-model="filters.type" class="px-4 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <select v-model="filters.type" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-100 border-0 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
                 <option value="usd">美元</option>
                 <option value="cny">人民币</option>
               </select>
             </div>
             
             <!-- 加载状态 -->
-            <div v-if="pairsLoading" class="flex justify-center py-12">
-              <div class="animate-spin w-10 h-10 border-3 border-orange-500 border-t-transparent rounded-full"></div>
+            <div v-if="pairsLoading" class="flex justify-center py-8 sm:py-12">
+              <div class="animate-spin w-8 h-8 sm:w-10 sm:h-10 border-2 sm:border-3 border-orange-500 border-t-transparent rounded-full"></div>
             </div>
             
-            <!-- 表格 -->
-            <div v-else class="overflow-x-auto">
-              <table class="w-full">
+            <!-- 表格 - 移动端卡片布局 -->
+            <div v-else class="sm:overflow-x-auto">
+              <!-- 移动端卡片布局 -->
+              <div class="sm:hidden divide-y divide-gray-100">
+                <div v-if="tradingPairs.length === 0" class="px-4 py-8 text-center text-gray-400 text-sm">
+                  暂无交易对数据
+                </div>
+                <div 
+                  v-for="(pair, index) in tradingPairs.slice(0, 10)" 
+                  :key="pair.symbol"
+                  class="px-4 py-3 hover:bg-orange-50/30 transition"
+                >
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="w-6 h-6 flex items-center justify-center rounded font-bold text-xs" :class="index < 3 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'">
+                        {{ index + 1 }}
+                      </span>
+                      <img v-if="pair.coinIcon" :src="pair.coinIcon" class="w-6 h-6 rounded-full" @error="(e) => e.target.style.display = 'none'">
+                      <span class="font-bold text-slate-800">{{ pair.symbol }}</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-xs font-medium" :class="Number(pair.percent) >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
+                      {{ Number(pair.percent) >= 0 ? '↑' : '↓' }} {{ Math.abs(Number(pair.percent)) }}%
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-xs text-gray-500 pl-8">
+                    <span>{{ pair.price }}</span>
+                    <span>成交量: {{ pair.volume24h }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 桌面端表格 -->
+              <table v-if="tradingPairs.length > 0" class="hidden sm:table w-full">
                 <thead class="bg-gray-50 border-b border-gray-100">
                   <tr>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">交易对</th>
-                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">最新价</th>
-                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">24H成交量</th>
-                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">24H成交额</th>
-                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">24H涨跌</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">交易对</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">最新价</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">24H成交量</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">24H成交额</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">涨跌</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                  <tr v-if="tradingPairs.length === 0">
-                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">暂无交易对数据</td>
-                  </tr>
                   <tr v-for="(pair, index) in tradingPairs" :key="pair.symbol" class="hover:bg-orange-50/30 transition">
-                    <td class="px-6 py-4">
-                      <span class="w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm" :class="index < 3 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4">
+                      <span class="w-6 sm:w-8 h-6 sm:h-8 flex items-center justify-center rounded-lg font-bold text-xs sm:text-sm" :class="index < 3 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'">
                         {{ index + 1 }}
                       </span>
                     </td>
-                    <td class="px-6 py-4">
-                      <div class="flex items-center gap-3">
+                    <td class="px-4 sm:px-6 py-3 sm:py-4">
+                      <div class="flex items-center gap-2 sm:gap-3">
                         <img v-if="pair.coinIcon" :src="pair.coinIcon" :alt="pair.symbol" class="w-8 h-8 rounded-full" @error="(e) => e.target.style.display = 'none'">
                         <div>
                           <p class="font-bold text-gray-800">{{ pair.symbol }}</p>
