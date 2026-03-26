@@ -15,31 +15,50 @@
         
         <div class="navbar-end">
           <router-link to="/" class="back-link">
-            ← 返回行情
+            ← 返回资讯
           </router-link>
         </div>
       </div>
     </header>
 
     <!-- 资讯详情 -->
-    <main class="news-content" v-if="news">
+    <main class="news-content" v-if="article">
       <div class="news-header">
-        <span class="news-category">{{ news.tag }}</span>
-        <h1 class="news-title">{{ news.title }}</h1>
+        <span class="news-category" :class="article.tagClass">{{ article.tag }}</span>
+        <h1 class="news-title">{{ article.title }}</h1>
         <div class="news-meta">
-          <span class="meta-item">🕐 {{ news.time }}</span>
-          <a :href="news.url" target="_blank" class="meta-link">阅读原文 →</a>
+          <span class="meta-item">🕐 {{ article.time }}</span>
+          <span class="meta-item">📰 {{ article.source }}</span>
         </div>
       </div>
       
+      <!-- 封面图 -->
+      <div class="news-image" v-if="article.image">
+        <img :src="article.image" :alt="article.title">
+      </div>
+      
       <div class="news-body">
-        <p class="news-intro">📰 来自 {{ news.tag }} 的热门资讯</p>
-        <p class="news-tip">点击上方"阅读原文"查看完整内容</p>
+        <p class="news-description">{{ article.description }}</p>
+        <p class="news-tip">📖 阅读全文请点击下方链接</p>
+        <a :href="article.url" target="_blank" class="read-original-btn">
+          阅读原文 →
+        </a>
       </div>
     </main>
     
+    <!-- 无数据 -->
+    <main class="news-content" v-else>
+      <div class="news-header">
+        <h1 class="news-title">资讯不存在</h1>
+        <p class="news-meta">该资讯可能已被移除或不存在</p>
+      </div>
+      <router-link to="/" class="back-home-btn">
+        返回资讯列表
+      </router-link>
+    </main>
+    
     <!-- 加载状态 -->
-    <div class="loading" v-else>
+    <div class="loading" v-if="loading">
       <div class="spinner"></div>
       <p>加载中...</p>
     </div>
@@ -49,28 +68,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useNewsStore } from '@/stores/newsStore'
 
 const route = useRoute()
-const news = ref(null)
-
-const newsData = {
-  1: { id: 1, tag: 'BTC', title: '比特币突破历史新高，牛市能否持续？', time: '2小时前', url: 'https://www.theblockbeats.info/news/61520' },
-  2: { id: 2, tag: 'DeFi', title: 'DeFi锁仓量突破500亿美元', time: '4小时前', url: 'https://www.theblockbeats.info/news/61519' },
-  3: { id: 3, tag: 'ETH', title: '以太坊Gas费用骤降，用户体验大幅提升', time: '6小时前', url: 'https://www.theblockbeats.info/news/61518' },
-  4: { id: 4, tag: 'ETF', title: 'SEC批准现货ETF，市场流动性显著增强', time: '8小时前', url: 'https://www.theblockbeats.info/news/61517' },
-  5: { id: 5, tag: '分析', title: '山寨季来临：哪些赛道值得关注？', time: '10小时前', url: 'https://www.theblockbeats.info/news/61516' },
-  6: { id: 6, tag: 'SOL', title: 'Solana网络活动创新高', time: '12小时前', url: 'https://www.theblockbeats.info/news/61515' },
-}
+const newsStore = useNewsStore()
+const article = ref(null)
+const loading = ref(true)
 
 onMounted(() => {
   const newsId = route.params.id
-  news.value = newsData[newsId] || {
-    id: newsId,
-    tag: 'Crypto',
-    title: '资讯详情',
-    time: '',
-    url: 'https://www.theblockbeats.info'
-  }
+  article.value = newsStore.getArticleById(newsId) || null
+  loading.value = false
 })
 </script>
 
@@ -128,7 +136,7 @@ body {
 .back-link:hover { background: rgba(247,147,26,0.2); }
 
 .news-content { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
-.news-header { margin-bottom: 32px; }
+.news-header { margin-bottom: 24px; }
 
 .news-category {
   display: inline-block;
@@ -150,8 +158,17 @@ body {
   font-size: 14px;
 }
 
-.meta-link { color: var(--primary); text-decoration: none; }
-.meta-link:hover { text-decoration: underline; }
+.news-image {
+  margin-bottom: 24px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.news-image img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+}
 
 .news-body {
   background: var(--white);
@@ -161,8 +178,31 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.news-intro { color: var(--slate-700); margin-bottom: 16px; }
-.news-tip { color: var(--slate-400); font-size: 14px; }
+.news-description { color: var(--slate-700); margin-bottom: 20px; line-height: 1.8; }
+.news-tip { color: var(--slate-400); font-size: 14px; margin-bottom: 20px; }
+
+.read-original-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+.read-original-btn:hover { background: #E8850C; }
+
+.back-home-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: var(--slate-200);
+  color: var(--slate-700);
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+}
 
 .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; color: var(--slate-500); }
 .spinner { width: 40px; height: 40px; border: 3px solid var(--slate-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }

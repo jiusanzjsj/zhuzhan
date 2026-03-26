@@ -203,7 +203,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useNewsStore } from '@/stores/newsStore'
 
+const newsStore = useNewsStore()
 const newsList = ref([])
 const hotNews = ref([])
 const loading = ref(true)
@@ -221,7 +223,7 @@ const fetchNews = async () => {
   try {
     // 获取加密货币新闻
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=crypto+OR+bitcoin+OR+ethereum&language=en&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`
+      `https://newsapi.org/v2/everything?q=crypto+OR+bitcoin+OR+ethereum&language=en&sortBy=publishedAt&pageSize=10&page=1&apiKey=${NEWS_API_KEY}`
     )
     const data = await response.json()
     
@@ -235,13 +237,19 @@ const fetchNews = async () => {
         views: Math.floor(Math.random() * 900 + 100),
         comments: Math.floor(Math.random() * 50 + 10),
         url: item.url,
-        image: item.urlToImage
+        image: item.urlToImage,
+        description: item.description || '',
+        source: item.source?.name || 'Unknown',
+        publishedAt: item.publishedAt || ''
       }))
       
       hotNews.value = data.articles.slice(0, 5).map((item, index) => ({
         id: index + 1,
         title: item.title || '无标题'
       }))
+      
+      // 保存到共享存储
+      newsStore.setArticles(newsList.value)
     }
   } catch (error) {
     console.error('获取新闻失败:', error)
