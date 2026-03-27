@@ -77,7 +77,7 @@
       <!-- 数据列表 -->
       <div v-else class="bg-white rounded-b-xl divide-y divide-slate-100">
         <div 
-          v-for="(exchange, index) in sortedExchanges.slice(0, 10)" 
+          v-for="(exchange, index) in sortedExchanges.slice(0, 15)" 
           :key="exchange.id"
           class="px-4 py-3 sm:py-4 hover:bg-orange-50/50 transition cursor-pointer group"
           @click="navigateToDetail(exchange)"
@@ -109,8 +109,8 @@
             </div>
             <div class="flex items-center justify-between pl-11">
               <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded">CEX</span>
-                <span class="text-sm">{{ getCountryFlag(exchange.country) }}</span>
+                <span class="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded">{{ exchange._typeDisplay }}</span>
+                <span class="text-sm">{{ exchange._countryDisplay }}</span>
               </div>
               <div class="text-right">
                 <div class="font-mono font-semibold text-slate-800 text-sm">
@@ -158,7 +158,7 @@
             <!-- 类型 -->
             <div class="w-24 lg:w-28 flex justify-center">
               <span class="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded">
-                CEX
+                {{ exchange._typeDisplay }}
               </span>
             </div>
             
@@ -175,7 +175,7 @@
             <!-- 国家 -->
             <div class="hidden lg:block w-20 text-center">
               <span class="text-sm text-slate-500">
-                {{ exchange.country ? getCountryFlag(exchange.country) : '-' }}
+                {{ exchange._countryDisplay }}
               </span>
             </div>
             
@@ -209,7 +209,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchExchanges, fetchExchangeDetail, setNavigationExchange, getExchangeNameZh, getExchangeDescZh } from '../store/exchange'
+import { fetchExchanges, fetchExchangeDetail, setNavigationExchange, getExchangeNameZh, getExchangeDescZh, getExchangeCountryZh, getCountryZh, getExchangeTypeZh } from '../store/exchange'
 
 const router = useRouter()
 
@@ -232,11 +232,42 @@ const getCountryFlag = (country) => {
   return countryFlags[country] || '🌍'
 }
 
+// 国家代码转地区
+const countryToRegion = {
+  // 亚太
+  'CN': '🌏 亚太', 'HK': '🌏 亚太', 'JP': '🌏 亚太', 'KR': '🌏 亚太',
+  'SG': '🌏 亚太', 'VN': '🌏 亚太', 'TH': '🌏 亚太', 'MY': '🌏 亚太',
+  'IN': '🌏 亚太', 'ID': '🌏 亚太', 'PH': '🌏 亚太', 'TW': '🌏 亚太',
+  'AU': '🌏 亚太', 'NZ': '🌏 亚太',
+  // 北美
+  'US': '🌎 北美', 'CA': '🌎 北美', 'MX': '🌎 北美',
+  // 欧洲
+  'UK': '🌍 欧洲', 'DE': '🌍 欧洲', 'SE': '🌍 欧洲', 'CH': '🌍 欧洲',
+  'RU': '🌍 欧洲', 'EU': '🌍 欧洲', 'NL': '🌍 欧洲', 'FR': '🌍 欧洲',
+  'ES': '🌍 欧洲', 'IT': '🌍 欧洲', 'PL': '🌍 欧洲', 'CY': '🌍 欧洲',
+  // 中东
+  'AE': '🏜️ 中东', 'IL': '🏜️ 中东', 'TR': '🏜️ 中东', 'SA': '🏜️ 中东',
+  // 南美
+  'BR': '🌎 南美', 'AR': '🌎 南美', 'CL': '🌎 南美', 'VE': '🌎 南美',
+  // 非洲
+  'KE': '🌍 非洲', 'NG': '🌍 非洲', 'ZA': '🌍 非洲',
+}
+
+const getRegion = (country) => {
+  return countryToRegion[country] || (country ? '🌍 其他' : '-')
+}
+
 const loadExchanges = async (forceRefresh = false) => {
   try {
     loading.value = true
     error.value = null
-    exchanges.value = await fetchExchanges(forceRefresh)
+    const list = await fetchExchanges(forceRefresh)
+    // 预处理国家显示字段，避免模板方法调用时机问题
+    exchanges.value = list.map(e => ({
+      ...e,
+      _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',
+      _typeDisplay: getExchangeTypeZh(e.id) || 'CEX'
+    }))
   } catch (err) {
     error.value = err.message
   } finally {
@@ -253,10 +284,18 @@ const prefetchDetail = (exchangeId) => {
 }
 
 const navigateToDetail = (exchange) => {
-  setNavigationExchange(exchange)
+  // 把关键字段编码进query，防止组件实例问题导致数据丢失
+  const preview = btoa(encodeURIComponent(JSON.stringify({
+    name: exchange.name || '',
+    image: exchange.image || '',
+    trust_score_rank: exchange.trust_score_rank || '-',
+    number_of_markets: exchange.number_of_markets || '-',
+    trade_volume_24h_btc: exchange.trade_volume_24h_btc || 0
+  })))
   router.push({
     name: 'ExchangeDetail',
-    params: { id: exchange.id }
+    params: { id: exchange.id },
+    query: { p: preview }
   })
 }
 

@@ -4,6 +4,12 @@
     <div class="bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 shadow-lg shadow-orange-200/50">
       <div class="max-w-7xl mx-auto px-4 py-5">
         <div class="flex items-center gap-4">
+          <!-- 返回按钮 -->
+          <router-link to="/exchange" class="text-orange-400 hover:text-orange-300 transition p-1 -ml-1">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </router-link>
           <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-300/30 transform rotate-3">
             <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
@@ -93,7 +99,7 @@
                 </div>
                 <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-blue-100/50">
                   <p class="text-xs text-gray-500 mb-1">地区</p>
-                  <p class="text-base sm:text-xl font-bold text-gray-800 truncate">{{ exchangeInfo.region }}</p>
+                  <p class="text-base sm:text-xl font-bold text-gray-800 truncate">{{ exchangeInfo._countryDisplay }}</p>
                 </div>
                 <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 sm:p-4 border border-purple-100/50">
                   <p class="text-xs text-gray-500 mb-1">KYC</p>
@@ -108,22 +114,9 @@
                   交易所简介
                 </h3>
                 <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100 min-h-[60px] sm:min-h-[80px]">
-                  <!-- 预设中文描述优先显示 -->
-                  <p v-if="getExchangeDescZh(exchangeInfo.id)" class="text-gray-600 text-sm sm:text-base leading-relaxed">
-                    {{ getExchangeDescZh(exchangeInfo.id) }}
-                  </p>
-                  <!-- 翻译加载中 -->
-                  <div v-else-if="translating" class="flex items-center gap-2 sm:gap-3">
-                    <div class="animate-spin w-4 h-4 sm:w-5 sm:h-5 border-2 border-orange-500 border-t-transparent rounded-full"></div>
-                    <span class="text-gray-400 text-xs sm:text-sm">正在翻译...</span>
-                  </div>
-                  <!-- 翻译结果 -->
-                  <p v-else-if="translatedDescription" class="text-gray-600 text-sm sm:text-base leading-relaxed">
-                    {{ translatedDescription }}
-                  </p>
-                  <!-- 原文 -->
-                  <p v-else-if="exchangeInfo.description" class="text-gray-600 text-sm sm:text-base leading-relaxed">
-                    {{ exchangeInfo.description }}
+                  <!-- 预设中文描述 -->
+                  <p v-if="exchangeDescription" class="text-gray-600 text-sm sm:text-base leading-relaxed">
+                    {{ exchangeDescription }}
                   </p>
                   <!-- 无描述 -->
                   <p v-else class="text-gray-400 italic text-sm">
@@ -262,7 +255,7 @@
               </div>
               <div class="flex justify-between items-center py-2 border-b border-gray-100">
                 <span class="text-gray-500 text-sm">注册地区</span>
-                <span class="font-medium text-gray-800">{{ exchangeInfo.region }}</span>
+                <span class="font-medium text-gray-800">{{ exchangeInfo._countryDisplay }}</span>
               </div>
               <div class="flex justify-between items-center py-2">
                 <span class="text-gray-500 text-sm">交易对数量</span>
@@ -314,17 +307,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchExchangeDetail, fetchTradingPairs, fetchExchangeDescription, translateToZh, getNavigationExchange, getPresetDescription, getExchangeNameZh, getExchangeDescZh } from '../store/exchange'
+import { fetchExchangeDetail, fetchTradingPairs, getNavigationExchange, getPresetDescription, getExchangeNameZh, fetchExchanges, getExchangeCountryZh } from '../store/exchange'
 
 const route = useRoute()
 
 const loading = ref(true)
 const error = ref(null)
 const pairsLoading = ref(true)
-const translating = ref(false)
-const translatedDescription = ref('')
+const exchangeDescription = ref('')
+let refreshTimer = null
 
 const exchangeInfo = reactive({
   name: '',
@@ -352,29 +345,41 @@ const loadExchangeData = async (exchangeId) => {
   loading.value = true
   error.value = null
   pairsLoading.value = true
-  translatedDescription.value = ''
+  exchangeDescription.value = ''
 
-  // 从导航状态快速显示
-  const navExchange = getNavigationExchange()
-  if (navExchange) {
-    exchangeInfo.name = navExchange.name || '加载中...'
-    exchangeInfo.logo = navExchange.image || ''
-    exchangeInfo.rank = navExchange.trust_score_rank || '-'
-    exchangeInfo.tradingPairs = navExchange.number_of_markets || '-'
-    exchangeInfo.volume24h = '$' + formatVolume(navExchange.trade_volume_24h_btc)
+  // 优先从 query params 恢复预览数据（最可靠）
+  let previewData = null
+  if (route.query.p) {
+    try {
+      previewData = JSON.parse(decodeURIComponent(atob(route.query.p)))
+    } catch {
+      previewData = null
+    }
+  }
+  // fallback：尝试从 store 导航状态读取
+  if (!previewData) {
+    previewData = getNavigationExchange()
+  }
+  if (previewData) {
+    exchangeInfo.name = previewData.name || '加载中...'
+    exchangeInfo.logo = previewData.image || previewData.logo || ''
+    exchangeInfo.rank = previewData.trust_score_rank || '-'
+    exchangeInfo.tradingPairs = previewData.number_of_markets || '-'
+    exchangeInfo.volume24h = '$' + formatVolume(previewData.trade_volume_24h_btc)
   }
 
   try {
-    // 并行加载：详情、交易对、描述
+    // 并行加载：详情、交易对
     const results = await Promise.allSettled([
       fetchExchangeDetail(exchangeId),
-      fetchTradingPairs(exchangeId),
-      fetchExchangeDescription(exchangeId)
+      fetchTradingPairs(exchangeId)
     ])
 
     // 处理详情
     if (results[0].status === 'fulfilled') {
       Object.assign(exchangeInfo, results[0].value)
+      // 预处理国家显示字段
+      exchangeInfo._countryDisplay = getExchangeCountryZh(exchangeId) || exchangeInfo.region || '-'
     } else {
       console.warn('详情加载失败:', results[0].reason)
       if (!exchangeInfo.name) {
@@ -389,45 +394,12 @@ const loadExchangeData = async (exchangeId) => {
       console.warn('交易对加载失败:', results[1].reason)
     }
 
-    // 处理描述翻译
-    const descriptionResult = results[2]
-    console.log('[ExchangeDetail] 描述结果:', descriptionResult)
-    if (descriptionResult.status === 'fulfilled' && descriptionResult.value) {
-      console.log('[ExchangeDetail] 原文:', descriptionResult.value.substring(0, 100))
-      // 有描述，进行翻译
-      translating.value = true
-      translateToZh(descriptionResult.value)
-        .then(translated => {
-          console.log('[ExchangeDetail] 翻译结果:', translated ? translated.substring(0, 50) : '无')
-          // 检查翻译是否有效（不是原文且长度合理）
-          if (translated && translated !== descriptionResult.value && translated.length > 5) {
-            translatedDescription.value = translated
-          } else {
-            // 翻译失败或无效，尝试用预设描述
-            const presetDesc = getPresetDescription(route.params.id)
-            if (presetDesc) {
-              translatedDescription.value = presetDesc
-              console.log('[ExchangeDetail] 使用预设描述')
-            }
-          }
-        })
-        .catch(err => {
-          console.error('[ExchangeDetail] 翻译失败:', err)
-          // 失败时用预设描述
-          const presetDesc = getPresetDescription(route.params.id)
-          if (presetDesc) {
-            translatedDescription.value = presetDesc
-          }
-        })
-        .finally(() => {
-          translating.value = false
-        })
-    } else {
-      console.log('[ExchangeDetail] 描述为空，尝试预设')
-      const presetDesc = getPresetDescription(route.params.id)
-      if (presetDesc) {
-        translatedDescription.value = presetDesc
-      }
+    // 直接从本地描述文件读取（按交易所小写英文ID匹配）
+    console.log('[ExchangeDetail] 正在加载描述，exchangeId:', exchangeId)
+    const presetDesc = getPresetDescription(exchangeId)
+    console.log('[ExchangeDetail] 描述匹配结果:', presetDesc ? '有内容' : '为空')
+    if (presetDesc) {
+      exchangeDescription.value = presetDesc
     }
 
   } catch (err) {
@@ -439,13 +411,45 @@ const loadExchangeData = async (exchangeId) => {
   }
 }
 
+/**
+ * 每天凌晨从API预获取排行榜数据，缓存到store以加快后续访问速度
+ */
+const scheduleMidnightRefresh = () => {
+  const now = new Date()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 1, 0, 0) // 次日00:01触发
+  const msUntilMidnight = tomorrow.getTime() - now.getTime()
+
+  // 立即预取一次（如果今天还没取过）
+  fetchExchanges(false).catch(() => {})
+
+  refreshTimer = setTimeout(() => {
+    // 每天凌晨刷新一次
+    fetchExchanges(true).catch(() => {})
+    // 之后每天固定时间重复
+    refreshTimer = setInterval(() => {
+      fetchExchanges(true).catch(() => {})
+    }, 24 * 60 * 60 * 1000)
+  }, msUntilMidnight)
+}
+
 onMounted(() => {
+  scheduleMidnightRefresh()
   const exchangeId = route.params.id
   if (exchangeId) {
     loadExchangeData(exchangeId)
   } else {
     error.value = '缺少交易所ID'
     loading.value = false
+  }
+})
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
+    clearInterval(refreshTimer)
+    refreshTimer = null
   }
 })
 
