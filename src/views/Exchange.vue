@@ -13,11 +13,7 @@
             <h1 class="text-xl font-bold text-white drop-shadow-sm">全球加密货币交易所</h1>
             <p class="text-orange-100 text-sm mt-0.5">追踪全球加密货币交易所,获取实时排名数据</p>
           </div>
-          <div class="hidden sm:flex items-center gap-2">
-            <span class="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
-              📊 实时数据
-            </span>
-          </div>
+          
         </div>
       </div>
     </div>

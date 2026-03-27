@@ -1,22 +1,16 @@
 <template>
-  <div class="news-page">
-    <!-- 顶部导航 -->
-    <header class="top-nav">
-      <div class="nav-inner">
-        <div class="nav-left">
-          <span class="nav-icon">📰</span>
-          <span class="nav-title">快讯</span>
+  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <!-- 精美横幅 -->
+    <header class="page-banner">
+      <div class="banner-inner">
+        <div class="banner-icon-wrap">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h10"/>
+          </svg>
         </div>
-        <div class="nav-right">
-          <span class="update-badge">
-            <span class="update-dot"></span>
-            自动更新
-          </span>
-          <button @click="handleRefresh" class="refresh-btn" :disabled="loading">
-            <svg class="refresh-icon" :class="{ 'spinning': loading }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-          </button>
+        <div class="banner-text">
+          <h1 class="banner-title">加密货币快讯</h1>
+          <p class="banner-sub">追踪最新加密货币行业动态</p>
         </div>
       </div>
     </header>
@@ -72,12 +66,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 空状态 -->
-        <div v-if="!loading && newsList.length === 0" class="empty-state">
-          <span class="empty-icon">📭</span>
-          <p>暂无快讯</p>
         </div>
       </div>
 
@@ -182,120 +170,62 @@ onMounted(() => {
 <style scoped>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-.news-page {
-  min-height: 100vh;
-  background: #fafbfc;
+/* ===== 页面横幅 ===== */
+.page-banner {
+  background: linear-gradient(to right, #FFF8F0 0%, #FB9E51 35%, #FB9E51 50%, #FB9E51 65%, #FFF8F0 100%) !important;
+  box-shadow: 0 4px 16px rgba(251, 158, 81, 0.12) !important;
 }
 
-/* ===== 顶部导航 ===== */
-.top-nav {
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
-
-.nav-inner {
-  max-width: 1200px;
+.banner-inner {
+  max-width: 1152px;
   margin: 0 auto;
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.nav-icon {
-  font-size: 22px;
-}
-
-.nav-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.nav-right {
+  padding: 20px 16px;
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.update-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #52c41a;
-  background: #f6ffed;
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid #b7eb8f;
-}
-
-.update-dot {
-  width: 6px;
-  height: 6px;
-  background: #52c41a;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.refresh-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #eee;
-  background: #fff;
-  border-radius: 10px;
-  cursor: pointer;
+.banner-icon-wrap {
+  width: 56px;
+  height: 56px;
+  background: #ffffff;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(251, 158, 81, 0.15);
+  transform: rotate(3deg);
+  flex-shrink: 0;
 }
 
-.refresh-btn:hover:not(:disabled) {
-  border-color: #f97316;
-  background: #fff7ed;
+.banner-icon-wrap svg {
+  width: 28px;
+  height: 28px;
+  color: #FB9E51;
 }
 
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.banner-text {
+  flex: 1;
 }
 
-.refresh-icon {
-  width: 18px;
-  height: 18px;
-  color: #666;
+.banner-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.refresh-icon.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.banner-sub {
+  font-size: 13px;
+  color: #FFF8F0;
+  margin-top: 2px;
 }
 
 /* ===== 主布局 ===== */
 .main-layout {
-  max-width: 1200px;
+  max-width: 1152px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 16px;
   display: flex;
   gap: 24px;
 }
@@ -310,14 +240,14 @@ onMounted(() => {
 .section-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
 .header-line {
   width: 4px;
   height: 24px;
-  background: linear-gradient(180deg, #f97316, #fb923c);
+  background: linear-gradient(180deg, #FB9E51, #FB9E51, #FB9E51);
   border-radius: 2px;
 }
 
@@ -330,7 +260,7 @@ onMounted(() => {
 .header-count {
   font-size: 12px;
   color: #999;
-  background: #f5f5f5;
+  background: #FFF8F0;
   padding: 3px 10px;
   border-radius: 10px;
 }
@@ -339,13 +269,18 @@ onMounted(() => {
 .news-list {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .news-item {
   display: flex;
   gap: 20px;
-  padding: 20px 0;
+  padding: 16px 0;
   cursor: pointer;
+}
+
+.news-item + .news-item {
+  border-top: 1px solid #FFF8F0;
 }
 
 .item-left {
@@ -353,13 +288,14 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  padding-top: 4px;
 }
 
 .item-time-box {
   width: 70px;
   height: 32px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: #FFF8F0;
+  border: 1px solid #FFF8F0;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -369,13 +305,13 @@ onMounted(() => {
 .item-time {
   font-size: 12px;
   font-weight: 600;
-  color: #f97316;
+  color: #FB9E51;
 }
 
 .item-line {
   width: 1px;
   flex: 1;
-  background: linear-gradient(180deg, #fed7aa, #fee2e2);
+  background: linear-gradient(180deg, #FB9E51, transparent);
   min-height: 20px;
 }
 
@@ -389,17 +325,17 @@ onMounted(() => {
 }
 
 .item-card {
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #FFF8F0;
+  border-radius: 16px;
   padding: 18px;
   transition: all 0.25s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .news-item:hover .item-card {
-  border-color: #f97316;
-  box-shadow: 0 4px 12px rgba(249,115,22,0.1);
+  border-color: #FB9E51;
+  box-shadow: 0 4px 16px rgba(249,115,22,0.08);
   transform: translateX(4px);
 }
 
@@ -413,8 +349,8 @@ onMounted(() => {
 .card-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #ffffff;
+  background: linear-gradient(to right, #FB9E51, #FB9E51, #FB9E51);
   padding: 3px 10px;
   border-radius: 4px;
 }
@@ -433,7 +369,7 @@ onMounted(() => {
 }
 
 .news-item:hover .card-title {
-  color: #f97316;
+  color: #FB9E51;
 }
 
 .card-desc {
@@ -458,7 +394,7 @@ onMounted(() => {
   gap: 4px;
   font-size: 12px;
   font-weight: 500;
-  color: #f97316;
+  color: #FB9E51;
   opacity: 0;
   transform: translateX(-5px);
   transition: all 0.2s;
@@ -476,7 +412,7 @@ onMounted(() => {
 
 /* ===== 右侧边栏 ===== */
 .sidebar {
-  width: 320px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -484,19 +420,19 @@ onMounted(() => {
 }
 
 .sidebar-card, .category-card {
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #FFF8F0;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px;
-  border-bottom: 1px solid #f5f5f5;
-  background: linear-gradient(135deg, #f97316, #fb923c);
+  padding: 14px 16px;
+  background: linear-gradient(to right, #FB9E51, #FB9E51, #FB9E51);
 }
 
 .sidebar-icon {
@@ -506,12 +442,12 @@ onMounted(() => {
 .sidebar-title {
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: #ffffff;
 }
 
 /* ===== 热门榜单 ===== */
 .hot-list {
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .hot-item {
@@ -521,29 +457,34 @@ onMounted(() => {
   padding: 12px 16px;
   cursor: pointer;
   transition: background 0.2s;
+  border-radius: 0;
 }
 
 .hot-item:hover {
-  background: #fff7ed;
+  background: #FFF8F0;
+}
+
+.hot-item + .hot-item {
+  border-top: 1px solid #FFF8F0;
 }
 
 .hot-rank {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
   color: #999;
-  background: #f5f5f5;
-  border-radius: 4px;
+  background: #FFF8F0;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
 .hot-rank.top {
-  color: #fff;
-  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #ffffff;
+  background: linear-gradient(to right, #FB9E51, #FB9E51, #FB9E51);
 }
 
 .hot-content {
@@ -565,7 +506,7 @@ onMounted(() => {
 }
 
 .hot-item:hover .hot-title {
-  color: #f97316;
+  color: #FB9E51;
 }
 
 .hot-source {
@@ -587,14 +528,16 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 12px;
-  background: #fafafa;
-  border-radius: 8px;
+  background: #FFF8F0;
+  border: 1px solid #FFF8F0;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .category-item:hover {
-  background: #fff7ed;
+  background: #FFF8F0;
+  border-color: #FFF8F0;
   transform: translateY(-2px);
 }
 
@@ -606,6 +549,10 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 600;
   color: #333;
+}
+
+.category-item:hover .cat-name {
+  color: #FB9E51;
 }
 
 /* ===== 加载状态 ===== */
@@ -622,8 +569,8 @@ onMounted(() => {
 .loading-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #ffe4c4;
-  border-top-color: #f97316;
+  border: 3px solid #FFF8F0;
+  border-top-color: #FB9E51;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

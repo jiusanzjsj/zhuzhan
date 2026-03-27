@@ -125,7 +125,7 @@
               
               <!-- 链接 -->
               <div class="flex flex-wrap gap-2 sm:gap-3">
-                <a :href="exchangeInfo.officialUrl" target="_blank" class="px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition flex items-center gap-2 text-sm font-medium">
+                <a :href="exchangeInfo.officialUrl" target="_blank" class="px-3 sm:px-5 py-2 sm:py-2.5 bg-[#FB9E51] text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:shadow-[#FB9E51]/30 transition flex items-center gap-2 text-sm font-medium">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                   </svg>
@@ -249,30 +249,6 @@
             </div>
           </div>
 
-          <!-- 快捷链接 -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100/80 p-6">
-            <h3 class="font-bold text-gray-800 mb-4">🔗 快捷链接</h3>
-            <div class="space-y-3">
-              <a :href="exchangeInfo.officialUrl" target="_blank" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition group">
-                <span class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 group-hover:bg-orange-500 group-hover:text-white transition">
-                  🌐
-                </span>
-                <span class="text-gray-700 font-medium">官方网站</span>
-              </a>
-              <a v-if="exchangeInfo.twitter" :href="exchangeInfo.twitter" target="_blank" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition group">
-                <span class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition">
-                  𝕏
-                </span>
-                <span class="text-gray-700 font-medium">Twitter</span>
-              </a>
-              <a v-if="exchangeInfo.telegram" :href="exchangeInfo.telegram" target="_blank" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-orange-50 transition group">
-                <span class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600 group-hover:bg-sky-500 group-hover:text-white transition">
-                  ✈️
-                </span>
-                <span class="text-gray-700 font-medium">Telegram</span>
-              </a>
-            </div>
-          </div>
         </aside>
       </div>
     </div>
