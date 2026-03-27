@@ -217,6 +217,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
     const volume = t.volume || 0
     const converted = t.converted_last || {}
     const priceUsd = converted.usd || lastPrice
+    const coinMcap = t.coin_mcap_usd || 0
     
     return {
       symbol: `${base}/${target}`,
@@ -224,6 +225,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
       price: `$${lastPrice.toLocaleString()}`,
       platformPrice: priceUsd ? `$${priceUsd.toLocaleString()}` : '-',
       volume24h: volume ? formatLargeNumber(volume) : '-',
+      marketCap: coinMcap ? `$${formatLargeNumber(coinMcap)}` : '-',
       percent: '0.00',
       updateTime: new Date().toLocaleTimeString()
     }

@@ -17,7 +17,7 @@
               <div v-if="$route.path === '/'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
             </router-link>
             <router-link to="/news" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/news' || $route.path === '/flash' }">
-              <span class="relative z-10">资讯</span>
+              <span class="relative z-10">快讯</span>
               <div v-if="$route.path === '/news' || $route.path === '/flash'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
             </router-link>
             <router-link to="/exchange" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/exchange' }">
@@ -63,7 +63,7 @@
               class="px-4 py-3 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition flex items-center gap-3"
               :class="{ 'text-orange-500 bg-orange-50': $route.path === '/news' || $route.path === '/flash' }"
             >
-              <span>📰</span> 资讯
+              <span>📰</span> 快讯
             </router-link>
             <router-link 
               to="/exchange" 
@@ -117,7 +117,7 @@
           <div class="text-gray-400 text-xs">
             © 2026 比特视界 专注加密货币行情数据
           </div>
-          <div class="text-gray-300 text-xs max-w-2xl mt-2 leading-relaxed">
+          <div class="text-gray-400 text-xs max-w-2xl mt-2 leading-relaxed">
             免责声明：本网站所有区块链相关数据与资料仅供用户学习及研究之用，不构成任何投资建议。
           </div>
         </div>

@@ -181,7 +181,7 @@
                   </div>
                   <div class="flex justify-between text-xs text-gray-500 pl-8">
                     <span>{{ pair.price }}</span>
-                    <span>成交量: {{ pair.volume24h }}</span>
+                    <span>市值: {{ pair.marketCap }}</span>
                   </div>
                 </div>
               </div>
@@ -194,6 +194,7 @@
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">交易对</th>
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">最新价</th>
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">24H成交额</th>
+                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">市值</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -213,6 +214,7 @@
                     </td>
                     <td class="px-6 py-4 text-right font-mono font-medium text-gray-800">{{ pair.price }}</td>
                     <td class="px-6 py-4 text-right text-gray-600">${{ pair.volume24h }}</td>
+                    <td class="px-6 py-4 text-right text-gray-600">{{ pair.marketCap }}</td>
                   </tr>
                 </tbody>
               </table>

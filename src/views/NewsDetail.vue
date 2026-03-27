@@ -28,7 +28,7 @@
         <div class="news-meta flex flex-wrap gap-2 sm:gap-4">
           <span class="meta-item text-xs sm:text-sm">{{ article.time }}</span>
           <span class="meta-item text-xs sm:text-sm hidden sm:inline">{{ article.source }}</span>
-          <span class="meta-item text-xs sm:text-sm">阅读 {{ article.views }}</span>
+          
         </div>
       </div>
       
@@ -52,9 +52,7 @@
           <span class="tag-item text-xs" :class="article.tagClass">{{ article.tag }}</span>
         </div>
         
-        <a :href="article.url" target="_blank" class="read-original-btn text-sm sm:text-base">
-          阅读原文 →
-        </a>
+        
       </div>
     </main>
     
