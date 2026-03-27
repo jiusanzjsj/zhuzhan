@@ -208,6 +208,27 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
   const btcPrice = btcPriceData.bitcoin?.usd || 50000
   const volumeUsd = (detail.trade_volume_24h_btc || 0) * btcPrice
 
+  // 处理交易对（从 tickers 字段获取）
+  const tickers = detail.tickers || []
+  const tradingPairsList = tickers.slice(0, 20).map((t) => {
+    const base = t.base || '-'
+    const target = t.target || '-'
+    const lastPrice = t.last || 0
+    const volume = t.volume || 0
+    const converted = t.converted_last || {}
+    const priceUsd = converted.usd || lastPrice
+    
+    return {
+      symbol: `${base}/${target}`,
+      coinIcon: '',
+      price: `$${lastPrice.toLocaleString()}`,
+      platformPrice: priceUsd ? `$${priceUsd.toLocaleString()}` : '-',
+      volume24h: volume ? formatLargeNumber(volume) : '-',
+      percent: '0.00',
+      updateTime: new Date().toLocaleTimeString()
+    }
+  })
+
   const formattedDetail = {
     id: detail.id,
     name: detail.name || '未知交易所',
@@ -224,54 +245,13 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
     kyc: !!detail.kyc_level,
     volume24h: '$' + formatLargeNumber(volumeUsd),
     volumeBtc: detail.trade_volume_24h_btc || 0,
-    volumeUsd
+    volumeUsd,
+    tradingPairsList  // 同时返回交易对列表
   }
 
   // 缓存
   exchangeDetailCache.value[exchangeId] = formattedDetail
   return formattedDetail
-}
-
-/**
- * 获取交易对列表（使用 CoinCap API + CORS代理）
- */
-export async function fetchTradingPairs(exchangeId) {
-  try {
-    // 使用 allorigins CORS 代理
-    const proxyUrl = 'https://api.allorigins.win/raw?url='
-    const targetUrl = encodeURIComponent(`https://api.coincap.io/v2/exchanges/${exchangeId}/markets?limit=50`)
-    
-    const response = await fetchWithTimeout(
-      `${proxyUrl}${targetUrl}`,
-      { headers: { 'Accept': 'application/json' } }
-    )
-
-    if (!response.ok) {
-      throw new Error(`获取交易对失败: ${response.status}`)
-    }
-
-    const data = await response.json()
-    const markets = data.data
-    
-    if (!Array.isArray(markets)) {
-      return []
-    }
-
-    return markets.slice(0, 20).map(m => ({
-      symbol: `${m.baseSymbol || '-'}/${m.quoteSymbol || '-'}`,
-      coinIcon: `https://assets.coincap.io/assets/icons/${(m.baseSymbol || '').toLowerCase()}@2x.png`,
-      price: m.price ? `$${Number(m.price).toLocaleString()}` : '-',
-      platformPrice: m.price ? `$${Number(m.price).toLocaleString()}` : '-',
-      volume24h: m.volumeUsd ? formatLargeNumber(Number(m.volumeUsd)) : '-',
-      volume24hCny: m.volumeUsd ? `¥${formatLargeNumber(Number(m.volumeUsd) * 7.2)}` : '-',
-      percent: m.pricePercent ? m.pricePercent.toFixed(2) : '0.00',
-      updateTime: new Date().toLocaleTimeString()
-    }))
-
-  } catch (err) {
-    console.error('获取交易对失败:', err)
-    return [] // 返回空数组而不是抛出异常
-  }
 }
 
 // 预设交易所完整信息（名称+描述）

@@ -488,23 +488,23 @@ const fetchStats = async (forceRefresh = false) => {
     console.error('fetchStats error:', e)
   }
   
-  // 获取恐慌指数 (币安API)
+  // 获取恐慌指数 (CoinMarketCap API)
   try {
-    // 先尝试本地服务器API
-    const serverRes = await fetch('http://localhost:3001/api/fear-index').catch(() => null)
-    if (serverRes && serverRes.ok) {
-      const serverData = await serverRes.json()
-      if (serverData.value) {
-        fearGreedIndex.value = serverData.value
-      } else {
-        // 如果本地API失败，尝试备用
-        throw new Error('本地API无数据')
-      }
+    // 你的 CMC API Key
+    const CMC_API_KEY = 'd7cabf5dc77c446e9dc16b1e8eba8979'
+    
+    const cmcRes = await fetch('https://pro-api.coinmarketcap.com/v3/fear-and-greed/latest', {
+      headers: { 'X-CMC_PRO_API_KEY': CMC_API_KEY }
+    })
+    const cmcData = await cmcRes.json()
+    
+    if (cmcData.data && cmcData.data.value) {
+      fearGreedIndex.value = cmcData.data.value
     } else {
-      throw new Error('本地API无响应')
+      throw new Error('CMC无数据')
     }
   } catch (e) {
-    // 备用：尝试 alternative.me
+    // 备用：alternative.me
     try {
       const fsRes = await fetch('https://api.alternative.me/fng/')
       const fsData = await fsRes.json()

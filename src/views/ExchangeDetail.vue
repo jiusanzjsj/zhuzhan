@@ -145,16 +145,12 @@
 
           <!-- 交易对列表 -->
           <div class="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-xl border border-gray-100/80 overflow-hidden">
-            <div class="px-4 sm:px-6 py-3 sm:py-5 border-b border-gray-100 flex items-center justify-between gap-2">
+            <div class="px-4 sm:px-6 py-3 sm:py-5 border-b border-gray-100">
               <h3 class="text-sm sm:text-lg font-bold text-gray-800 flex items-center gap-2">
                 <span class="w-1 h-5 sm:h-6 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></span>
                 <span class="hidden xs:inline">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</span>
                 <span class="xs:hidden">交易对</span>
               </h3>
-              <select v-model="filters.type" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-gray-100 border-0 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-                <option value="usd">美元</option>
-                <option value="cny">人民币</option>
-              </select>
             </div>
             
             <!-- 加载状态 -->
@@ -182,9 +178,6 @@
                       <img v-if="pair.coinIcon" :src="pair.coinIcon" class="w-6 h-6 rounded-full" @error="(e) => e.target.style.display = 'none'">
                       <span class="font-bold text-slate-800">{{ pair.symbol }}</span>
                     </div>
-                    <span class="px-2 py-0.5 rounded text-xs font-medium" :class="Number(pair.percent) >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
-                      {{ Number(pair.percent) >= 0 ? '↑' : '↓' }} {{ Math.abs(Number(pair.percent)) }}%
-                    </span>
                   </div>
                   <div class="flex justify-between text-xs text-gray-500 pl-8">
                     <span>{{ pair.price }}</span>
@@ -200,9 +193,7 @@
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">交易对</th>
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">最新价</th>
-                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">24H成交量</th>
                     <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">24H成交额</th>
-                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">涨跌</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -221,13 +212,7 @@
                       </div>
                     </td>
                     <td class="px-6 py-4 text-right font-mono font-medium text-gray-800">{{ pair.price }}</td>
-                    <td class="px-6 py-4 text-right text-gray-600">{{ pair.volume24h }}</td>
-                    <td class="px-6 py-4 text-right text-gray-600">{{ filters.type === 'cny' ? pair.volume24hCny : '$' + pair.volume24h }}</td>
-                    <td class="px-6 py-4 text-right">
-                      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-medium" :class="Number(pair.percent) >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
-                        {{ Number(pair.percent) >= 0 ? '↑' : '↓' }} {{ Math.abs(Number(pair.percent)) }}%
-                      </span>
-                    </td>
+                    <td class="px-6 py-4 text-right text-gray-600">${{ pair.volume24h }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -258,7 +243,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchExchangeDetail, fetchTradingPairs, getNavigationExchange, getPresetDescription, getExchangeNameZh, fetchExchanges, getExchangeCountryZh, getExchangeKycZh } from '../store/exchange'
+import { fetchExchangeDetail, getNavigationExchange, getPresetDescription, getExchangeNameZh, fetchExchanges, getExchangeCountryZh, getExchangeKycZh } from '../store/exchange'
 
 const route = useRoute()
 
@@ -282,10 +267,6 @@ const exchangeInfo = reactive({
   apiEnabled: false,
   kyc: false,
   volume24h: '-'
-})
-
-const filters = reactive({
-  type: 'usd'
 })
 
 const tradingPairs = ref([])
@@ -318,36 +299,21 @@ const loadExchangeData = async (exchangeId) => {
   }
 
   try {
-    // 并行加载：详情、交易对
-    const results = await Promise.allSettled([
-      fetchExchangeDetail(exchangeId),
-      fetchTradingPairs(exchangeId)
-    ])
-
-    // 处理详情
-    if (results[0].status === 'fulfilled') {
-      Object.assign(exchangeInfo, results[0].value)
-      // 预处理国家显示字段
-      exchangeInfo._countryDisplay = getExchangeCountryZh(exchangeId) || exchangeInfo.region || '-'
-      exchangeInfo._kycDisplay = getExchangeKycZh(exchangeId) || '未知'
-    } else {
-      console.warn('详情加载失败:', results[0].reason)
-      if (!exchangeInfo.name) {
-        error.value = '无法加载交易所详情'
-      }
+    // 只调用一次接口，获取详情和交易对
+    const detail = await fetchExchangeDetail(exchangeId)
+    
+    // 更新交易所信息
+    Object.assign(exchangeInfo, detail)
+    exchangeInfo._countryDisplay = getExchangeCountryZh(exchangeId) || exchangeInfo.region || '-'
+    exchangeInfo._kycDisplay = getExchangeKycZh(exchangeId) || '未知'
+    
+    // 使用接口返回的交易对列表
+    if (detail.tradingPairsList) {
+      tradingPairs.value = detail.tradingPairsList
     }
 
-    // 处理交易对
-    if (results[1].status === 'fulfilled') {
-      tradingPairs.value = results[1].value
-    } else {
-      console.warn('交易对加载失败:', results[1].reason)
-    }
-
-    // 直接从本地描述文件读取（按交易所小写英文ID匹配）
-    console.log('[ExchangeDetail] 正在加载描述，exchangeId:', exchangeId)
+    // 直接从本地描述文件读取
     const presetDesc = getPresetDescription(exchangeId)
-    console.log('[ExchangeDetail] 描述匹配结果:', presetDesc ? '有内容' : '为空')
     if (presetDesc) {
       exchangeDescription.value = presetDesc
     }

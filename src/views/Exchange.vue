@@ -194,7 +194,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchExchanges, fetchExchangeDetail, setNavigationExchange, getExchangeNameZh, getExchangeDescZh, getExchangeCountryZh, getCountryZh, getExchangeTypeZh } from '../store/exchange'
+import { fetchExchanges, setNavigationExchange, getExchangeNameZh, getExchangeDescZh, getExchangeCountryZh, getCountryZh, getExchangeTypeZh } from '../store/exchange'
 
 const router = useRouter()
 
@@ -261,10 +261,6 @@ const loadExchanges = async (forceRefresh = false) => {
 
 const handleRefresh = () => {
   loadExchanges(true)
-}
-
-const prefetchDetail = (exchangeId) => {
-  fetchExchangeDetail(exchangeId).catch(() => {})
 }
 
 const navigateToDetail = (exchange) => {
