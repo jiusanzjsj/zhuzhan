@@ -26,7 +26,7 @@
     <!-- 资讯详情 -->
     <main class="news-content px-4 sm:px-6" v-if="article">
       <div class="news-header">
-        <h1 class="news-title text-xl sm:text-2xl lg:text-3xl">{{ displayTitle }}</h1>
+        <h1 class="news-title text-xl sm:text-2xl lg:text-3xl">{{ article.title }}</h1>
         <div class="news-meta flex flex-wrap gap-2 sm:gap-4">
           <span class="meta-item text-xs sm:text-sm">{{ article.time }}</span>
           <span class="meta-item text-xs sm:text-sm hidden sm:inline">{{ article.source }}</span>
@@ -39,26 +39,15 @@
       </div>
       
       <div class="news-body">
-        <!-- 加载状态 -->
-        <div v-if="contentLoading" class="loading-content">
-          <div class="spinner-small"></div>
-          <p class="text-sm">正在加载文章内容...</p>
-        </div>
-        
         <!-- 文章正文 -->
-        <div v-else-if="contentData.content" class="article-content">
-          <p class="content-text text-sm sm:text-base">{{ displayContent }}</p>
-          <p v-if="contentTranslating" class="text-xs text-gray-400 mt-2">🔄 正在完善翻译...</p>
+        <div v-if="contentData.content" class="article-content">
+          <p class="content-text text-sm sm:text-base">{{ contentData.content }}</p>
         </div>
         
         <!-- 无内容 -->
         <div v-else class="no-content">
           <p>暂无详细内容</p>
         </div>
-        
-        
-        
-        
       </div>
     </main>
     
@@ -82,80 +71,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchArticleContent, getNavigationArticle, getArticleById } from '../stores/newsStore'
-import { quickTranslate, smartTranslate } from '../utils/translations'
+import { getNavigationArticle, getArticleById } from '../stores/newsStore'
 
 const route = useRoute()
 const article = ref(null)
 const contentData = ref({ content: '', image: '' })
 const loading = ref(true)
-const contentLoading = ref(false)
-const contentTranslating = ref(false)
 
-// 快速翻译标题（本地词典，即时响应）
-const quickTitle = computed(() => {
-  return article.value ? quickTranslate(article.value.title) : ''
-})
-
-// 快速翻译内容（本地词典）
-const quickContent = computed(() => {
-  return contentData.value.content ? quickTranslate(contentData.value.content) : ''
-})
-
-// 完整翻译（异步调用Google API）
-const fullTranslatedTitle = ref('')
-const fullTranslatedContent = ref('')
-
-// 执行完整翻译
-const performFullTranslation = async () => {
-  if (!article.value) return
-  
-  // 标题翻译
-  const title = await smartTranslate(article.value.title, true)
-  fullTranslatedTitle.value = title
-  
-  // 内容翻译
-  if (contentData.value.content) {
-    contentTranslating.value = true
-    const content = await smartTranslate(contentData.value.content, true)
-    fullTranslatedContent.value = content
-    contentTranslating.value = false
-  }
-}
-
-// 显示用的翻译结果：优先完整翻译，否则快速翻译
-const displayTitle = computed(() => {
-  return fullTranslatedTitle.value || quickTitle.value
-})
-
-const displayContent = computed(() => {
-  return fullTranslatedContent.value || quickContent.value
-})
-
-const loadArticle = async () => {
+const loadArticle = () => {
   loading.value = true
-  contentLoading.value = false
   article.value = null
   contentData.value = { content: '', image: '' }
-  fullTranslatedTitle.value = ''
-  fullTranslatedContent.value = ''
 
   // 1. 从导航数据获取
   const navArticle = getNavigationArticle()
   if (navArticle) {
     article.value = navArticle
-    contentLoading.value = true
-    try {
-      const result = await fetchArticleContent(navArticle.url)
-      contentData.value = result
-    } catch (e) {
-      console.error(e)
+    // 直接使用 description 作为内容
+    contentData.value = { 
+      content: navArticle.description || '暂无详细内容', 
+      image: navArticle.image || '' 
     }
-    contentLoading.value = false
-    // 开始异步完整翻译
-    performFullTranslation()
   }
 
   // 2. 从store获取
@@ -163,16 +101,11 @@ const loadArticle = async () => {
     const storeArticle = getArticleById(route.params.id)
     if (storeArticle) {
       article.value = storeArticle
-      contentLoading.value = true
-      try {
-        const result = await fetchArticleContent(storeArticle.url)
-        contentData.value = result
-      } catch (e) {
-        console.error(e)
+      // 直接使用 description 作为内容
+      contentData.value = { 
+        content: storeArticle.description || '暂无详细内容', 
+        image: storeArticle.image || '' 
       }
-      contentLoading.value = false
-      // 开始异步完整翻译
-      performFullTranslation()
     }
   }
 

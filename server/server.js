@@ -9,6 +9,24 @@ const PORT = 3001
 app.use(cors())
 app.use(express.json())
 
+// CryptoPanic API 代理接口
+app.get('/api/proxy/news', async (req, res) => {
+  try {
+    const authToken = '8c820bb21bc5acdc1dcca538410b3a478e26ccc8'
+    const url = `https://cryptopanic.com/api/developer/v2/posts/?auth_token=${authToken}&regions=zh`
+    
+    const response = await axios.get(url, {
+      timeout: 30000,
+      proxy: false
+    })
+    
+    res.json(response.data)
+  } catch (error) {
+    console.error('CryptoPanic API失败:', error.message)
+    res.status(500).json({ error: '获取新闻失败: ' + error.message })
+  }
+})
+
 // 爬取原文正文内容
 async function scrapeArticleContent(url) {
   try {
@@ -116,5 +134,6 @@ app.get('/api/news/content', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`API服务已启动: http://localhost:${PORT}`)
+  console.log(`获取新闻: http://localhost:${PORT}/api/proxy/news`)
   console.log(`获取文章内容: http://localhost:${PORT}/api/news/content?url=原文链接`)
 })

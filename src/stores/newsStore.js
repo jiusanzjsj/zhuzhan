@@ -5,7 +5,6 @@
 import { ref } from 'vue'
 import { apiCache } from '../utils/apiCache'
 
-const NEWS_API_KEY = '3908eafc986a4b75842bee9ac752cced'
 const REQUEST_TIMEOUT = 10000
 
 // 状态
@@ -70,7 +69,7 @@ export async function fetchNewsList(forceRefresh = false) {
     error.value = null
 
     const response = await fetchWithTimeout(
-      `https://newsapi.org/v2/everything?q=crypto+OR+bitcoin+OR+ethereum&language=en&sortBy=publishedAt&pageSize=10&page=1&apiKey=${NEWS_API_KEY}`
+      'https://cryptopanic.com/api/developer/v2/posts/?auth_token=8c820bb21bc5acdc1dcca538410b3a478e26ccc8&regions=zh'
     )
 
     if (!response.ok) {
@@ -79,31 +78,31 @@ export async function fetchNewsList(forceRefresh = false) {
 
     const data = await response.json()
     
-    if (!data.articles || !Array.isArray(data.articles)) {
+    if (!data.results || !Array.isArray(data.results)) {
       throw new Error('返回数据格式错误')
     }
 
-    const articlesData = data.articles.slice(0, 10).map((item, index) => ({
+    const articlesData = data.results.slice(0, 10).map((item, index) => ({
       id: index + 1,
       title: item.title || '无标题',
-      tag: getTag(item.source?.name),
-      tagClass: getTagClass(getTag(item.source?.name)),
-      time: formatTime(item.publishedAt),
+      tag: '快讯',
+      tagClass: 'bg-blue-50 text-blue-600 border border-blue-100',
+      time: formatTime(item.published_at),
       views: Math.floor(Math.random() * 900 + 100),
       comments: Math.floor(Math.random() * 50 + 10),
       url: item.url || '',
-      image: item.urlToImage || '',
+      image: '',
       description: item.description || '',
-      source: item.source?.name || 'Unknown',
+      source: item.source?.name || 'CryptoPanic',
       content: item.description || '',
-      publishedAt: item.publishedAt
+      publishedAt: item.published_at
     }))
 
-    const hotData = data.articles.slice(0, 5).map((item, index) => ({
+    const hotData = data.results.slice(0, 5).map((item, index) => ({
       id: index + 1,
       title: item.title || '无标题',
       source: item.source?.name || '快讯',
-      time: formatTime(item.publishedAt)
+      time: formatTime(item.published_at)
     }))
 
     articles.value = articlesData
