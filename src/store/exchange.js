@@ -352,45 +352,28 @@ const COINGECKO_ID_MAP = {
  */
 function normalizeExchangeId(exchangeId, localMap) {
   if (!exchangeId || typeof exchangeId !== 'string') return ''
-  // 统一空格和连字符
   const raw = exchangeId.toLowerCase().trim().replace(/\s+/g, '-').replace(/_/g, '')
   if (!raw) return ''
 
-  // 调试日志
-  console.log('[normalizeExchangeId] 输入ID:', exchangeId, '→ 标准化:', raw)
-
   // 1. 直接匹配
-  if (localMap[raw]) {
-    console.log('[normalizeExchangeId] 命中1: 直接匹配', raw)
-    return raw
-  }
+  if (localMap[raw]) return raw
 
   // 2. 通过映射表匹配
   const mapped = COINGECKO_ID_MAP[raw]
-  if (mapped && localMap[mapped]) {
-    console.log('[normalizeExchangeId] 命中2: 映射', raw, '→', mapped)
-    return mapped
-  }
+  if (mapped && localMap[mapped]) return mapped
 
   // 3. 去除下划线后匹配
   const noExtra = raw.replace(/_/g, '')
   const found = Object.keys(localMap).find(k => k.replace(/_/g, '').replace(/\s+/g, '-') === noExtra)
-  if (found) {
-    console.log('[normalizeExchangeId] 命中3: 下划线匹配', noExtra, '→', found)
-    return found
-  }
+  if (found) return found
 
   // 4. 名称反向模糊匹配（兜底）
   const reverseMatch = Object.entries(localMap).find(([k, v]) => {
     const nameField = (v.name || v.desc || k).replace(/[_\s\.]+/g, '')
     return nameField.includes(noExtra) || noExtra.includes(nameField)
   })
-  if (reverseMatch) {
-    console.log('[normalizeExchangeId] 命中4: 模糊匹配', raw, '→', reverseMatch[0])
-    return reverseMatch[0]
-  }
+  if (reverseMatch) return reverseMatch[0]
 
-  console.log('[normalizeExchangeId] 未命中，返回空')
   return ''
 }
 
@@ -563,6 +546,57 @@ export function getExchangeTypeZh(exchangeId) {
   const mapped = COINGECKO_ID_MAP[id]
   const lookupKey = mapped || id
   return EXCHANGE_TYPE_ZH[lookupKey] || ''
+}
+
+/**
+ * 交易所KYC状态映射（交易所ID → 是否需要KYC）
+ * '是' = 需要KYC认证，'否' = 不需要（DEX等），'未知' = 暂无公开信息
+ */
+const EXCHANGE_KYC_ZH = {
+  binance: '是',
+  bybitspot: '是',
+  gateio: '是',
+  gdax: '是',
+  okex: '是',
+  kraken: '是',
+  bitget: '是',
+  mxc: '是',
+  kucoin: '是',
+  cryptocom: '是',
+  bitfinex: '是',
+  upbit: '是',
+  htx: '是',
+  deribit: '是',
+  gemini: '是',
+  bithumb: '是',
+  deepcoin: '是',
+  biking: '未知',
+  bittap: '未知',
+  hyperliquid: '否',
+  bitflyer: '是',
+  bitstamp: '是',
+  bittrex: '是',
+  coinexchange: '未知',
+  coinone: '是',
+  coinsbit: '未知',
+  exmo: '是',
+  huobi: '是',
+  korbit: '是',
+  lbank: '未知',
+  liquid: '是',
+  poloniex: '是',
+  probit: '是',
+  bullishcom: '否',
+  bingx: '是',
+}
+
+export function getExchangeKycZh(exchangeId) {
+  if (!exchangeId || typeof exchangeId !== 'string') return ''
+  const id = exchangeId.toLowerCase().trim()
+  if (!id) return ''
+  const mapped = COINGECKO_ID_MAP[id]
+  const lookupKey = mapped || id
+  return EXCHANGE_KYC_ZH[lookupKey] || '未知'
 }
 
 /**

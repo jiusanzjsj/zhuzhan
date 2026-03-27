@@ -20,9 +20,7 @@
             <p class="text-orange-100 text-sm mt-0.5">全球加密货币交易所详细信息</p>
           </div>
           <div class="hidden sm:flex items-center gap-2">
-            <span class="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs font-medium">
-              🔍 深度分析
-            </span>
+            
           </div>
         </div>
       </div>
@@ -56,7 +54,7 @@
           </svg>
         </div>
         <p class="text-gray-600 mb-4">{{ error }}</p>
-        <button @click="$router.back()" class="px-4 sm:px-6 py-2 sm:py-3 bg-orange-500 text-white rounded-lg sm:rounded-xl hover:bg-orange-600 transition shadow-md sm:shadow-lg">
+        <button @click="$router.back()" class="px-4 sm:px-6 py-2 sm:py-3 bg-orange-500 text-black rounded-lg sm:rounded-xl hover:bg-orange-600 transition shadow-md sm:shadow-lg">
           返回列表
         </button>
       </div>
@@ -75,12 +73,10 @@
                 <div class="flex-1 min-w-0">
                   <h2 class="text-lg sm:text-2xl font-bold text-black mb-1 truncate">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</h2>
                   <div class="flex flex-wrap items-center gap-2">
-                    <span v-if="exchangeInfo.rank && exchangeInfo.rank !== '-'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm font-medium">
+                    <span v-if="exchangeInfo.rank && exchangeInfo.rank !== '-'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-orange-100/80 backdrop-blur-sm rounded-lg text-orange-600 text-xs sm:text-sm font-medium">
                       🏆 #{{ exchangeInfo.rank }}
                     </span>
-                    <span class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm">
-                      👥 {{ exchangeInfo.followers || 0 }}
-                    </span>
+                    
                   </div>
                 </div>
               </div>
@@ -103,7 +99,9 @@
                 </div>
                 <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 sm:p-4 border border-purple-100/50">
                   <p class="text-xs text-gray-500 mb-1">KYC</p>
-                  <p class="text-base sm:text-xl font-bold text-gray-800">{{ exchangeInfo.kyc ? '✅' : '❌' }}</p>
+                  <p class="text-base sm:text-xl font-bold text-gray-800">
+                    {{ exchangeInfo._kycDisplay === '是' ? '✅' : exchangeInfo._kycDisplay === '否' ? '❌' : '❓' }}
+                  </p>
                 </div>
               </div>
               
@@ -239,31 +237,6 @@
 
         <!-- 右侧信息栏 -->
         <aside class="space-y-6">
-          <!-- 基本信息 -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100/80 overflow-hidden">
-            <div class="bg-gradient-to-r from-gray-50 to-orange-50/30 px-6 py-4 border-b border-gray-100">
-              <h3 class="font-bold text-gray-800">📋 基本信息</h3>
-            </div>
-            <div class="p-6 space-y-4">
-              <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                <span class="text-gray-500 text-sm">KYC认证</span>
-                <span class="font-medium text-gray-800">{{ exchangeInfo.kyc ? '✅ 支持' : '❌ 不支持' }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                <span class="text-gray-500 text-sm">API接口</span>
-                <span class="font-medium text-gray-800">{{ exchangeInfo.apiEnabled ? '✅ 支持' : '❌ 不支持' }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                <span class="text-gray-500 text-sm">注册地区</span>
-                <span class="font-medium text-gray-800">{{ exchangeInfo._countryDisplay }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2">
-                <span class="text-gray-500 text-sm">交易对数量</span>
-                <span class="font-medium text-gray-800">{{ exchangeInfo.tradingPairs }}</span>
-              </div>
-            </div>
-          </div>
-
           <!-- 关注交易所 -->
           <div class="bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 rounded-2xl p-6 text-white shadow-xl shadow-orange-500/30 relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -309,7 +282,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchExchangeDetail, fetchTradingPairs, getNavigationExchange, getPresetDescription, getExchangeNameZh, fetchExchanges, getExchangeCountryZh } from '../store/exchange'
+import { fetchExchangeDetail, fetchTradingPairs, getNavigationExchange, getPresetDescription, getExchangeNameZh, fetchExchanges, getExchangeCountryZh, getExchangeKycZh } from '../store/exchange'
 
 const route = useRoute()
 
@@ -380,6 +353,7 @@ const loadExchangeData = async (exchangeId) => {
       Object.assign(exchangeInfo, results[0].value)
       // 预处理国家显示字段
       exchangeInfo._countryDisplay = getExchangeCountryZh(exchangeId) || exchangeInfo.region || '-'
+      exchangeInfo._kycDisplay = getExchangeKycZh(exchangeId) || '未知'
     } else {
       console.warn('详情加载失败:', results[0].reason)
       if (!exchangeInfo.name) {
