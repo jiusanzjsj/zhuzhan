@@ -488,15 +488,32 @@ const fetchStats = async (forceRefresh = false) => {
     console.error('fetchStats error:', e)
   }
   
-  // 获取恐慌指数 (Alternative.me API)
+  // 获取恐慌指数 (币安API)
   try {
-    const fsRes = await fetch('https://api.alternative.me/fng/')
-    const fsData = await fsRes.json()
-    if (fsData.data && fsData.data[0]) {
-      fearGreedIndex.value = parseInt(fsData.data[0].value)
+    // 先尝试本地服务器API
+    const serverRes = await fetch('http://localhost:3001/api/fear-index').catch(() => null)
+    if (serverRes && serverRes.ok) {
+      const serverData = await serverRes.json()
+      if (serverData.value) {
+        fearGreedIndex.value = serverData.value
+      } else {
+        // 如果本地API失败，尝试备用
+        throw new Error('本地API无数据')
+      }
+    } else {
+      throw new Error('本地API无响应')
     }
   } catch (e) {
-    console.error('fear index error:', e)
+    // 备用：尝试 alternative.me
+    try {
+      const fsRes = await fetch('https://api.alternative.me/fng/')
+      const fsData = await fsRes.json()
+      if (fsData.data && fsData.data[0]) {
+        fearGreedIndex.value = parseInt(fsData.data[0].value)
+      }
+    } catch (e2) {
+      console.error('fear index error:', e2)
+    }
   }
   
   // 估算总市值 (前100币种)

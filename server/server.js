@@ -1,7 +1,5 @@
 import express from 'express'
 import cors from 'cors'
-import axios from 'axios'
-import * as cheerio from 'cheerio'
 
 const app = express()
 const PORT = 3001
@@ -9,131 +7,31 @@ const PORT = 3001
 app.use(cors())
 app.use(express.json())
 
-// CryptoPanic API 代理接口
-app.get('/api/proxy/news', async (req, res) => {
+// ========== 恐慌指数 API (使用 alternative.me) ==========
+app.get('/api/fear-index', async (req, res) => {
   try {
-    const authToken = '8c820bb21bc5acdc1dcca538410b3a478e26ccc8'
-    const url = `https://cryptopanic.com/api/developer/v2/posts/?auth_token=${authToken}&regions=zh`
+    // 由于 CoinMarketCap 和币安都没有官方恐慌指数API
+    // 使用 alternative.me (最稳定的免费API)
+    const response = await fetch('https://api.alternative.me/fng/')
+    const data = await response.json()
     
-    const response = await axios.get(url, {
-      timeout: 30000,
-      proxy: false
-    })
-    
-    res.json(response.data)
-  } catch (error) {
-    console.error('CryptoPanic API失败:', error.message)
-    res.status(500).json({ error: '获取新闻失败: ' + error.message })
-  }
-})
-
-// 爬取原文正文内容
-async function scrapeArticleContent(url) {
-  try {
-    console.log('开始爬取:', url)
-    
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-      },
-      timeout: 15000
-    })
-
-    const $ = cheerio.load(response.data)
-    
-    let content = ''
-    const selectors = [
-      'article',
-      '.article-content',
-      '.article-body',
-      '.post-content',
-      '.entry-content',
-      '.news-content',
-      '.content-body',
-      '[class*="article"]',
-      '[class*="content"]',
-      'main',
-      '.main-content'
-    ]
-    
-    for (const selector of selectors) {
-      const $el = $(selector)
-      if ($el.length) {
-        content = $el.text().trim()
-        content = content.replace(/\s+/g, ' ').replace(/\n+/g, '\n').trim()
-        if (content.length > 200) break
-      }
-    }
-    
-    if (!content || content.length < 200) {
-      const paragraphs = []
-      $('p').each((i, el) => {
-        const text = $(el).text().trim()
-        if (text.length > 50) {
-          paragraphs.push(text)
-        }
+    if (data.data && data.data[0]) {
+      res.json({
+        source: 'alternative.me',
+        value: parseInt(data.data[0].value),
+        sentiment: data.data[0].value_classification,
+        timestamp: Date.now()
       })
-      content = paragraphs.join('\n\n')
+    } else {
+      res.json({ source: 'alternative.me', value: null, sentiment: 'Unavailable' })
     }
-    
-    let title = $('h1').first().text().trim() || 
-                 $('title').text().trim() ||
-                 $('h2').first().text().trim()
-    
-    let image = $('meta[property="og:image"]').attr('content') ||
-                $('article img').first().attr('src') ||
-                $('img').first().attr('src') ||
-                ''
-    
-    if (image && !image.startsWith('http')) {
-      const urlObj = new URL(url)
-      image = image.startsWith('/') 
-        ? `${urlObj.protocol}//${urlObj.host}${image}`
-        : `${urlObj.protocol}//${urlObj.host}/${image}`
-    }
-    
-    console.log('爬取成功')
-    
-    return {
-      title: title.substring(0, 200) || '无标题',
-      content: content.substring(0, 5000) || '暂无详细内容',
-      image: image || null
-    }
-    
   } catch (error) {
-    console.error('爬取原文失败:', error.message)
-    return {
-      title: '',
-      content: '暂无详细内容，请点击阅读原文查看完整文章',
-      image: null
-    }
+    res.status(500).json({ error: error.message })
   }
-}
-
-// 获取文章详情
-app.get('/api/news/content', async (req, res) => {
-  const { url } = req.query
-  
-  if (!url) {
-    return res.status(400).json({
-      success: false,
-      message: '缺少url参数'
-    })
-  }
-  
-  console.log('收到内容请求:', url)
-  const content = await scrapeArticleContent(url)
-  
-  res.json({
-    success: true,
-    data: content
-  })
 })
 
+// ========== 启动服务 ==========
 app.listen(PORT, () => {
   console.log(`API服务已启动: http://localhost:${PORT}`)
-  console.log(`获取新闻: http://localhost:${PORT}/api/proxy/news`)
-  console.log(`获取文章内容: http://localhost:${PORT}/api/news/content?url=原文链接`)
+  console.log(`恐慌指数: http://localhost:${PORT}/api/fear-index`)
 })

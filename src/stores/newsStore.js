@@ -186,12 +186,14 @@ function getTagClass(tag) {
 function formatTime(dateStr) {
   if (!dateStr) return '未知时间'
   const date = new Date(dateStr)
-  const now = new Date()
-  const diff = Math.floor((now - date) / 1000 / 60)
   
-  if (diff < 60) return diff + '分钟前'
-  if (diff < 1440) return Math.floor(diff / 60) + '小时前'
-  return Math.floor(diff / 1440) + '天前'
+  // 转换为北京时间 (UTC+8)
+  const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000)
+  
+  const hours = String(beijingTime.getUTCHours()).padStart(2, '0')
+  const minutes = String(beijingTime.getUTCMinutes()).padStart(2, '0')
+  
+  return `${hours}:${minutes}`
 }
 
 // 导出状态
