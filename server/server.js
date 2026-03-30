@@ -177,4 +177,5 @@ app.get('/api/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 比特视界API服务已启动: http://localhost:${PORT}`)
+  console.log(`🚀 比特视界API服务已启动: http://localhost:${PORT}`)
 })
