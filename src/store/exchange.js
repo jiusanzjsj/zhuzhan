@@ -259,7 +259,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
 // 预设交易所完整信息（名称+描述）
 const EXCHANGE_INFO_ZH = {
   binance: { name: '币安', desc: '全球最大加密货币交易所，支持币币、合约、法币交易' },
-  okex: { name: 'OKX交易所', desc: '全球领先的加密货币交易所，现货、合约、期权交易' },
+  okex: { name: 'OKX', desc: '全球领先的加密货币交易所，现货、合约、期权交易' },
   huobi: { name: '火必', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' },
   kraken: { name: 'Kraken', desc: '美国头部加密货币交易所，以安全性和合规性著称' },
   kucoin: { name: '库币', desc: '全球性加密货币交易所，支持多种数字资产交易' },
@@ -305,6 +305,8 @@ const COINGECKO_ID_MAP = {
   // EXCHANGE_INFO_ZH / EXCHANGE_DESCRIPTIONS 中实际使用的 key
   'okx': 'okex',
   'bybit': 'bybitspot',
+  'bybits': 'bybitspot',
+  'bybit-spot': 'bybitspot',
   'coinbase': 'gdax',
   'mexc': 'mxc',
   'gdax': 'gdax',
@@ -314,12 +316,20 @@ const COINGECKO_ID_MAP = {
   'coinbase exchange': 'gdax',
   'crypto.com': 'crypto_com',
   'cryptocom': 'crypto_com',
+  'crypto_com': 'crypto_com',
+  'crypto-com': 'crypto_com',
   htx: 'huobi',
   huobi: 'huobi',
   'binance-us': 'binance',
   'binance-pegged': 'binance',
   'crypto-com-exchange': 'crypto_com',
   'lbank-info': 'lbank',
+  'bullish': 'bullishcom',
+  'bullish-exchange': 'bullishcom',
+  'block-one': 'bullishcom',
+  'blockone': 'bullishcom',
+  'bingx': 'bingx',
+  'bing-x': 'bingx',
 }
 
 /**
@@ -474,11 +484,10 @@ const EXCHANGE_COUNTRY_ZH = {
 
 export function getExchangeCountryZh(exchangeId) {
   if (!exchangeId || typeof exchangeId !== 'string') return ''
-  const id = exchangeId.toLowerCase().trim()
-  if (!id) return ''
-  const mapped = COINGECKO_ID_MAP[id]
-  const lookupKey = mapped || id
-  return EXCHANGE_COUNTRY_ZH[lookupKey] || ''
+  const key = normalizeExchangeId(exchangeId, EXCHANGE_COUNTRY_ZH)
+  if (!key) return ''
+  const country = EXCHANGE_COUNTRY_ZH[key]
+  return (country && typeof country === 'string') ? country : ''
 }
 
 /**
@@ -495,6 +504,7 @@ const EXCHANGE_TYPE_ZH = {
   mxc: '现货、ETF、合约',
   kucoin: '法币、期货、现货',
   cryptocom: '法币、期货、现货',
+  crypto_com: '法币、期货、现货',
   bitfinex: '法币、现货',
   upbit: '法币、现货',
   htx: '法币、期货、现货',
@@ -519,15 +529,16 @@ const EXCHANGE_TYPE_ZH = {
   poloniex: '现货',
   probit: '法币、现货',
   bullishcom: 'DEX、现货',
+  bingx: '合约、现货',
 }
 
 export function getExchangeTypeZh(exchangeId) {
   if (!exchangeId || typeof exchangeId !== 'string') return ''
-  const id = exchangeId.toLowerCase().trim()
-  if (!id) return ''
-  const mapped = COINGECKO_ID_MAP[id]
-  const lookupKey = mapped || id
-  return EXCHANGE_TYPE_ZH[lookupKey] || ''
+  // 使用 normalizeExchangeId 的完整匹配流程（与 getExchangeNameZh 一致）
+  const key = normalizeExchangeId(exchangeId, EXCHANGE_TYPE_ZH)
+  if (!key) return ''
+  const type = EXCHANGE_TYPE_ZH[key]
+  return (type && typeof type === 'string') ? type : ''
 }
 
 /**

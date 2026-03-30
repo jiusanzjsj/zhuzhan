@@ -48,4 +48,51 @@ const router = createRouter({
   routes
 })
 
+// SEO 导航守卫
+const SEO_CONFIG = {
+  '/': { title: '比特视界 - 加密货币实时行情', desc: '专业加密货币行情数据平台，提供比特币、以太坊、Solana等主流币种实时价格、24小时涨跌统计、K线走势图', keys: '比特币,以太坊,加密货币,行情,实时价格,BTC,ETH,K线' },
+  '/news': { title: '快讯 - 比特视界', desc: '最新加密货币快讯、链上动态、重要资讯实时更新', keys: '加密货币,快讯,链上,新闻,资讯' },
+  '/exchange': { title: '交易所 - 比特视界', desc: '全球加密货币交易所排名、交易量、详细信息对比', keys: '交易所,币安,OKX,火币,CoinGecko' },
+  '/kline': { title: 'K线行情 - 比特视界', desc: '专业K线图表，支持多种时间周期和技术指标分析', keys: 'K线,技术分析,图表,TradingView' },
+  '/tools': { title: '工具 - 比特视界', desc: '区块浏览器、汇率转换、Gas费查询等加密货币常用工具', keys: '工具,区块浏览器,汇率转换,Gas' },
+  '/topics': { title: '热门专题 - 比特视界', desc: '比特币入门、以太坊生态、DeFi教程等热门专题', keys: '专题,教程,DeFi,NFT,入门' },
+  '/flash': { title: '快讯 - 比特视界', desc: '最新加密货币快讯、链上动态、重要资讯实时更新', keys: '加密货币,快讯,链上,新闻' },
+}
+
+const updateMeta = (toPath) => {
+  const base = 'https://openupbtc.com'
+  const config = SEO_CONFIG[toPath] || SEO_CONFIG['/']
+  
+  document.title = config.title
+  
+  // 更新或创建 meta 标签
+  const updateMetaTag = (name, content, property = false) => {
+    const attr = property ? 'property' : 'name'
+    let el = document.querySelector(`meta[${attr}="${name}"]`)
+    if (!el) {
+      el = document.createElement('meta')
+      el.setAttribute(attr, name)
+      document.head.appendChild(el)
+    }
+    el.setAttribute('content', content)
+  }
+  
+  updateMetaTag('description', config.desc)
+  updateMetaTag('keywords', config.keys)
+  updateMetaTag('og:title', config.title, true)
+  updateMetaTag('og:description', config.desc, true)
+  updateMetaTag('og:url', `${base}${toPath}`, true)
+  updateMetaTag('og:type', 'website', true)
+  updateMetaTag('twitter:card', 'summary_large_image')
+  updateMetaTag('twitter:title', config.title)
+  updateMetaTag('twitter:description', config.desc)
+}
+
+router.afterEach((to) => {
+  updateMeta(to.path)
+})
+
+// 初始化首页 SEO
+updateMeta('/')
+
 export default router
