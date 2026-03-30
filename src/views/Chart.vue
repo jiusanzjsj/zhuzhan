@@ -237,7 +237,7 @@ const fetchHotCoins = async () => {
   const cfg = { BTC: 'btcusdt', ETH: 'ethusdt', BNB: 'bnbusdt', SOL: 'solusdt', XRP: 'xrpusdt', USDT: 'usdtusdt', ADA: 'adausdt', DOGE: 'dogeusdt' }
   for (const coin of hotCoins.value) {
     try {
-      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${cfg[coin.symbol].toUpperCase()}`)
+      const res = await fetch(`/binance-api/api/v3/ticker/24hr?symbol=${cfg[coin.symbol].toUpperCase()}`)
       const d = await res.json()
       coin.price = parseFloat(d.lastPrice) || 0
       coin.change = parseFloat(d.priceChangePercent) || 0

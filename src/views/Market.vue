@@ -194,12 +194,6 @@ const coinConfig = [
   { symbol: 'IMX', name: 'Immutable', market: 2000000000, volume: 600000000, supply: 1500000000, color: '#00C2E4', pair: 'imxusdt' },
   { symbol: 'ENS', name: 'Ethereum Name Service', market: 1500000000, volume: 400000000, supply: 200000000, color: '#529652', pair: 'ensusdt' },
   { symbol: 'BLUR', name: 'Blur', market: 1000000000, volume: 500000000, supply: 3000000000, color: '#FF6B6B', pair: 'blurusdt' },
-  { symbol: 'MKR', name: 'Maker', market: 1800000000, volume: 500000000, supply: 900000, color: '#1AAB9B', pair: 'mkrusdt' },
-  { symbol: 'CRV', name: 'Curve DAO', market: 1500000000, volume: 400000000, supply: 3000000000, color: '#FF6B6B', pair: 'crvusdt' },
-  { symbol: 'BCH', name: 'Bitcoin Cash', market: 12000000000, volume: 3000000000, supply: 19700000, color: '#8DC351', pair: 'bchusdt' },
-  { symbol: 'TON', name: 'Toncoin', market: 18000000000, volume: 8000000000, supply: 5000000000, color: '#0098EA', pair: 'tonusdt' },
-  { symbol: 'NOT', name: 'Notcoin', market: 2500000000, volume: 1500000000, supply: 100000000000, color: '#FF4040', pair: 'notusdt' },
-  { symbol: 'PNUT', name: 'Peanut the Squirrel', market: 2000000000, volume: 800000000, supply: 1000000000, color: '#FFB347', pair: 'pnutusdt' },
 ]
 
 const coinList = ref(coinConfig.map(c => ({ ...c, price: 0, change: 0 })))
@@ -468,7 +462,7 @@ const fetchStats = async (forceRefresh = false) => {
   
   try {
     // 从Binance获取24h交易量
-    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr')
+    const res = await fetch('/binance-api/api/v3/ticker/24hr')
     const data = await res.json()
     let volume = 0
     data.forEach(t => {
@@ -568,7 +562,7 @@ const connectWS = () => {
 const fetchChange = async () => {
   try {
     const promises = coinConfig.map(async (c) => {
-      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
+      const res = await fetch(`/binance-api/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
       const d = await res.json()
       return { symbol: c.symbol, price: d.lastPrice ? parseFloat(d.lastPrice) : 0, change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0 }
     })

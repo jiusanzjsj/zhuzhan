@@ -17,6 +17,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true
+      },
+      '/binance-api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
       }
     }
   }
