@@ -9,6 +9,7 @@ import axios from 'axios'
 
 const app = express()
 const PORT = 3001
+const CRYPTOPANIC_TOKEN = '8c820bb21bc5acdc1dcca538410b3a478e26ccc8'
 
 app.use(cors())
 app.use(express.json())
@@ -27,9 +28,16 @@ const setCache = (key, data) => cache.set(key, { data, timestamp: Date.now() })
 
 // 后备数据
 const FALLBACK_NEWS = [
-  { title: 'BTC突破105000美元关口，机构买盘强劲', summary: '比特币价格今日强势突破105000美元，创历史新高', time: '14:32', url: '', tags: ['BTC'], isImportant: true },
-  { title: '以太坊Gas费骤降，DeFi活动创新高', summary: '以太坊网络Gas费降至50 Gwei以下', time: '13:15', url: '', tags: ['ETH'], isImportant: false },
-  { title: 'Solana链上NFT销售额突破10亿美元', summary: 'Solana网络NFT市场持续繁荣', time: '11:45', url: '', tags: ['SOL'], isImportant: false }
+  { title: 'BTC突破105000美元关口，机构买盘强劲', summary: '比特币价格今日强势突破105000美元，创历史新高', time: '10:30', url: '', tags: ['BTC'], isImportant: true },
+  { title: '以太坊Gas费骤降，DeFi活动创新高', summary: '以太坊网络Gas费降至50 Gwei以下，DeFi协议活跃度大幅提升', time: '10:15', url: '', tags: ['ETH'], isImportant: false },
+  { title: 'Solana链上NFT销售额突破10亿美元', summary: 'Solana网络NFT市场持续繁荣，本月销售额已突破10亿美元', time: '09:45', url: '', tags: ['SOL'], isImportant: false },
+  { title: '币安将在迪拜设立全球合规中心', summary: '币安宣布将在迪拜设立全球合规中心，以应对各国监管要求', time: '09:20', url: '', tags: ['BNB'], isImportant: false },
+  { title: '美国SEC批准以太坊现货ETF，多家机构提交申请', summary: '美国证券交易委员会批准以太坊现货ETF，机构投资者热情高涨', time: '08:50', url: '', tags: ['ETH'], isImportant: true },
+  { title: '狗狗币社区发起新营销活动，价格小幅上涨', summary: '狗狗币社区发起新营销活动，吸引大量新投资者关注', time: '08:30', url: '', tags: ['DOGE'], isImportant: false },
+  { title: 'Cardano主网升级即将完成，智能合约功能增强', summary: 'Cardano主网升级进入最后阶段，将大幅提升网络性能', time: '08:00', url: '', tags: ['ADA'], isImportant: false },
+  { title: 'Ripple与多家银行达成合作，XRP应用场景扩大', summary: 'Ripple宣布与多家国际银行建立合作关系，XRP采用率提升', time: '07:40', url: '', tags: ['XRP'], isImportant: false },
+  { title: '加密货币总市值突破3万亿美元', summary: '全球加密货币市场总市值今日突破3万亿美元大关，创历史记录', time: '07:20', url: '', tags: ['BTC'], isImportant: true },
+  { title: 'Polygon推出新开发者工具，ZK-Rollup技术再进一步', summary: 'Polygon发布新一代开发者工具，进一步简化ZK-Rollup应用开发', time: '07:00', url: '', tags: ['MATIC'], isImportant: false }
 ]
 const FALLBACK_CHAIN = [
   { title: '某巨鲸地址转移5000枚BTC至交易所', time: '14:20', url: '' },
@@ -86,12 +94,36 @@ const BINANCE_FALLBACK = {
   BLURUSDT: { lastPrice: '0.40', priceChangePercent: '-2.00' },
 }
 
-app.get('/api/news', (req, res) => {
+app.get('/api/news', async (req, res) => {
   const cached = getCache('news')
   if (cached) return res.json(cached)
-  const result = { success: true, data: FALLBACK_NEWS }
-  setCache('news', result)
-  res.json(result)
+  
+  // 尝试从CryptoPanic获取实时数据
+  try {
+    const response = await axios.get(
+      `https://cryptopanic.com/api/developer/v2/posts/?auth_token=${CRYPTOPANIC_TOKEN}&regions=zh`,
+      { timeout: 8000 }
+    )
+    if (response.data?.results?.length > 0) {
+      const news = response.data.results.slice(0, 20).map(item => ({
+        title: item.title,
+        summary: item.description || '',
+        time: item.published_at ? new Date(item.published_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '',
+        url: item.url || '',
+        tags: item.tags?.map(t => t.name) || [],
+        isImportant: item.title.includes('重要') || item.title.includes('突发'),
+        source: item.source?.name || 'CryptoPanic'
+      }))
+      const result = { success: true, data: news }
+      setCache('news', result)
+      return res.json(result)
+    }
+  } catch (e) {
+    console.error('获取快讯失败:', e.message)
+  }
+  
+  // 后备静态数据
+  res.json({ success: true, data: FALLBACK_NEWS })
 })
 
 app.get('/api/news/chain', (req, res) => {
