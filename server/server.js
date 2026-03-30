@@ -28,7 +28,6 @@ const setCache = (key, data) => cache.set(key, { data, timestamp: Date.now() })
 
 // 后备数据
 const FALLBACK_NEWS = [
-  { title: 'BTC突破105000美元关口，机构买盘强劲', summary: '比特币价格今日强势突破105000美元，创历史新高', time: '10:30', url: '', tags: ['BTC'], isImportant: true },
   { title: '以太坊Gas费骤降，DeFi活动创新高', summary: '以太坊网络Gas费降至50 Gwei以下，DeFi协议活跃度大幅提升', time: '10:15', url: '', tags: ['ETH'], isImportant: false },
   { title: 'Solana链上NFT销售额突破10亿美元', summary: 'Solana网络NFT市场持续繁荣，本月销售额已突破10亿美元', time: '09:45', url: '', tags: ['SOL'], isImportant: false },
   { title: '币安将在迪拜设立全球合规中心', summary: '币安宣布将在迪拜设立全球合规中心，以应对各国监管要求', time: '09:20', url: '', tags: ['BNB'], isImportant: false },
