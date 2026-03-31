@@ -556,7 +556,9 @@ onMounted(() => {
     nextTick(() => {
       initCharts()
     })
-    // 后台异步刷新
+    // 缓存命中也要拉取币价（走 Binance API）
+    fetchChange()
+    // 后台异步刷新统计
     fetchStats()
   } else {
     // 无缓存，正常加载
@@ -565,14 +567,15 @@ onMounted(() => {
         initCharts()
       })
     })
+    // 同时获取币价
+    fetchChange()
   }
-  
+
   // 设置每小时整点定时刷新
   setupHourlyRefresh()
-  
-  // WebSocket连接
+
+  // WebSocket连接（实时更新币价）
   connectWS()
-  fetchChange()
 })
 
 onUnmounted(() => { 
