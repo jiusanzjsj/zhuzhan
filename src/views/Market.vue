@@ -461,8 +461,7 @@ const fetchStats = async (forceRefresh = false) => {
   statsLoading.value = true
   
   try {
-    // 从Binance获取24h交易量
-    // 获取24H成交额（从CoinGecko获取BTC成交额）
+    // 获取24H成交额（从CoinGecko获取）
     try {
       const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=1&page=1&sparkline=false&price_change_percentage=24h')
       const cgData = await cgRes.json()
@@ -472,13 +471,19 @@ const fetchStats = async (forceRefresh = false) => {
     } catch (e) {
       console.error('获取24H成交额失败:', e)
     }
-    
-    // 计算涨跌分布
-    const upCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
-    const downCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) < 0).length
-    const total = upCoins + downCoins
-    upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
-    downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
+
+    // 获取涨跌分布（从Binance获取全量ticker）
+    try {
+      const res = await fetch('/binance-api/api/v3/ticker/24hr')
+      const data = await res.json()
+      const upCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
+      const downCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) < 0).length
+      const total = upCoins + downCoins
+      upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
+      downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
+    } catch (e) {
+      console.error('获取涨跌分布失败:', e)
+    }
   } catch (e) {
     console.error('fetchStats error:', e)
   }
