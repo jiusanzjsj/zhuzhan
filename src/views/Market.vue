@@ -462,15 +462,16 @@ const fetchStats = async (forceRefresh = false) => {
   
   try {
     // 从Binance获取24h交易量
-    const res = await fetch('/binance-api/api/v3/ticker/24hr')
-    const data = await res.json()
-    let volume = 0
-    data.forEach(t => {
-      if (t.symbol.endsWith('USDT')) {
-        volume += parseFloat(t.quoteVolume || 0)
+    // 获取24H成交额（从CoinGecko获取BTC成交额）
+    try {
+      const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=1&page=1&sparkline=false&price_change_percentage=24h')
+      const cgData = await cgRes.json()
+      if (cgData && cgData[0] && cgData[0].total_volume) {
+        totalVolume24h.value = cgData[0].total_volume
       }
-    })
-    totalVolume24h.value = volume
+    } catch (e) {
+      console.error('获取24H成交额失败:', e)
+    }
     
     // 计算涨跌分布
     const upCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
@@ -510,8 +511,16 @@ const fetchStats = async (forceRefresh = false) => {
     }
   }
   
-  // 估算总市值 (前100币种)
-  totalMarketCap.value = coinList.value.reduce((sum, c) => sum + (c.market || 0), 0)
+  // 获取总市值（从CoinGecko全球市场获取）
+  try {
+    const cgRes = await fetch('https://api.coingecko.com/api/v3/global')
+    const cgData = await cgRes.json()
+    if (cgData && cgData.data && cgData.data.total_market_cap && cgData.data.total_market_cap.usd) {
+      totalMarketCap.value = cgData.data.total_market_cap.usd
+    }
+  } catch (e) {
+    console.error('获取总市值失败:', e)
+  }
   
   // 保存到缓存
   saveToCache()
