@@ -428,6 +428,18 @@ const fetchStats = async (forceRefresh = false) => {
       console.error('获取24H成交额失败:', e)
     }
 
+    // 获取涨跌分布（从Binance获取全量ticker）
+    try {
+      const res = await fetch('/binance-api/api/v3/ticker/24hr')
+      const data = await res.json()
+      const upCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
+      const downCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) < 0).length
+      const total = upCoins + downCoins
+      upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
+      downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
+    } catch (e) {
+      console.error('获取涨跌分布失败:', e)
+    }
   } catch (e) {
     console.error('fetchStats error:', e)
   }
@@ -532,13 +544,6 @@ const fetchChange = async () => {
         coin.change = r.change
       }
     })
-
-    // 基于已加载的13个币种计算涨跌分布（无需额外API请求）
-    const upCoins = results.filter(r => r.change > 0).length
-    const downCoins = results.filter(r => r.change < 0).length
-    const total = upCoins + downCoins
-    upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
-    downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
   } catch (e) {
     console.error('fetchChange error:', e)
   }
