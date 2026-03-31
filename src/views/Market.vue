@@ -430,12 +430,13 @@ const fetchStats = async (forceRefresh = false) => {
       console.error('获取24H成交额失败:', e)
     }
 
-    // 获取涨跌分布（从Binance获取全量ticker）
+    // 获取涨跌分布（从Binance直连，CORS已开放）
     try {
-      const res = await fetch('/binance-api/api/v3/ticker/24hr')
-      const data = await res.json()
-      const upCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
-      const downCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) < 0).length
+      const res = await fetch('https://api.binance.com/api/v3/ticker/24hr')
+      const resData = await res.json()
+      const data = Array.isArray(resData) ? resData : []
+      const upCoins = data.filter(t => t.symbol && t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
+      const downCoins = data.filter(t => t.symbol && t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) < 0).length
       const total = upCoins + downCoins
       upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
       downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
@@ -446,32 +447,15 @@ const fetchStats = async (forceRefresh = false) => {
     console.error('fetchStats error:', e)
   }
   
-  // 获取恐慌指数 (CoinMarketCap API)
+  // 获取恐慌指数（备用方案alternative.me，CORS无限制）
   try {
-    // 你的 CMC API Key
-    const CMC_API_KEY = 'd7cabf5dc77c446e9dc16b1e8eba8979'
-    
-    const cmcRes = await fetch('https://pro-api.coinmarketcap.com/v3/fear-and-greed/latest', {
-      headers: { 'X-CMC_PRO_API_KEY': CMC_API_KEY }
-    })
-    const cmcData = await cmcRes.json()
-    
-    if (cmcData.data && cmcData.data.value) {
-      fearGreedIndex.value = cmcData.data.value
-    } else {
-      throw new Error('CMC无数据')
+    const fsRes = await fetch('https://api.alternative.me/fng/')
+    const fsData = await fsRes.json()
+    if (fsData.data && fsData.data[0]) {
+      fearGreedIndex.value = parseInt(fsData.data[0].value)
     }
   } catch (e) {
-    // 备用：alternative.me
-    try {
-      const fsRes = await fetch('https://api.alternative.me/fng/')
-      const fsData = await fsRes.json()
-      if (fsData.data && fsData.data[0]) {
-        fearGreedIndex.value = parseInt(fsData.data[0].value)
-      }
-    } catch (e2) {
-      console.error('fear index error:', e2)
-    }
+    console.error('fear index error:', e)
   }
   
   // 获取总市值（从CoinGecko全球市场获取）
@@ -534,20 +518,17 @@ const connectWS = () => {
 const fetchChange = async () => {
   try {
     const promises = coinConfig.map(async (c) => {
-      const res = await fetch(`/binance-api/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
       const d = await res.json()
-      console.log('[Market] Binance响应:', c.symbol, 'price:', d.lastPrice, 'change:', d.priceChangePercent)
       return { symbol: c.symbol, price: d.lastPrice ? parseFloat(d.lastPrice) : 0, change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0 }
     })
     const results = await Promise.all(promises)
-    console.log('[Market] 全部结果:', results)
     results.forEach(r => {
       const idx = coinList.value.findIndex(c => c.symbol === r.symbol)
       if (idx !== -1) {
         coinList.value[idx] = { ...coinList.value[idx], price: r.price, change: r.change }
       }
     })
-    console.log('[Market] coinList更新后:', coinList.value.map(c => ({ symbol: c.symbol, price: c.price, change: c.change })))
   } catch (e) {
     console.error('fetchChange error:', e)
   }
