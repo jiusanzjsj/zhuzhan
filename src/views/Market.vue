@@ -472,15 +472,16 @@ const fetchStats = async (forceRefresh = false) => {
       console.error('获取24H成交额失败:', e)
     }
 
-    // 获取涨跌分布（从Binance获取全量ticker）
+    // 获取涨跌分布（从Binance直接获取全量ticker，CORS已开放）
     try {
-      const res = await fetch('/binance-api/api/v3/ticker/24hr')
+      const res = await fetch('https://api.binance.com/api/v3/ticker/24hr')
       const data = await res.json()
       const upCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) > 0).length
       const downCoins = data.filter(t => t.symbol.endsWith('USDT') && parseFloat(t.priceChangePercent) < 0).length
       const total = upCoins + downCoins
       upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
       downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
+      console.log('[Market] 涨跌分布: 涨' + upPercent.value + '% / 跌' + downPercent.value + '%')
     } catch (e) {
       console.error('获取涨跌分布失败:', e)
     }
