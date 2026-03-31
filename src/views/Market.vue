@@ -534,16 +534,18 @@ const fetchChange = async () => {
     const promises = coinConfig.map(async (c) => {
       const res = await fetch(`/binance-api/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
       const d = await res.json()
+      console.log('[Market] Binance响应:', c.symbol, 'price:', d.lastPrice, 'change:', d.priceChangePercent)
       return { symbol: c.symbol, price: d.lastPrice ? parseFloat(d.lastPrice) : 0, change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0 }
     })
     const results = await Promise.all(promises)
+    console.log('[Market] 全部结果:', results)
     results.forEach(r => {
-      const coin = coinList.value.find(c => c.symbol === r.symbol)
-      if (coin) {
-        coin.price = r.price
-        coin.change = r.change
+      const idx = coinList.value.findIndex(c => c.symbol === r.symbol)
+      if (idx !== -1) {
+        coinList.value[idx] = { ...coinList.value[idx], price: r.price, change: r.change }
       }
     })
+    console.log('[Market] coinList更新后:', coinList.value.map(c => ({ symbol: c.symbol, price: c.price, change: c.change })))
   } catch (e) {
     console.error('fetchChange error:', e)
   }
