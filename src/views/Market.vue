@@ -523,6 +523,8 @@ const fetchChange = async () => {
     const total = upCoins + downCoins
     upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
     downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
+    // 同步更新涨跌分布饼图
+    updateCharts()
   } catch (e) {
     console.error('fetchChange error:', e)
   }
