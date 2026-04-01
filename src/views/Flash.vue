@@ -38,7 +38,7 @@
           </div>
           
           <!-- 日期 -->
-          <div class="date-header">2026-03-21</div>
+          <div class="date-header">{{ currentDate }}</div>
           
           <!-- 快讯列表 -->
           <div class="news-container">
@@ -119,6 +119,7 @@ const activeCategory = ref('all')
 const showImportant = ref(false)
 const loading = ref(false)
 const lastUpdate = ref('')
+const currentDate = ref(new Date().toLocaleDateString('zh-CN'))
 let refreshTimer = null
 
 const API_BASE = '/api'
@@ -140,6 +141,25 @@ const filteredNews = computed(() => {
   let news = newsData.value
   // 跳过前5条数据
   news = news.slice(5)
+  // 分类筛选
+  if (activeCategory.value !== 'all') {
+    news = news.filter(item => {
+      const tags = item.tags || []
+      if (activeCategory.value === 'chain') {
+        return tags.includes('ETH') || tags.includes('BTC') || tags.includes('DeFi')
+      }
+      if (activeCategory.value === 'ai') {
+        return tags.includes('AI') || tags.includes('AGIX') || tags.includes('FET')
+      }
+      if (activeCategory.value === 'funding') {
+        return tags.includes('融资') || tags.includes('投资')
+      }
+      if (activeCategory.value === 'predict') {
+        return tags.includes('预测') || tags.includes('Polymarket')
+      }
+      return true
+    })
+  }
   // 只显示当前数量的数据
   news = news.slice(0, displayCount.value)
   if (showImportant.value) {
@@ -192,8 +212,7 @@ const fetchNews = async () => {
 }
 
 const loadMore = () => {
-  alert('加载更多...')
-  fetchNews()
+  displayCount.value += 10
 }
 
 // 自动刷新 - 每30秒更新一次
