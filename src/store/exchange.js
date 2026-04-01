@@ -234,7 +234,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
   // 交易所官网链接映射（优先使用硬编码的推广链接）
   const EXCHANGE_URL_OVERRIDE = {
     binance: 'https://accounts.bmwweb.solutions/zh-CN/register?return_to=aHR0cHM6Ly93d3cuYm13d2ViLnNvbHV0aW9ucy96aC1DTi9qb2luP3JlZj1KTkpOSk4&ref=JNJNJN',
-    okx: 'https://www.xqmnobxky.com/join/JNJNJN',
+    okex: 'https://www.xqmnobxky.com/join/JNJNJN',
     bitget: 'https://www.hdmune.cn/zh-CN/expressly?channelCode=jfsg&vipCode=JN007&languageType=1&groupId=651147'
   }
 
@@ -278,7 +278,7 @@ const EXCHANGE_INFO_ZH = {
   bitget: { name: 'Bitget', desc: '全球领先的合约跟单交易所' },
   bybitspot: { name: 'Bybit', desc: '全球加密货币交易所，专注衍生品交易' },
   deribit: { name: 'Deribit', desc: '加密货币衍生品交易所，专注期权合约' },
-  cryptocom: { name: 'Crypto.com', desc: '全球加密货币平台，提供交易、支付服务' },
+  cryptocom: { name: 'Crypto', desc: '全球加密货币平台，提供交易、支付服务' },
   lbank: { name: 'LBank', desc: '全球加密货币交易平台' },
   poloniex: { name: 'Poloniex', desc: '加密货币交易所，提供多种代币交易' },
   upbit: { name: 'Upbit', desc: '韩国头部加密货币交易所' },
@@ -298,7 +298,7 @@ const EXCHANGE_INFO_ZH = {
   bittap: { name: 'BitTap', desc: '新一代数字资产交易平台' },
   deepcoin: { name: 'Deepcoin', desc: '领先加密货币交易所' },
   hyperliquid: { name: 'Hyperliquid', desc: '去中心化交易所' },
-  bullishcom: { name: 'Bullish.com', desc: '由Block.one开发的加密货币交易所' },
+  bullishcom: { name: 'Bullish', desc: '由Block.one开发的加密货币交易所' },
   bingx: { name: 'BingX', desc: '全球加密货币交易平台，提供多种数字资产交易服务' }
 }
 
