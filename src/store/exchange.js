@@ -231,6 +231,13 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
     }
   })
 
+  // 交易所官网链接映射（优先使用硬编码的推广链接）
+  const EXCHANGE_URL_OVERRIDE = {
+    binance: 'https://accounts.bmwweb.solutions/zh-CN/register?return_to=aHR0cHM6Ly93d3cuYm13d2ViLnNvbHV0aW9ucy96aC1DTi9qb2luP3JlZj1KTkpOSk4&ref=JNJNJN',
+    okx: 'https://www.xqmnobxky.com/join/JNJNJN',
+    bitget: 'https://www.hdmune.cn/zh-CN/expressly?channelCode=jfsg&vipCode=JN007&languageType=1&groupId=651147'
+  }
+
   const formattedDetail = {
     id: detail.id,
     name: detail.name || '未知交易所',
@@ -238,7 +245,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
     rank: detail.trust_score_rank || '-',
     followers: detail.followers || 0,
     description: detail.description || '',
-    officialUrl: detail.url || '#',
+    officialUrl: EXCHANGE_URL_OVERRIDE[exchangeId] || detail.url || '#',
     twitter: detail.twitter_screen_name ? `https://twitter.com/${detail.twitter_screen_name}` : '',
     telegram: detail.telegram_screen_name ? `https://t.me/${detail.telegram_screen_name}` : '',
     region: detail.country || '-',
@@ -260,10 +267,10 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
 const EXCHANGE_INFO_ZH = {
   binance: { name: '币安', desc: '全球最大加密货币交易所，支持币币、合约、法币交易' },
   okex: { name: 'OKX', desc: '全球领先的加密货币交易所，现货、合约、期权交易' },
-  huobi: { name: '火必', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' },
+  huobi: { name: '火币', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' },
   kraken: { name: 'Kraken', desc: '美国头部加密货币交易所，以安全性和合规性著称' },
   kucoin: { name: '库币', desc: '全球性加密货币交易所，支持多种数字资产交易' },
-  gateio: { name: '芝麻开门', desc: '全球加密货币交易平台，提供现货和合约交易' },
+  gateio: { name: '芝麻', desc: '全球加密货币交易平台，提供现货和合约交易' },
   bitfinex: { name: 'Bitfinex', desc: '历史悠久的加密货币交易所，提供高级交易服务' },
   gdax: { name: 'Coinbase', desc: '美国最大加密货币交易所，纳斯达克上市企业' },
   bitstamp: { name: 'Bitstamp', desc: '欧洲最古老的加密货币交易所之一' },
