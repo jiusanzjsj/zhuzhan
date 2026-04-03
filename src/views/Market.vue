@@ -525,9 +525,41 @@ const fetchChange = async () => {
     downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
     // 同步更新涨跌分布饼图
     updateCharts()
+    // 更新实时价格Schema
+    updateCryptoSchema(results)
   } catch (e) {
     console.error('fetchChange error:', e)
   }
+}
+
+// 更新加密货币实时价格Schema
+const updateCryptoSchema = (prices) => {
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": prices.map((p, i) => ({
+      "@type": "Product",
+      "name": coinList.value.find(c => c.symbol === p.symbol)?.name || p.symbol,
+      "description": `${p.symbol} 实时价格`,
+      "offers": {
+        "@type": "Offer",
+        "price": p.price.toFixed(2),
+        "priceCurrency": "USD",
+        "priceChange": p.change.toFixed(2) + "%"
+      },
+      "position": i + 1
+    }))
+  }
+  
+  // 更新或创建schema
+  let schemaEl = document.getElementById('crypto-schema')
+  if (!schemaEl) {
+    schemaEl = document.createElement('script')
+    schemaEl.id = 'crypto-schema'
+    schemaEl.type = 'application/ld+json'
+    document.head.appendChild(schemaEl)
+  }
+  schemaEl.textContent = JSON.stringify(schemaData)
 }
 
 onMounted(() => {
