@@ -1,21 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-    <!-- 精美横幅 -->
-    <div class="bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 shadow-lg shadow-orange-200/50">
-      <div class="max-w-6xl mx-auto px-4 py-5">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-300/30 transform rotate-3">
-            <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <h1 class="text-xl font-bold text-white drop-shadow-sm">全球加密货币交易所</h1>
-            <p class="text-orange-100 text-sm mt-0.5">追踪全球加密货币交易所,获取实时排名数据</p>
-          </div>
-          
-        </div>
-      </div>
+    <!-- 海报图 -->
+    <div class="max-w-6xl mx-auto px-4 py-4">
+      <img src="@/assets/banner.png" alt="交易所榜单" class="w-full h-auto object-cover rounded-xl shadow-lg" />
     </div>
 
     <!-- 内容区域 -->
