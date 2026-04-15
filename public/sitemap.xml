@@ -50,4 +50,34 @@
     <priority>0.8</priority>
     <changefreq>daily</changefreq>
   </url>
+  <url>
+    <loc>https://openupbtc.com/exchange/binance</loc>
+    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://openupbtc.com/exchange/okx</loc>
+    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://openupbtc.com/exchange/kraken</loc>
+    <priority>0.7</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://openupbtc.com/exchange/kucoin</loc>
+    <priority>0.7</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://openupbtc.com/exchange/bitget</loc>
+    <priority>0.7</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://openupbtc.com/exchange/gate</loc>
+    <priority>0.7</priority>
+    <changefreq>daily</changefreq>
+  </url>
 </urlset>

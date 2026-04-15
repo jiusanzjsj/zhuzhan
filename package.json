@@ -7,7 +7,9 @@
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "server": "cd server && npm start",
-    "build": "vite build",
+    "build": "vite build && npm run prerender",
+    "build:spa": "vite build",
+    "prerender": "node scripts/prerender-routes.js",
     "preview": "vite preview"
   },
   "dependencies": {
