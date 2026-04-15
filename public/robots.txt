@@ -31,4 +31,4 @@ Sitemap: https://openupbtc.com/sitemap.xml
 
 # Disallow unnecessary paths
 Disallow: /api/
-Disallow: /chart/
+

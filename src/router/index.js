@@ -62,6 +62,7 @@ const SEO_CONFIG = {
 const updateMeta = (toPath) => {
   const base = 'https://openupbtc.com'
   const config = SEO_CONFIG[toPath] || SEO_CONFIG['/']
+  const canonicalUrl = `${base}${toPath}`
 
   document.title = config.title
 
@@ -77,18 +78,29 @@ const updateMeta = (toPath) => {
     el.setAttribute('content', content)
   }
 
+  const updateCanonical = (href) => {
+    let el = document.querySelector('link[rel="canonical"]')
+    if (!el) {
+      el = document.createElement('link')
+      el.setAttribute('rel', 'canonical')
+      document.head.appendChild(el)
+    }
+    el.setAttribute('href', href)
+  }
+
   updateMetaTag('description', config.desc)
   updateMetaTag('keywords', config.keys)
   updateMetaTag('og:title', config.title, true)
   updateMetaTag('og:description', config.desc, true)
   updateMetaTag('og:image', config.img || SEO_CONFIG['/'].img, true)
-  updateMetaTag('og:url', `${base}${toPath}`, true)
+  updateMetaTag('og:url', canonicalUrl, true)
   updateMetaTag('og:type', 'website', true)
   updateMetaTag('og:site_name', '比特视界', true)
   updateMetaTag('twitter:card', 'summary')
   updateMetaTag('twitter:title', config.title)
   updateMetaTag('twitter:description', config.desc)
   updateMetaTag('twitter:image', config.img || SEO_CONFIG['/'].img)
+  updateCanonical(canonicalUrl)
 }
 
 router.afterEach((to) => {
