@@ -246,6 +246,7 @@
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchExchangeDetail, getNavigationExchange, getPresetDescription, getExchangeNameZh, fetchExchanges, getExchangeCountryZh, getExchangeKycZh } from '../store/exchange'
+import { updatePageSeo } from '../utils/seo'
 
 const route = useRoute()
 
@@ -253,7 +254,24 @@ const loading = ref(true)
 const error = ref(null)
 const pairsLoading = ref(true)
 const exchangeDescription = ref('')
+const baseUrl = 'https://openupbtc.com'
 let refreshTimer = null
+
+const setExchangeSeo = (exchangeId) => {
+  const displayName = getExchangeNameZh(exchangeId) || exchangeInfo.name || '交易所'
+  const description = exchangeDescription.value
+    ? exchangeDescription.value.slice(0, 120)
+    : `查看${displayName}交易所详情，包括排名、24小时成交额、交易对数量、地区与KYC信息。`
+
+  updatePageSeo({
+    title: `${displayName}交易所详情 - 排名、交易对与成交额 - 比特视界`,
+    description,
+    keywords: `${displayName},${exchangeId},加密货币交易所,交易所排名,交易平台,比特视界`,
+    image: exchangeInfo.logo || `${baseUrl}/logo.png`,
+    url: `${baseUrl}/exchange/${exchangeId}`,
+    type: 'website'
+  })
+}
 
 const exchangeInfo = reactive({
   name: '',
@@ -326,6 +344,7 @@ const loadExchangeData = async (exchangeId) => {
   } finally {
     loading.value = false
     pairsLoading.value = false
+    setExchangeSeo(exchangeId)
   }
 }
 

@@ -79,11 +79,42 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getNavigationArticle, getArticleById } from '../stores/newsStore'
+import { updatePageSeo } from '../utils/seo'
 
 const route = useRoute()
 const article = ref(null)
 const contentData = ref({ content: '', image: '' })
 const loading = ref(true)
+const baseUrl = 'https://openupbtc.com'
+
+const buildDescription = (text = '') => {
+  const cleaned = String(text).replace(/\s+/g, ' ').trim()
+  return cleaned ? cleaned.slice(0, 120) : '查看最新加密货币资讯详情，了解区块链、比特币、以太坊等市场动态。'
+}
+
+const setNewsSeo = () => {
+  const title = article.value?.title
+    ? `${article.value.title} - 比特视界`
+    : '资讯详情 - 比特视界'
+  const description = buildDescription(contentData.value.content || article.value?.description)
+  const keywords = [
+    article.value?.title,
+    article.value?.tag,
+    article.value?.source,
+    '加密货币新闻',
+    '区块链资讯',
+    '比特视界'
+  ].filter(Boolean).join(',')
+
+  updatePageSeo({
+    title,
+    description,
+    keywords,
+    image: article.value?.image || contentData.value.image || `${baseUrl}/logo.png`,
+    url: `${baseUrl}/news/${route.params.id}`,
+    type: 'article'
+  })
+}
 
 const loadArticle = () => {
   loading.value = true
@@ -113,6 +144,7 @@ const loadArticle = () => {
   }
 
   loading.value = false
+  setNewsSeo()
 }
 
 onMounted(() => {

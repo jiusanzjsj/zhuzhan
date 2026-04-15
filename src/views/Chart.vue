@@ -147,6 +147,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { updatePageSeo } from '../utils/seo'
 
 const currentTime = ref('')
 const price = ref(0), change = ref(0), high24h = ref(0), low24h = ref(0), volume24h = ref(0), quoteVolume = ref(0)
@@ -156,6 +157,19 @@ const path = window.location.pathname
 const match = path.match(/\/chart\/(\w+)/)
 const symbol = match ? match[1] : 'BTC'
 const pair = `${symbol.toLowerCase()}usdt`
+const baseUrl = 'https://openupbtc.com'
+
+const setChartSeo = () => {
+  const upperSymbol = String(symbol || 'BTC').toUpperCase()
+  updatePageSeo({
+    title: `${upperSymbol}实时价格走势 - ${upperSymbol}行情K线图表 - 比特视界`,
+    description: `查看${upperSymbol}实时价格、24小时涨跌幅、成交量和专业K线走势图，快速了解${upperSymbol}/USDT市场行情与技术分析。`,
+    keywords: `${upperSymbol},${upperSymbol}价格,${upperSymbol}行情,${upperSymbol}实时价格,${upperSymbol}K线,加密货币行情`,
+    image: `${baseUrl}/logo.png`,
+    url: `${baseUrl}/chart/${upperSymbol}`,
+    type: 'website'
+  })
+}
 
 const hotCoins = ref([
   { symbol: 'BTC', name: 'Bitcoin', price: 0, change: 0, color: '#F7931A' },
@@ -249,6 +263,7 @@ const fetchHotCoins = async () => {
 }
 
 onMounted(() => {
+  setChartSeo()
   currentTime.value = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
   timeTimer = setInterval(() => {
     currentTime.value = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
