@@ -1,38 +1,37 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
-    <!-- 导航栏 -->
-    <header class="bg-white/95 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="h-14 flex items-center">
-          <!-- Logo -->
+  <div class="min-h-screen flex flex-col bg-[#f7f8fa]">
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+      <div class="max-w-[1400px] mx-auto px-3 md:px-4">
+        <div class="h-14 flex items-center gap-4">
           <router-link to="/" class="flex items-center gap-3 group flex-shrink-0">
-            <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-orange-500/30 group-hover:ring-orange-500/60 transition" />
-            <span class="text-xl font-bold text-orange-500">比特视界</span>
+            <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-orange-500/20 group-hover:ring-orange-500/50 transition" />
+            <div class="leading-tight">
+              <div class="text-[17px] font-bold text-slate-900">比特视界</div>
+              <div class="hidden md:block text-[11px] text-slate-400">Binance Square 风格紧凑广场</div>
+            </div>
           </router-link>
-          
-          <!-- 桌面端导航 - 左侧紧跟 -->
-          <nav class="hidden md:flex items-center gap-1 ml-12">
-            <router-link to="/" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/' }">
-              <span class="relative z-10">行情</span>
-              <div v-if="$route.path === '/'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
-            </router-link>
-            <router-link to="/news" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/news' || $route.path === '/flash' }">
-              <span class="relative z-10">快讯</span>
-              <div v-if="$route.path === '/news' || $route.path === '/flash'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
-            </router-link>
-            <router-link to="/exchange" class="px-4 py-3 text-gray-600 hover:text-orange-500 transition relative" :class="{ 'text-orange-500': $route.path === '/exchange' }">
-              <span class="relative z-10">交易所</span>
-              <div v-if="$route.path === '/exchange'" class="absolute bottom-0 left-2 right-2 h-0.5 bg-orange-500 rounded-full"></div>
+
+          <nav class="hidden md:flex items-center gap-1 ml-6">
+            <router-link
+              to="/"
+              class="px-4 py-2 text-sm rounded-lg transition border"
+              :class="$route.path === '/' ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-slate-600 border-transparent hover:text-orange-500 hover:bg-orange-50/60'"
+            >
+              广场
             </router-link>
           </nav>
 
-          <!-- 占位 -->
           <div class="flex-1"></div>
 
-          <!-- 移动端汉堡菜单按钮 -->
-          <button 
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-400">
+            <span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">行情</span>
+            <span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">快讯</span>
+            <span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">交易所</span>
+          </div>
+
+          <button
             @click="mobileMenuOpen = !mobileMenuOpen"
-            class="md:hidden p-2 text-gray-600 hover:text-orange-500 transition"
+            class="md:hidden p-2 text-slate-600 hover:text-orange-500 transition"
           >
             <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -43,42 +42,24 @@
           </button>
         </div>
 
-        <!-- 移动端导航菜单 -->
-        <div 
-          v-show="mobileMenuOpen"
-          class="md:hidden pb-4 border-t border-gray-100"
-        >
-          <nav class="flex flex-col gap-1 pt-2">
-            <router-link 
-              to="/" 
+        <div v-show="mobileMenuOpen" class="md:hidden pb-3 border-t border-slate-100">
+          <nav class="flex flex-col gap-2 pt-3">
+            <router-link
+              to="/"
               @click="mobileMenuOpen = false"
-              class="px-4 py-3 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition flex items-center gap-3"
-              :class="{ 'text-orange-500 bg-orange-50': $route.path === '/' }"
+              class="px-4 py-3 rounded-xl text-sm transition flex items-center gap-3"
+              :class="$route.path === '/' ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:text-orange-500 hover:bg-orange-50'"
             >
-              <span>📊</span> 行情
+              <span>🟠</span> 广场首页
             </router-link>
-            <router-link 
-              to="/news" 
-              @click="mobileMenuOpen = false"
-              class="px-4 py-3 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition flex items-center gap-3"
-              :class="{ 'text-orange-500 bg-orange-50': $route.path === '/news' || $route.path === '/flash' }"
-            >
-              <span>📰</span> 快讯
-            </router-link>
-            <router-link 
-              to="/exchange" 
-              @click="mobileMenuOpen = false"
-              class="px-4 py-3 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition flex items-center gap-3"
-              :class="{ 'text-orange-500 bg-orange-50': $route.path === '/exchange' }"
-            >
-              <span>🏛️</span> 交易所
-            </router-link>
+            <div class="px-4 text-xs text-slate-400 leading-5">
+              已整合：行情 / 快讯 / 交易所
+            </div>
           </nav>
         </div>
       </div>
     </header>
 
-    <!-- 主内容 -->
     <main class="flex-1">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="['Exchange', 'NewsList']">
@@ -86,40 +67,15 @@
         </keep-alive>
       </router-view>
     </main>
-    
-    <!-- 底部信息 -->
-    <footer class="bg-white border-t border-gray-200/50 py-6 mt-auto">
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="flex flex-col items-center text-center">
-          <div class="flex items-center gap-2 mb-4">
-            <img src="/src/assets/bsj.png" class="w-6 h-6 rounded-full" />
-            <span class="text-sm font-medium text-gray-600">比特视界</span>
+
+    <footer class="bg-white border-t border-slate-200 py-5 mt-auto">
+      <div class="max-w-[1400px] mx-auto px-3 md:px-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-400">
+          <div class="flex items-center gap-2">
+            <img src="/src/assets/bsj.png" class="w-5 h-5 rounded-full" />
+            <span>© 2026 比特视界</span>
           </div>
-          
-          <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-gray-500 text-xs mb-4">
-            <a href="#" class="hover:text-orange-500 transition">关于我们</a>
-            <a href="#" class="hover:text-orange-500 transition">联系我们</a>
-            <a href="#" class="hover:text-orange-500 transition">免责声明</a>
-          </div>
-          
-          <div class="flex gap-3 mb-4">
-            <a href="#" class="w-8 h-8 bg-gray-100 hover:bg-orange-100 rounded-full flex items-center justify-center text-gray-400 hover:text-orange-500 transition">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.834L7.084 4.189H5.117z"/></svg>
-            </a>
-            <a href="#" class="w-8 h-8 bg-gray-100 hover:bg-orange-100 rounded-full flex items-center justify-center text-gray-400 hover:text-orange-500 transition">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"/></svg>
-            </a>
-            <a href="#" class="w-8 h-8 bg-gray-100 hover:bg-orange-100 rounded-full flex items-center justify-center text-gray-400 hover:text-orange-500 transition">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/></svg>
-            </a>
-          </div>
-          
-          <div class="text-gray-400 text-xs">
-            © 2026 比特视界 专注加密货币行情数据
-          </div>
-          <div class="text-gray-400 text-xs max-w-2xl mt-2 leading-relaxed">
-            免责声明：本网站所有区块链相关数据与资料仅供用户学习及研究之用，不构成任何投资建议。
-          </div>
+          <div>页面已改为更紧凑的广场式信息流布局</div>
         </div>
       </div>
     </footer>

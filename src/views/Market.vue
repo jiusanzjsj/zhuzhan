@@ -1,326 +1,281 @@
 <template>
-  <div class="market-page">
-    <!-- Ticker Bar -->
-    <div class="bg-gradient-to-r from-orange-50 via-white to-amber-50 shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 py-3">
-        <div class="bg-white/80 backdrop-blur-sm rounded-xl border-t border-b border-orange-200 shadow-[0_2px_12px_rgba(249,115,22,0.08)] p-2 overflow-hidden relative">
-          <div class="ticker-wrap flex gap-3 items-center">
-            <div class="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-orange-50 to-transparent z-10 pointer-events-none"></div>
-            <div class="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-amber-50 to-transparent z-10 pointer-events-none"></div>
-          <a v-for="coin in [...coinList.slice(0,13),...coinList.slice(0,13)]" :key="coin.symbol+'-dup'" @click.prevent="goToChart(coin.symbol)" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer whitespace-nowrap transition-all flex-shrink-0">
-            <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'" class="w-5 h-5 rounded-full" @error="onImageError($event)" :alt="coin.symbol" :data-symbol="coin.symbol">
-            <span class="font-bold text-gray-800 text-xs">{{ coin.symbol }}</span>
-            <span class="font-mono font-medium text-gray-700 text-xs">${{ formatPrice(coin.price) }}</span>
-            <span class="text-xs font-medium px-1 py-0.5 rounded" :class="coin.change>=0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
-              {{ coin.change>=0?'+':''}}{{ coin.change?.toFixed(2) || '0.00' }}%
-            </span>
-          </a>
-        </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 海报 -->
-    <div class="max-w-7xl mx-auto px-4 py-4">
-      <img src="/banner.png" alt="Banner" class="w-full rounded-lg shadow-sm">
-    </div>
-
-    <!-- 数据统计卡片 -->
-    <div class="bg-gray-50 border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 py-3">
-        <div class="grid grid-cols-4 gap-3">
-          <!-- 24H成交额 -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm text-gray-400">24H成交额</span>
-              <span class="text-lg">📊</span>
-            </div>
-            <div v-if="statsLoading" class="h-20 skeleton-glow"></div>
-            <div v-else ref="volumeChart" class="h-20"></div>
-            <div v-if="statsLoading" class="h-7 w-24 skeleton-text mt-2"></div>
-            <div v-else class="text-lg font-bold text-gray-800">${{ formatVolume(totalVolume24h) }}</div>
+  <div class="min-h-screen bg-[#f7f8fa] text-slate-900">
+    <div class="max-w-[1400px] mx-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4">
+      <!-- 顶部紧凑行情条 -->
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between gap-3">
+          <div>
+            <h1 class="text-base md:text-lg font-semibold text-slate-900">比特视界广场</h1>
+            <p class="text-xs text-slate-500 mt-0.5">行情、快讯、交易所一屏浏览</p>
           </div>
-          <!-- 总市值 -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm text-gray-400">总市值</span>
-              <span class="text-lg">💰</span>
-            </div>
-            <div v-if="statsLoading" class="h-20 skeleton-glow"></div>
-            <div v-else ref="marketChart" class="h-20"></div>
-            <div v-if="statsLoading" class="h-7 w-24 skeleton-text mt-2"></div>
-            <div v-else class="text-lg font-bold text-gray-800">${{ formatMarket(totalMarketCap) }}</div>
-          </div>
-          <!-- 恐慌指数 -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm text-gray-400">恐慌指数</span>
-              <span class="text-lg">😱</span>
-            </div>
-            <div v-if="statsLoading" class="h-12 skeleton-glow"></div>
-            <div v-else class="flex items-center gap-2">
-              <div class="text-3xl font-bold" :class="fearGreedIndex >= 50 ? 'text-green-500' : 'text-red-500'">{{ fearGreedIndex }}</div>
-              <span class="text-sm px-2 py-1 rounded-full font-medium" :class="fearGreedIndex >= 50 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">{{ fearGreedIndex >= 50 ? '贪婪' : '恐慌' }}</span>
-            </div>
-            <div v-if="!statsLoading" class="w-full bg-gray-100 rounded-full h-2 mt-2 overflow-hidden">
-              <div class="h-full rounded-full transition-all" :class="fearGreedIndex >= 50 ? 'bg-green-500' : 'bg-red-500'" :style="{ width: fearGreedIndex + '%' }"></div>
-            </div>
-          </div>
-          <!-- 涨跌分布 -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm text-gray-400">24H涨跌</span>
-              <span class="text-lg">📈</span>
-            </div>
-            <div v-if="statsLoading" class="h-20 skeleton-glow"></div>
-            <div v-else ref="pieChart" class="h-20"></div>
-            <div v-if="statsLoading" class="h-5 w-16 skeleton-text mt-2"></div>
-            <div v-else class="flex justify-between text-sm mt-1">
-              <span class="text-green-500">↑{{ upPercent }}%</span>
-              <span class="text-red-500">↓{{ downPercent }}%</span>
-            </div>
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+            <span class="px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100">紧凑模式</span>
+            <span>{{ marketStatusText }}</span>
           </div>
         </div>
-      </div>
-    </div>
 
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-5">
-      <!-- Data Table -->
-      <div class="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <!-- Table Header -->
-        <div class="flex items-center px-11 py-3.5 bg-gray-50/50 border-b border-gray-100 text-xs text-gray-500 font-medium">
-          <span class="w-10 text-center">#</span>
-          <span class="flex-1 min-w-[140px] text-left">币种</span>
-          <span class="w-28 text-right">价格</span>
-          <span class="w-24 text-right">24H</span>
-          <span class="w-28 text-right">市值</span>
-          <span class="w-28 text-right">成交量</span>
-          <span class="w-28 text-right">流通量</span>
-        </div>
-        
-        <!-- Table Body -->
-        <div class="max-h-[70vh] overflow-y-auto">
-          <a v-for="(coin,i) in sortedList" :key="coin.symbol" @click.prevent="goToChart(coin.symbol)" class="flex items-center px-5 py-3.5 border-b border-gray-50/50 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-amber-50/30 cursor-pointer transition-all group">
-            <span class="w-10 text-center text-gray-400 font-medium">{{ i+1 }}</span>
-            <span class="flex-1 min-w-[140px] flex items-center gap-3">
-              <div class="relative">
-                <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'" class="w-9 h-9 rounded-full ring-2 ring-gray-100 group-hover:ring-orange-200 transition" @error="onImageError($event)" :alt="coin.symbol" :data-symbol="coin.symbol">
-                <div v-if="coin.change >= 0" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                <div v-else class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
+        <div class="overflow-x-auto">
+          <div class="min-w-max flex items-stretch gap-2 px-3 py-2 bg-slate-50/70">
+            <button
+              v-for="coin in tickerCoins"
+              :key="coin.symbol"
+              class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl hover:border-orange-300 hover:bg-orange-50/40 transition whitespace-nowrap"
+              @click="goToChart(coin.symbol)"
+            >
+              <img
+                :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'"
+                class="w-5 h-5 rounded-full"
+                @error="onImageError($event)"
+                :alt="coin.symbol"
+              >
+              <div class="leading-tight text-left">
+                <div class="text-xs font-semibold text-slate-800">{{ coin.symbol }}</div>
+                <div class="text-[11px] text-slate-500">${{ formatPrice(coin.price) }}</div>
               </div>
-              <div class="flex flex-col">
-                <span class="font-bold text-gray-800">{{ coin.symbol }}</span>
-                <span class="text-xs text-gray-400">{{ coin.name }}</span>
-              </div>
-            </span>
-            <div class="w-32 text-right flex flex-col items-end -ml-2">
-              <span class="font-mono font-semibold text-gray-800">${{ formatPrice(coin.price) }}</span>
-              <span class="text-xs text-gray-400">¥{{ formatCNY(coin.price) }}</span>
-            </div>
-            <span class="w-24 text-right font-bold" :class="coin.change>=0 ? 'text-green-500' : 'text-red-500'">
-              {{ coin.change>=0?'+':''}}{{ coin.change?.toFixed(2) || '0.00' }}%
-            </span>
-            <span class="w-28 text-right text-gray-500 font-medium">${{ formatMarket(coin.market) }}</span>
-            <span class="w-28 text-right text-gray-500">${{ formatVolume(coin.volume) }}</span>
-            <span class="w-28 text-right text-gray-400 text-sm">{{ formatSupply(coin.supply) }}</span>
-          </a>
+              <span class="text-[11px] font-semibold px-2 py-1 rounded-lg" :class="coin.change >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+                {{ coin.change >= 0 ? '+' : '' }}{{ (coin.change || 0).toFixed(2) }}%
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
-    </main>
+      </section>
+
+      <!-- 三栏主体 -->
+      <section class="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_320px] gap-3 md:gap-4 items-start">
+        <!-- 左：恐慌指数 + 币种排行 -->
+        <div class="space-y-3 md:space-y-4 xl:sticky xl:top-[72px]">
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-900">市场情绪</h2>
+                <p class="text-xs text-slate-500 mt-0.5">保留核心指标，减少干扰</p>
+              </div>
+              <span class="text-lg">😶‍🌫️</span>
+            </div>
+
+            <div class="p-4">
+              <div class="rounded-2xl p-4 border" :class="fearGreedIndex >= 50 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'">
+                <div class="flex items-end justify-between gap-3">
+                  <div>
+                    <div class="text-xs text-slate-500 mb-1">恐慌与贪婪指数</div>
+                    <div class="text-4xl font-bold leading-none" :class="fearGreedIndex >= 50 ? 'text-green-600' : 'text-red-600'">{{ fearGreedIndex }}</div>
+                  </div>
+                  <span class="text-xs font-semibold px-2.5 py-1.5 rounded-full" :class="fearGreedIndex >= 50 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                    {{ fearGreedIndex >= 50 ? '偏贪婪' : '偏恐慌' }}
+                  </span>
+                </div>
+
+                <div class="mt-4 h-2.5 bg-white/80 rounded-full overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :class="fearGreedIndex >= 50 ? 'bg-green-500' : 'bg-red-500'"
+                    :style="{ width: fearGreedIndex + '%' }"
+                  ></div>
+                </div>
+
+                <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div class="rounded-xl bg-white/70 px-3 py-2 border border-white/80">
+                    <div class="text-slate-400">上涨占比</div>
+                    <div class="font-semibold text-green-600 mt-0.5">{{ upPercent }}%</div>
+                  </div>
+                  <div class="rounded-xl bg-white/70 px-3 py-2 border border-white/80">
+                    <div class="text-slate-400">下跌占比</div>
+                    <div class="font-semibold text-red-600 mt-0.5">{{ downPercent }}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-900">币种排行</h2>
+                <p class="text-xs text-slate-500 mt-0.5">只保留排名与价格变化</p>
+              </div>
+              <span class="text-xs text-slate-400">Top {{ sortedList.length }}</span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+              <button
+                v-for="(coin, index) in sortedList"
+                :key="coin.symbol"
+                class="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 transition"
+                @click="goToChart(coin.symbol)"
+              >
+                <div class="w-7 text-xs font-semibold text-slate-400">{{ index + 1 }}</div>
+                <img
+                  :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'"
+                  class="w-8 h-8 rounded-full"
+                  @error="onImageError($event)"
+                  :alt="coin.symbol"
+                >
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm text-slate-900">{{ coin.symbol }}</span>
+                    <span class="text-[11px] text-slate-400 truncate">{{ coin.name }}</span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5">${{ formatPrice(coin.price) }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-semibold" :class="coin.change >= 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ coin.change >= 0 ? '+' : '' }}{{ (coin.change || 0).toFixed(2) }}%
+                  </div>
+                  <div class="text-[11px] text-slate-400">¥{{ formatCNY(coin.price) }}</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中：快讯 -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden min-w-0">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-900">实时快讯</h2>
+              <p class="text-xs text-slate-500 mt-0.5">类似广场信息流，压缩留白</p>
+            </div>
+            <div class="text-xs text-slate-400">{{ newsList.length }} 条</div>
+          </div>
+
+          <div v-if="newsLoading" class="p-6 text-center text-sm text-slate-400">快讯加载中...</div>
+          <div v-else class="divide-y divide-slate-100">
+            <button
+              v-for="item in newsList"
+              :key="item.id"
+              class="w-full text-left px-4 py-3 hover:bg-slate-50 transition"
+              @click="navigateToDetail(item)"
+            >
+              <div class="flex items-start gap-3">
+                <div class="w-[58px] flex-shrink-0 text-center">
+                  <div class="text-[11px] font-semibold text-orange-600 bg-orange-50 border border-orange-100 rounded-lg px-2 py-1">
+                    {{ item.time }}
+                  </div>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">{{ item.source || '快讯' }}</span>
+                    <span class="text-[11px] text-slate-400">快讯</span>
+                  </div>
+                  <h3 class="text-sm md:text-[15px] font-semibold leading-6 text-slate-900 line-clamp-2">{{ item.title }}</h3>
+                  <p v-if="item.description" class="mt-1.5 text-[13px] leading-6 text-slate-500 line-clamp-2">{{ item.description }}</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 右：交易所 -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden xl:sticky xl:top-[72px]">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-900">交易所榜</h2>
+              <p class="text-xs text-slate-500 mt-0.5">保留最常看的排名信息</p>
+            </div>
+            <span class="text-xs text-slate-400">Top {{ exchangeList.length }}</span>
+          </div>
+
+          <div v-if="exchangeLoading" class="p-6 text-center text-sm text-slate-400">交易所数据加载中...</div>
+          <div v-else class="divide-y divide-slate-100">
+            <button
+              v-for="(exchange, index) in exchangeList"
+              :key="exchange.id"
+              class="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 transition"
+              @click="navigateToExchange(exchange)"
+            >
+              <div class="w-7 text-xs font-semibold" :class="index < 3 ? 'text-orange-500' : 'text-slate-400'">{{ index + 1 }}</div>
+              <img
+                :src="exchange.image"
+                :alt="exchange.name"
+                class="w-8 h-8 rounded-full object-cover bg-slate-100"
+                @error="onImageError($event)"
+              >
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-slate-900 truncate">{{ getExchangeNameZh(exchange.id) || exchange.name }}</div>
+                <div class="text-[11px] text-slate-400 truncate mt-0.5">{{ exchange._countryDisplay || '-' }} · {{ exchange._typeDisplay || 'CEX' }}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-[13px] font-semibold text-slate-700">#{{ exchange.trust_score_rank || index + 1 }}</div>
+                <div class="text-[11px] text-slate-400">{{ formatVolume(exchange.trade_volume_24h_btc) }} BTC</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { fetchNewsList, setNavigationArticle } from '../stores/newsStore'
+import { fetchExchanges, getExchangeNameZh, getExchangeCountryZh, getCountryZh, getExchangeTypeZh } from '../store/exchange'
 
+const router = useRouter()
 let ws = null
+let hourlyTimer = null
 
 const coinConfig = [
-  { symbol: 'BTC', name: 'Bitcoin', market: 1400000000000, volume: 350000000000, supply: 19990000, color: '#F7931A', pair: 'btcusdt' },
-  { symbol: 'ETH', name: 'Ethereum', market: 260000000000, volume: 150000000000, supply: 120000000, color: '#627EEA', pair: 'ethusdt' },
-  { symbol: 'BNB', name: 'BNB', market: 87000000000, volume: 15000000000, supply: 153000000, color: '#F3BA2F', pair: 'bnbusdt' },
-  { symbol: 'SOL', name: 'Solana', market: 50000000000, volume: 25000000000, supply: 46000000, color: '#9945FF', pair: 'solusdt' },
-  { symbol: 'XRP', name: 'Ripple', market: 88000000000, volume: 25000000000, supply: 99000000000, color: '#23292F', pair: 'xrpusdt' },
-  { symbol: 'TRX', name: 'TRON', market: 28000000000, volume: 5000000000, supply: 87000000000, color: '#FF0013', pair: 'trxusdt' },
-  { symbol: 'DOGE', name: 'Dogecoin', market: 14000000000, volume: 8000000000, supply: 140000000000, color: '#C2A633', pair: 'dogeusdt' },
-  { symbol: 'ADA', name: 'Cardano', market: 12000000000, volume: 3500000000, supply: 35000000000, color: '#0033AD', pair: 'adausdt' },
-  { symbol: 'AVAX', name: 'Avalanche', market: 11000000000, volume: 3500000000, supply: 41000000, color: '#E84142', pair: 'avaxusdt' },
-  { symbol: 'DOT', name: 'Polkadot', market: 10000000000, volume: 2500000000, supply: 1500000000, color: '#E6007A', pair: 'dotusdt' },
-  { symbol: 'LINK', name: 'Chainlink', market: 9000000000, volume: 2500000000, supply: 600000000, color: '#2A5ADA', pair: 'linkusdt' },
-  { symbol: 'MATIC', name: 'Polygon', market: 8000000000, volume: 2000000000, supply: 9800000000, color: '#8247E5', pair: 'polusdt' },
-  { symbol: 'LTC', name: 'Litecoin', market: 7000000000, volume: 3000000000, supply: 76000000, color: '#BFBBBB', pair: 'ltcusdt' },
+  { symbol: 'BTC', name: 'Bitcoin', market: 1400000000000, volume: 350000000000, supply: 19990000, pair: 'btcusdt' },
+  { symbol: 'ETH', name: 'Ethereum', market: 260000000000, volume: 150000000000, supply: 120000000, pair: 'ethusdt' },
+  { symbol: 'BNB', name: 'BNB', market: 87000000000, volume: 15000000000, supply: 153000000, pair: 'bnbusdt' },
+  { symbol: 'SOL', name: 'Solana', market: 50000000000, volume: 25000000000, supply: 46000000, pair: 'solusdt' },
+  { symbol: 'XRP', name: 'Ripple', market: 88000000000, volume: 25000000000, supply: 99000000000, pair: 'xrpusdt' },
+  { symbol: 'TRX', name: 'TRON', market: 28000000000, volume: 5000000000, supply: 87000000000, pair: 'trxusdt' },
+  { symbol: 'DOGE', name: 'Dogecoin', market: 14000000000, volume: 8000000000, supply: 140000000000, pair: 'dogeusdt' },
+  { symbol: 'ADA', name: 'Cardano', market: 12000000000, volume: 3500000000, supply: 35000000000, pair: 'adausdt' },
+  { symbol: 'AVAX', name: 'Avalanche', market: 11000000000, volume: 3500000000, supply: 41000000, pair: 'avaxusdt' },
+  { symbol: 'DOT', name: 'Polkadot', market: 10000000000, volume: 2500000000, supply: 1500000000, pair: 'dotusdt' },
+  { symbol: 'LINK', name: 'Chainlink', market: 9000000000, volume: 2500000000, supply: 600000000, pair: 'linkusdt' },
+  { symbol: 'MATIC', name: 'Polygon', market: 8000000000, volume: 2000000000, supply: 9800000000, pair: 'polusdt' },
+  { symbol: 'LTC', name: 'Litecoin', market: 7000000000, volume: 3000000000, supply: 76000000, pair: 'ltcusdt' },
 ]
 
 const coinList = ref(coinConfig.map(c => ({ ...c, price: 0, change: 0 })))
-
-// ECharts refs
-const volumeChart = ref(null)
-const marketChart = ref(null)
-const fearChart = ref(null)
-const pieChart = ref(null)
-let volumeChartInstance = null
-let marketChartInstance = null
-let fearChartInstance = null
-let pieChartInstance = null
-
-const initCharts = () => {
-  // 成交额 - 迷你趋势图
-  if (volumeChart.value) {
-    volumeChartInstance = echarts.init(volumeChart.value)
-    volumeChartInstance.setOption({
-      tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151', fontSize: 12 }, padding: [8, 12], formatter: (params) => `24H成交额<br/>$${formatVolume(totalVolume24h.value)}` },
-      grid: { top: 2, bottom: 18, left: 0, right: 0 },
-      xAxis: { type: 'category', data: ['1', '2', '3', '4', '5', '6', '7'], axisLine: { show: false }, axisTick: { show: false }, axisLabel: { show: false } },
-      yAxis: { type: 'value', show: false },
-      series: [{
-        type: 'line',
-        data: [30, 45, 35, 50, 40, 60, totalVolume24h.value / 1e12],
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { color: '#3b82f6', width: 2 },
-        areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(59, 130, 246, 0.3)' }, { offset: 1, color: 'rgba(59, 130, 246, 0)' }]) }
-      }]
-    })
-  }
-  
-  // 总市值 - 环形图
-  if (marketChart.value) {
-    marketChartInstance = echarts.init(marketChart.value)
-    marketChartInstance.setOption({
-      tooltip: { trigger: 'item', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151', fontSize: 12 }, padding: [8, 12], formatter: (params) => `总市值<br/>$${formatMarket(totalMarketCap.value)}` },
-      series: [{
-        type: 'pie',
-        radius: ['60%', '80%'],
-        center: ['50%', '50%'],
-        data: [{ value: totalMarketCap.value / 1e12, name: '市值' }],
-        itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: '#8b5cf6' }, { offset: 1, color: '#a78bfa' }]) },
-        label: { show: false },
-        emphasis: { scale: true, scaleSize: 5 }
-      }]
-    })
-  }
-  
-  // 恐慌指数 - 仪表盘
-  if (fearChart.value) {
-    fearChartInstance = echarts.init(fearChart.value)
-    const fearColor = fearGreedIndex.value >= 50 ? '#22c55e' : '#ef4444'
-    fearChartInstance.setOption({
-      tooltip: { trigger: 'item', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151', fontSize: 12 }, padding: [8, 12], formatter: () => `恐慌指数: ${fearGreedIndex.value}<br/>${fearGreedIndex.value >= 50 ? '贪婪' : '恐慌'}` },
-      series: [{
-        type: 'gauge',
-        startAngle: 200,
-        endAngle: -20,
-        min: 0,
-        max: 100,
-        splitNumber: 10,
-        itemStyle: { color: fearColor },
-        progress: { show: true, width: 8, roundCap: true },
-        pointer: { show: false },
-        axisLine: { lineStyle: { width: 8, color: [[1, '#e5e7eb']] } },
-        axisTick: { show: false },
-        splitLine: { show: false },
-        axisLabel: { show: false },
-        detail: { 
-          valueAnimation: true, 
-          fontSize: 24, 
-          fontWeight: 'bold',
-          offsetCenter: [0, '20%'],
-          color: fearColor,
-          formatter: '{value}'
-        },
-        data: [{ value: fearGreedIndex.value }]
-      }]
-    })
-  }
-  
-  // 涨跌分布 - 饼图
-  if (pieChart.value) {
-    pieChartInstance = echarts.init(pieChart.value)
-    pieChartInstance.setOption({
-      tooltip: { 
-        trigger: 'item', 
-        backgroundColor: 'rgba(255,255,255,0.95)', 
-        borderColor: '#e5e7eb', 
-        textStyle: { color: '#374151', fontSize: 12 }, 
-        padding: [8, 12],
-        formatter: (params) => `${params.name}: <b style="color:${params.color}">${params.value}%</b>`
-      },
-      series: [{
-        type: 'pie',
-        radius: ['50%', '80%'],
-        center: ['50%', '50%'],
-        data: [
-          { value: upPercent.value, name: '上涨', itemStyle: { color: '#22c55e' } },
-          { value: downPercent.value, name: '下跌', itemStyle: { color: '#ef4444' } }
-        ],
-        label: { show: false },
-        emphasis: { scale: true, scaleSize: 5 }
-      }]
-    })
-  }
-}
-
-const updateCharts = () => {
-  // 更新成交额趋势图
-  if (volumeChartInstance) {
-    volumeChartInstance.setOption({
-      series: [{ data: [30, 45, 35, 50, 40, 60, totalVolume24h.value / 1e12] }]
-    })
-  }
-  // 更新总市值
-  if (marketChartInstance) {
-    marketChartInstance.setOption({
-      series: [{ data: [{ value: totalMarketCap.value / 1e12 }] }]
-    })
-  }
-  // 更新恐慌指数
-  if (fearChartInstance) {
-    const fearColor = fearGreedIndex.value >= 50 ? '#22c55e' : '#ef4444'
-    fearChartInstance.setOption({
-      series: [{
-        itemStyle: { color: fearColor },
-        detail: { color: fearColor },
-        data: [{ value: fearGreedIndex.value }]
-      }]
-    })
-  }
-  // 更新涨跌分布
-  if (pieChartInstance) {
-    pieChartInstance.setOption({
-      tooltip: { 
-        trigger: 'item', 
-        backgroundColor: 'rgba(255,255,255,0.95)', 
-        borderColor: '#e5e7eb', 
-        textStyle: { color: '#374151', fontSize: 12 }, 
-        padding: [8, 12],
-        formatter: (params) => `${params.name}: <b style="color:${params.color}">${params.value}%</b>`
-      },
-      series: [{
-        data: [
-          { value: upPercent.value, name: '上涨', itemStyle: { color: '#22c55e' } },
-          { value: downPercent.value, name: '下跌', itemStyle: { color: '#ef4444' } }
-        ]
-      }]
-    })
-  }
-}
-
-// 数据统计
-const totalVolume24h = ref(0)
-const totalMarketCap = ref(0)
 const fearGreedIndex = ref(50)
 const upPercent = ref(50)
 const downPercent = ref(50)
-const statsLoading = ref(true)
 
-// 缓存键名
-const CACHE_KEY = 'market_stats_cache'
-const CACHE_EXPIRY_KEY = 'market_stats_expiry'
+const newsList = ref([])
+const newsLoading = ref(true)
+const exchangeList = ref([])
+const exchangeLoading = ref(true)
 
-// 获取缓存过期时间 (次日零点)
+const CACHE_KEY = 'market_square_stats_cache'
+const CACHE_EXPIRY_KEY = 'market_square_stats_expiry'
+
+const sortedList = computed(() => coinList.value)
+const tickerCoins = computed(() => coinList.value.slice(0, 8))
+const marketStatusText = computed(() => fearGreedIndex.value >= 50 ? '市场情绪偏热' : '市场情绪偏谨慎')
+
+const formatPrice = (p) => p ? Number(p).toFixed(2) : '0.00'
+const formatCNY = (p) => p ? (p * 7.3).toFixed(0) : '0'
+const formatVolume = (v) => {
+  if (!v && v !== 0) return '-'
+  if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B'
+  if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M'
+  if (v >= 1e3) return (v / 1e3).toFixed(2) + 'K'
+  return Number(v).toFixed(2)
+}
+
+const onImageError = (e) => {
+  e.target.style.display = 'none'
+}
+
+const goToChart = (symbol) => {
+  router.push({ name: 'Chart', params: { symbol } })
+}
+
+const navigateToDetail = (item) => {
+  setNavigationArticle(item)
+  router.push({ name: 'NewsDetail', params: { id: item.id } })
+}
+
+const navigateToExchange = (exchange) => {
+  router.push({ name: 'ExchangeDetail', params: { id: exchange.id } })
+}
+
 const getNextMidnight = () => {
   const now = new Date()
   const tomorrow = new Date(now)
@@ -329,58 +284,41 @@ const getNextMidnight = () => {
   return tomorrow.getTime()
 }
 
-// 检查缓存是否有效
 const isCacheValid = () => {
   try {
     const expiry = localStorage.getItem(CACHE_EXPIRY_KEY)
-    if (!expiry) return false
-    const expiryTime = parseInt(expiry)
-    return Date.now() < expiryTime
+    return expiry ? Date.now() < parseInt(expiry) : false
   } catch {
     return false
   }
 }
 
-// 从缓存加载数据
 const loadFromCache = () => {
   try {
     const cached = localStorage.getItem(CACHE_KEY)
-    if (cached) {
-      const data = JSON.parse(cached)
-      totalVolume24h.value = data.volume || 0
-      totalMarketCap.value = data.marketCap || 0
-      fearGreedIndex.value = data.fearIndex || 50
-      upPercent.value = data.upPercent || 50
-      downPercent.value = data.downPercent || 50
-      return true
-    }
-  } catch {}
-  return false
+    if (!cached) return false
+    const data = JSON.parse(cached)
+    fearGreedIndex.value = data.fearIndex || 50
+    upPercent.value = data.upPercent || 50
+    downPercent.value = data.downPercent || 50
+    return true
+  } catch {
+    return false
+  }
 }
 
-// 保存数据到缓存
 const saveToCache = () => {
   try {
-    const data = {
-      volume: totalVolume24h.value,
-      marketCap: totalMarketCap.value,
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
       fearIndex: fearGreedIndex.value,
       upPercent: upPercent.value,
       downPercent: downPercent.value,
       savedAt: Date.now()
-    }
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    }))
     localStorage.setItem(CACHE_EXPIRY_KEY, getNextMidnight().toString())
-    console.log('[Market] 统计数据已缓存')
-  } catch (e) {
-    console.error('缓存失败:', e)
-  }
+  } catch {}
 }
 
-// 定时器ID
-let hourlyTimer = null
-
-// 获取下一个整点时间戳
 const getNextHour = () => {
   const now = new Date()
   const nextHour = new Date(now)
@@ -389,104 +327,61 @@ const getNextHour = () => {
   return nextHour.getTime()
 }
 
-// 设置每小时整点定时刷新
 const setupHourlyRefresh = () => {
   if (hourlyTimer) clearTimeout(hourlyTimer)
-  
-  const now = Date.now()
-  const nextHourTime = getNextHour()
-  const msUntilNextHour = nextHourTime - now
-  
-  const minutes = Math.round(msUntilNextHour / 1000 / 60)
-  console.log(`[Market] 距离下次刷新: ${minutes} 分钟 (${new Date(nextHourTime).toLocaleTimeString()})`)
-  
-  hourlyTimer = setTimeout(() => {
-    console.log('[Market] 整点定时刷新...')
-    fetchStats(true) // 强制刷新
-    setupHourlyRefresh() // 重新设置下次定时器
-  }, msUntilNextHour)
+  hourlyTimer = setTimeout(async () => {
+    await fetchStats(true)
+    await Promise.all([loadNews(true), loadExchangesData(true)])
+    setupHourlyRefresh()
+  }, getNextHour() - Date.now())
 }
 
 const fetchStats = async (forceRefresh = false) => {
-  // 检查缓存
-  if (!forceRefresh && isCacheValid() && loadFromCache()) {
-    console.log('[Market] 从缓存加载统计数据')
-    updateCharts()
-    statsLoading.value = false
-    return
-  }
-  
-  statsLoading.value = true
-  
-  try {
-    // 获取24H成交额（从CoinGecko获取）
-    try {
-      const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=1&page=1&sparkline=false&price_change_percentage=24h')
-      const cgData = await cgRes.json()
-      if (cgData && cgData[0] && cgData[0].total_volume) {
-        totalVolume24h.value = cgData[0].total_volume
-      }
-    } catch (e) {
-      console.error('获取24H成交额失败:', e)
-    }
+  if (!forceRefresh && isCacheValid() && loadFromCache()) return
 
-
-  } catch (e) {
-    console.error('fetchStats error:', e)
-  }
-  
-  // 获取恐慌指数（备用方案alternative.me，CORS无限制）
   try {
-    const fsRes = await fetch('https://api.alternative.me/fng/')
-    const fsData = await fsRes.json()
-    if (fsData.data && fsData.data[0]) {
-      fearGreedIndex.value = parseInt(fsData.data[0].value)
+    const fearRes = await fetch('https://api.alternative.me/fng/')
+    const fearData = await fearRes.json()
+    if (fearData?.data?.[0]?.value) {
+      fearGreedIndex.value = parseInt(fearData.data[0].value)
     }
   } catch (e) {
     console.error('fear index error:', e)
   }
-  
-  // 获取总市值（从CoinGecko全球市场获取）
-  try {
-    const cgRes = await fetch('https://api.coingecko.com/api/v3/global')
-    const cgData = await cgRes.json()
-    if (cgData && cgData.data && cgData.data.total_market_cap && cgData.data.total_market_cap.usd) {
-      totalMarketCap.value = cgData.data.total_market_cap.usd
-    }
-  } catch (e) {
-    console.error('获取总市值失败:', e)
-  }
-  
-  // 保存到缓存
+
   saveToCache()
-  
-  // 更新图表
-  updateCharts()
-  statsLoading.value = false
 }
 
-const sortedList = computed(() => {
-  // 固定13个流行币种，无序展示
-  return coinList.value
-})
-
-const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
-const formatCNY = (p) => p ? (p * 7.3).toFixed(0) : '0'
-const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : v
-const formatVolume = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(1) + '亿' : v
-const formatSupply = (s) => s >= 1e9 ? (s / 1e9).toFixed(1) + '亿' : s >= 1e6 ? (s / 1e6).toFixed(1) + '万' : s
-
-const onImageError = (e) => {
-  e.target.style.display = 'none'
-}
-
-const goToChart = (s) => {
-  // 暂时禁用跳转，点击只打印日志
-  console.log('Selected:', s)
+const fetchChange = async () => {
+  try {
+    const promises = coinConfig.map(async (c) => {
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
+      const d = await res.json()
+      return {
+        symbol: c.symbol,
+        price: d.lastPrice ? parseFloat(d.lastPrice) : 0,
+        change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0
+      }
+    })
+    const results = await Promise.all(promises)
+    results.forEach(r => {
+      const idx = coinList.value.findIndex(c => c.symbol === r.symbol)
+      if (idx !== -1) {
+        coinList.value[idx] = { ...coinList.value[idx], price: r.price, change: r.change }
+      }
+    })
+    const upCoins = results.filter(r => r.change > 0).length
+    const downCoins = results.filter(r => r.change < 0).length
+    const total = upCoins + downCoins
+    upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
+    downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
+    saveToCache()
+  } catch (e) {
+    console.error('fetchChange error:', e)
+  }
 }
 
 const connectWS = () => {
-  // 连接所有币种
   const streams = coinConfig.map(c => c.pair + '@ticker').join('/')
   ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`)
   ws.onmessage = (e) => {
@@ -503,209 +398,45 @@ const connectWS = () => {
   ws.onclose = () => setTimeout(connectWS, 3000)
 }
 
-const fetchChange = async () => {
+const loadNews = async (forceRefresh = false) => {
   try {
-    const promises = coinConfig.map(async (c) => {
-      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
-      const d = await res.json()
-      return { symbol: c.symbol, price: d.lastPrice ? parseFloat(d.lastPrice) : 0, change: d.priceChangePercent ? parseFloat(d.priceChangePercent) : 0 }
-    })
-    const results = await Promise.all(promises)
-    results.forEach(r => {
-      const idx = coinList.value.findIndex(c => c.symbol === r.symbol)
-      if (idx !== -1) {
-        coinList.value[idx] = { ...coinList.value[idx], price: r.price, change: r.change }
-      }
-    })
-    // 基于已加载的13个币种计算涨跌分布
-    const upCoins = results.filter(r => r.change > 0).length
-    const downCoins = results.filter(r => r.change < 0).length
-    const total = upCoins + downCoins
-    upPercent.value = total > 0 ? Math.round((upCoins / total) * 100) : 50
-    downPercent.value = total > 0 ? Math.round((downCoins / total) * 100) : 50
-    // 同步更新涨跌分布饼图
-    updateCharts()
-    // 更新实时价格Schema
-    updateCryptoSchema(results)
+    newsLoading.value = true
+    const result = await fetchNewsList(forceRefresh)
+    newsList.value = (result.articles || []).slice(0, 16)
   } catch (e) {
-    console.error('fetchChange error:', e)
+    console.error('loadNews error:', e)
+    newsList.value = []
+  } finally {
+    newsLoading.value = false
   }
 }
 
-// 更新加密货币实时价格Schema
-const updateCryptoSchema = (prices) => {
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "itemListElement": prices.map((p, i) => ({
-      "@type": "Product",
-      "name": coinList.value.find(c => c.symbol === p.symbol)?.name || p.symbol,
-      "description": `${p.symbol} 实时价格`,
-      "offers": {
-        "@type": "Offer",
-        "price": p.price.toFixed(2),
-        "priceCurrency": "USD",
-        "priceChange": p.change.toFixed(2) + "%"
-      },
-      "position": i + 1
+const loadExchangesData = async (forceRefresh = false) => {
+  try {
+    exchangeLoading.value = true
+    const list = await fetchExchanges(forceRefresh)
+    exchangeList.value = list.slice(0, 12).map(e => ({
+      ...e,
+      _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',
+      _typeDisplay: getExchangeTypeZh(e.id) || 'CEX'
     }))
+  } catch (e) {
+    console.error('loadExchanges error:', e)
+    exchangeList.value = []
+  } finally {
+    exchangeLoading.value = false
   }
-  
-  // 更新或创建schema
-  let schemaEl = document.getElementById('crypto-schema')
-  if (!schemaEl) {
-    schemaEl = document.createElement('script')
-    schemaEl.id = 'crypto-schema'
-    schemaEl.type = 'application/ld+json'
-    document.head.appendChild(schemaEl)
-  }
-  schemaEl.textContent = JSON.stringify(schemaData)
 }
 
-onMounted(() => {
-  // 先从缓存加载显示，再后台刷新
-  if (loadFromCache()) {
-    console.log('[Market] 页面加载: 从缓存渲染')
-    nextTick(() => {
-      initCharts()
-    })
-    // 缓存命中也要拉取币价（走 Binance API）
-    fetchChange()
-    // 后台异步刷新统计
-    fetchStats()
-  } else {
-    // 无缓存，正常加载
-    fetchStats().then(() => {
-      nextTick(() => {
-        initCharts()
-      })
-    })
-    // 同时获取币价
-    fetchChange()
-  }
-
-  // 设置每小时整点定时刷新
-  setupHourlyRefresh()
-
-  // WebSocket连接（实时更新币价）
+onMounted(async () => {
+  loadFromCache()
+  await Promise.all([fetchStats(), fetchChange(), loadNews(), loadExchangesData()])
   connectWS()
+  setupHourlyRefresh()
 })
 
-onUnmounted(() => { 
+onUnmounted(() => {
   ws?.close()
   if (hourlyTimer) clearTimeout(hourlyTimer)
-  volumeChartInstance?.dispose()
-  marketChartInstance?.dispose()
-  fearChartInstance?.dispose()
-  pieChartInstance?.dispose()
 })
 </script>
-
-<style>
-/* 走马灯容器样式 */
-.ticker-wrap {
-  width: 200%;           /* 宽度是屏幕的2倍，用于循环滚动 */
-  animation: ticker-scroll 30s linear infinite;  /* 30秒滚动一次，无限循环 */
-  display: flex;         /* 弹性布局 */
-  align-items: center;  /* 垂直居中 */
-}
-.ticker-wrap:hover {
-  animation-play-state: paused;  /* 鼠标悬停时暂停滚动 */
-}
-@keyframes ticker-scroll {
-  0% { transform: translateX(0); }       /* 开始位置 */
-  100% { transform: translateX(-50%); } /* 滚动到一半的位置 */
-}
-
-/* 走马灯每个项目的样式 */
-.ticker-wrap a {
-  display: flex;                    /* 弹性布局 */
-  align-items: center;             /* 垂直居中 */
-  gap: 6px;                        /* 项目内元素间距 */
-  padding: 6px 12px;              /* 内边距 */
-  margin-right: 8px;              /* 右外边距 */
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);  /* 渐变背景 */
-  border-radius: 20px;            /* 圆角20px */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);  /* 阴影 */
-  transition: all 0.3s ease;       /* 过渡动画0.3秒 */
-  white-space: nowrap;             /* 不换行 */
-  border: 1px solid #f0f0f0;      /* 边框 */
-}
-.ticker-wrap a:hover {
-  transform: translateY(-2px);    /* 悬停时向上移动2px */
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);  /* 悬停时橙色阴影 */
-  border-color: #F97316;         /* 悬停时边框变橙色 */
-}
-.ticker-wrap a img {
-  width: 20px;        /* 图标宽度20px */
-  height: 20px;       /* 图标高度20px */
-  border-radius: 50%; /* 圆形头像 */
-}
-.ticker-wrap a .font-bold {
-  font-size: 13px;    /* 币种名字体大小 */
-  color: #1f2937;     /* 字体颜色深灰 */
-}
-.ticker-wrap a .font-mono {
-  font-size: 12px;    /* 价格字体大小 */
-  color: #6b7280;     /* 价格颜色中灰 */
-}
-.ticker-wrap a .text-xs {
-  font-size: 11px;    /* 涨跌字体大小 */
-  padding: 2px 6px;  /* 涨跌内边距 */
-  border-radius: 10px; /* 涨跌圆角 */
-}
-
-.ticker-wrap:hover {
-  animation-play-state: paused;
-}
-@keyframes ticker-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* 炫酷骨架屏 */
-.skeleton-glow {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-}
-.skeleton-glow::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.15), transparent);
-  animation: shimmer 1.5s infinite;
-}
-.skeleton-glow::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 8px;
-  animation: border-glow 2s ease-in-out infinite;
-}
-.skeleton-text {
-  background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%);
-  background-size: 200% 100%;
-  animation: text-shimmer 1.2s infinite;
-  border-radius: 4px;
-}
-
-@keyframes shimmer {
-  0% { left: -50%; }
-  100% { left: 150%; }
-}
-
-@keyframes border-glow {
-  0%, 100% { box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.1); }
-  50% { box-shadow: inset 0 0 0 2px rgba(249, 115, 22, 0.3), 0 0 15px rgba(249, 115, 22, 0.2); }
-}
-
-@keyframes text-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-</style>
