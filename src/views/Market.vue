@@ -3,17 +3,6 @@
     <div class="max-w-[1400px] mx-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4">
       <!-- 顶部紧凑行情条 -->
       <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between gap-3">
-          <div>
-            <h1 class="text-base md:text-lg font-semibold text-slate-900">比特视界广场</h1>
-            <p class="text-xs text-slate-500 mt-0.5">行情、快讯、交易所一屏浏览</p>
-          </div>
-          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-            <span class="px-2 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100">紧凑模式</span>
-            <span>{{ marketStatusText }}</span>
-          </div>
-        </div>
-
         <div class="overflow-x-auto">
           <div class="min-w-max flex items-stretch gap-2 px-3 py-2 bg-slate-50/70">
             <button
@@ -247,7 +236,6 @@ const CACHE_EXPIRY_KEY = 'market_square_stats_expiry'
 
 const sortedList = computed(() => coinList.value)
 const tickerCoins = computed(() => coinList.value.slice(0, 8))
-const marketStatusText = computed(() => fearGreedIndex.value >= 50 ? '市场情绪偏热' : '市场情绪偏谨慎')
 
 const formatPrice = (p) => p ? Number(p).toFixed(2) : '0.00'
 const formatCNY = (p) => p ? (p * 7.3).toFixed(0) : '0'

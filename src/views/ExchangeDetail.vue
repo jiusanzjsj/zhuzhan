@@ -5,10 +5,11 @@
       <div class="max-w-7xl mx-auto px-4 py-5">
         <div class="flex items-center gap-4">
           <!-- 返回按钮 -->
-          <router-link to="/exchange" class="text-orange-400 hover:text-orange-300 transition p-1 -ml-1">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <router-link to="/" class="inline-flex items-center gap-1.5 text-white/90 hover:text-white transition px-2 py-1 rounded-lg bg-white/10 -ml-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
+            <span class="text-sm font-medium">返回首页</span>
           </router-link>
           <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-300/30 transform rotate-3">
             <svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,9 +55,9 @@
           </svg>
         </div>
         <p class="text-gray-600 mb-4">{{ error }}</p>
-        <button @click="$router.back()" class="px-4 sm:px-6 py-2 sm:py-3 bg-orange-500 text-black rounded-lg sm:rounded-xl hover:bg-orange-600 transition shadow-md sm:shadow-lg">
-          返回列表
-        </button>
+        <router-link to="/" class="inline-flex px-4 sm:px-6 py-2 sm:py-3 bg-orange-500 text-black rounded-lg sm:rounded-xl hover:bg-orange-600 transition shadow-md sm:shadow-lg">
+          返回首页
+        </router-link>
       </div>
     </div>
 

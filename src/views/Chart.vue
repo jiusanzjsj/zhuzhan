@@ -1,5 +1,13 @@
 <template>
   <div class="chart-page">
+    <div class="max-w-[1200px] mx-auto px-[15px] pt-[15px]">
+      <button class="back-home-chip" @click="goHome">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        返回首页
+      </button>
+    </div>
     <!-- Main -->
     <div class="main">
       <!-- Left Column -->
@@ -147,11 +155,13 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { updatePageSeo } from '../utils/seo'
 
 const currentTime = ref('')
 const price = ref(0), change = ref(0), high24h = ref(0), low24h = ref(0), volume24h = ref(0), quoteVolume = ref(0)
 let timeTimer = null, ws = null
+const router = useRouter()
 
 const path = window.location.pathname
 const match = path.match(/\/chart\/(\w+)/)
@@ -191,6 +201,7 @@ const onImgError = (e) => {
 const onHotImgError = (e) => {
   e.target.style.display = 'none'
 }
+const goHome = () => router.push('/')
 const formatVol = (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v >= 1e6 ? (v / 1e6).toFixed(1) + '万' : v
 const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v
 
@@ -285,6 +296,8 @@ onUnmounted(() => {
 body { font-family: 'Noto Sans SC', sans-serif; background: #f5f5f5; color: #333; }
 a { text-decoration: none; color: inherit; }
 .app { min-height: 100vh; }
+.back-home-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid #e5e7eb; background:#fff; color:#475569; padding:8px 12px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+.back-home-chip:hover { background:#fff7ed; color:#f97316; border-color:#fdba74; }
 
 .header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
 .header-left { display: flex; align-items: center; gap: 12px; }

@@ -5,29 +5,10 @@
         <div class="h-14 flex items-center gap-4">
           <router-link to="/" class="flex items-center gap-3 group flex-shrink-0">
             <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-orange-500/20 group-hover:ring-orange-500/50 transition" />
-            <div class="leading-tight">
-              <div class="text-[17px] font-bold text-slate-900">比特视界</div>
-              <div class="hidden md:block text-[11px] text-slate-400">Binance Square 风格紧凑广场</div>
-            </div>
+            <div class="text-[17px] font-bold text-slate-900">比特视界</div>
           </router-link>
 
-          <nav class="hidden md:flex items-center gap-1 ml-6">
-            <router-link
-              to="/"
-              class="px-4 py-2 text-sm rounded-lg transition border"
-              :class="$route.path === '/' ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-slate-600 border-transparent hover:text-orange-500 hover:bg-orange-50/60'"
-            >
-              广场
-            </router-link>
-          </nav>
-
           <div class="flex-1"></div>
-
-          <div class="hidden md:flex items-center gap-2 text-xs text-slate-400">
-            <span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">行情</span>
-            <span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">快讯</span>
-            <span class="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">交易所</span>
-          </div>
 
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
@@ -50,11 +31,8 @@
               class="px-4 py-3 rounded-xl text-sm transition flex items-center gap-3"
               :class="$route.path === '/' ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:text-orange-500 hover:bg-orange-50'"
             >
-              <span>🟠</span> 广场首页
+              <span>🏠</span> 首页
             </router-link>
-            <div class="px-4 text-xs text-slate-400 leading-5">
-              已整合：行情 / 快讯 / 交易所
-            </div>
           </nav>
         </div>
       </div>
@@ -75,7 +53,7 @@
             <img src="/src/assets/bsj.png" class="w-5 h-5 rounded-full" />
             <span>© 2026 比特视界</span>
           </div>
-          <div>页面已改为更紧凑的广场式信息流布局</div>
+          <div>加密货币行情、快讯与交易所信息平台</div>
         </div>
       </div>
     </footer>

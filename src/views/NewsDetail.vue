@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <header class="navbar">
       <div class="navbar-inner">
-        <router-link to="/news" class="back-btn">
+        <router-link to="/" class="back-btn">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
@@ -62,8 +62,8 @@
         <h1 class="news-title text-xl">资讯不存在</h1>
         <p class="news-meta">该资讯可能已被移除或不存在</p>
       </div>
-      <router-link to="/news" class="back-home-btn">
-        返回资讯列表
+      <router-link to="/" class="back-home-btn">
+        返回首页
       </router-link>
     </main>
     
