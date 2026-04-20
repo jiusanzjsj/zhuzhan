@@ -405,19 +405,35 @@ const ALLOWED_EXCHANGE_IDS = new Set([
   'okx',
   'bybitspot',
   'bybit',
+  'bybit-spot',
   'gateio',
   'gate',
+  'gate.io',
   'bitget',
   'huobi',
   'htx'
 ])
+
+const ALLOWED_EXCHANGE_NAMES = ['binance', 'okx', 'bybit', 'gate', 'gate.io', 'bitget', 'huobi', 'htx']
+
+const isAllowedExchange = (exchange) => {
+  const rawId = String(exchange?.id || '').toLowerCase().trim()
+  const rawName = String(exchange?.name || '').toLowerCase().trim()
+  const zhName = String(getExchangeNameZh(exchange?.id) || '').toLowerCase().trim()
+
+  if (ALLOWED_EXCHANGE_IDS.has(rawId)) return true
+
+  return ALLOWED_EXCHANGE_NAMES.some(name =>
+    rawName.includes(name) || zhName.includes(name)
+  )
+}
 
 const loadExchangesData = async (forceRefresh = false) => {
   try {
     exchangeLoading.value = true
     const list = await fetchExchanges(forceRefresh)
     exchangeList.value = list
-      .filter(e => ALLOWED_EXCHANGE_IDS.has(e.id))
+      .filter(e => isAllowedExchange(e))
       .map(e => ({
         ...e,
         _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',

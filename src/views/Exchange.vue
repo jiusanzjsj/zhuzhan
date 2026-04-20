@@ -272,24 +272,40 @@ const formatVolume = (vol) => {
 // --- 新增代码开始 ---
 
 // 只展示指定的 6 家交易所
-// 注意：火币在 CoinGecko 中常见 id 为 htx，这里同时兼容 huobi/htx
+// 同时兼容不同来源返回的 id / name 差异
 const ALLOWED_EXCHANGE_IDS = new Set([
   'binance',
   'okex',
   'okx',
   'bybitspot',
   'bybit',
+  'bybit-spot',
   'gateio',
   'gate',
+  'gate.io',
   'bitget',
   'huobi',
   'htx'
 ])
 
+const ALLOWED_EXCHANGE_NAMES = ['binance', 'okx', 'bybit', 'gate', 'gate.io', 'bitget', 'huobi', 'htx']
+
+const isAllowedExchange = (exchange) => {
+  const rawId = String(exchange?.id || '').toLowerCase().trim()
+  const rawName = String(exchange?.name || '').toLowerCase().trim()
+  const zhName = String(getExchangeNameZh(exchange?.id) || '').toLowerCase().trim()
+
+  if (ALLOWED_EXCHANGE_IDS.has(rawId)) return true
+
+  return ALLOWED_EXCHANGE_NAMES.some(name =>
+    rawName.includes(name) || zhName.includes(name)
+  )
+}
+
 // 创建过滤后的排序列表
 const filteredAndSortedExchanges = computed(() => {
   // 1. 先过滤出白名单中的交易所
-  let result = exchanges.value.filter(exchange => ALLOWED_EXCHANGE_IDS.has(exchange.id))
+  let result = exchanges.value.filter(exchange => isAllowedExchange(exchange))
 
   // 2. 再排序
   if (sortBy.value === 'trust_score_rank') {
