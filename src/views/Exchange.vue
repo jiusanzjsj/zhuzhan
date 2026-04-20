@@ -46,10 +46,9 @@
       </div>
 
       <!-- 数据列表 -->
-      <!-- 修改点：使用 filteredAndSortedExchanges 替代 sortedExchanges -->
       <div v-else class="bg-white rounded-b-xl divide-y divide-slate-100">
         <div
-          v-for="(exchange, index) in filteredAndSortedExchanges.slice(0, 6)"
+          v-for="(exchange, index) in filteredAndSortedExchanges"
           :key="exchange.id"
           class="px-4 py-3 sm:py-4 hover:bg-orange-50/50 transition cursor-pointer group"
           @click="navigateToDetail(exchange)"
@@ -272,15 +271,16 @@ const formatVolume = (vol) => {
 
 // --- 新增代码开始 ---
 
-// 定义允许显示的交易所 ID 白名单 (对应 exchange.js 中的 key)
-// binance, bybitspot, gateio (芝麻), okex, bitget, huobi (火币)
+// 只展示指定的 6 家交易所
+// 注意：火币在 CoinGecko 中常见 id 为 htx，这里同时兼容 huobi/htx
 const ALLOWED_EXCHANGE_IDS = new Set([
   'binance',
+  'okex',
   'bybitspot',
   'gateio',
-  'okex',
   'bitget',
-  'huobi'
+  'huobi',
+  'htx'
 ])
 
 // 创建过滤后的排序列表
@@ -302,20 +302,5 @@ const filteredAndSortedExchanges = computed(() => {
 
 // --- 新增代码结束 ---
 
-// 原有的 sortedExchanges 可以保留用于其他用途，或者如果不再需要可以删除
-// 这里为了兼容，我们让模板使用新的 filteredAndSortedExchanges
-const sortedExchanges = computed(() => {
-   // 如果其他地方还用得到，可以保留原逻辑，否则建议直接移除或重命名
-   let result = [...exchanges.value]
-   if (sortBy.value === 'trust_score_rank') {
-     result.sort((a, b) => a.trust_score_rank - b.trust_score_rank)
-   } else if (sortBy.value === 'trade_volume_24h') {
-     result.sort((a, b) => b.trade_volume_24h_btc - a.trade_volume_24h_btc)
-   } else if (sortBy.value === 'name') {
-     result.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
-   }
-   return result
-})
-
-// 注意：模板中已改为使用 filteredAndSortedExchanges
+// 注意：模板中已使用 filteredAndSortedExchanges
 </script>

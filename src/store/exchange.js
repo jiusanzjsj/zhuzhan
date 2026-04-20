@@ -84,7 +84,7 @@ export async function fetchExchanges(forceRefresh = false) {
     error.value = null
 
     const response = await fetchWithTimeout(
-      `https://api.coingecko.com/api/v3/exchanges?per_page=15&page=1`,
+      `https://api.coingecko.com/api/v3/exchanges?per_page=50&page=1`,
       {
         headers: {
           'Accept': 'application/json',
