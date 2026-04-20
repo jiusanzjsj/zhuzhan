@@ -399,15 +399,30 @@ const loadNews = async (forceRefresh = false) => {
   }
 }
 
+const ALLOWED_EXCHANGE_IDS = new Set([
+  'binance',
+  'okex',
+  'okx',
+  'bybitspot',
+  'bybit',
+  'gateio',
+  'gate',
+  'bitget',
+  'huobi',
+  'htx'
+])
+
 const loadExchangesData = async (forceRefresh = false) => {
   try {
     exchangeLoading.value = true
     const list = await fetchExchanges(forceRefresh)
-    exchangeList.value = list.slice(0, 12).map(e => ({
-      ...e,
-      _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',
-      _typeDisplay: getExchangeTypeZh(e.id) || 'CEX'
-    }))
+    exchangeList.value = list
+      .filter(e => ALLOWED_EXCHANGE_IDS.has(e.id))
+      .map(e => ({
+        ...e,
+        _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',
+        _typeDisplay: getExchangeTypeZh(e.id) || 'CEX'
+      }))
   } catch (e) {
     console.error('loadExchanges error:', e)
     exchangeList.value = []

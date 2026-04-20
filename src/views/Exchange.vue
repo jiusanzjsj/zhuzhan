@@ -276,8 +276,11 @@ const formatVolume = (vol) => {
 const ALLOWED_EXCHANGE_IDS = new Set([
   'binance',
   'okex',
+  'okx',
   'bybitspot',
+  'bybit',
   'gateio',
+  'gate',
   'bitget',
   'huobi',
   'htx'
