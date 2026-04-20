@@ -271,41 +271,39 @@ const formatVolume = (vol) => {
 
 // --- 新增代码开始 ---
 
-// 只展示指定的 6 家交易所
-// 同时兼容不同来源返回的 id / name 差异
-const ALLOWED_EXCHANGE_IDS = new Set([
-  'binance',
-  'okex',
-  'okx',
-  'bybitspot',
-  'bybit',
-  'bybit-spot',
-  'gateio',
-  'gate',
-  'gate.io',
-  'bitget',
-  'huobi',
-  'htx'
-])
+// 只展示指定的 6 家交易所，并按品牌归一化去重
+const TARGET_EXCHANGES = ['binance', 'okx', 'bybit', 'gate', 'bitget', 'htx']
 
-const ALLOWED_EXCHANGE_NAMES = ['binance', 'okx', 'bybit', 'gate', 'gate.io', 'bitget', 'huobi', 'htx']
-
-const isAllowedExchange = (exchange) => {
+const getCanonicalExchangeKey = (exchange) => {
   const rawId = String(exchange?.id || '').toLowerCase().trim()
   const rawName = String(exchange?.name || '').toLowerCase().trim()
   const zhName = String(getExchangeNameZh(exchange?.id) || '').toLowerCase().trim()
+  const text = `${rawId} ${rawName} ${zhName}`
 
-  if (ALLOWED_EXCHANGE_IDS.has(rawId)) return true
+  if (text.includes('binance us')) return ''
+  if (text.includes('binance')) return 'binance'
+  if (text.includes('okx') || text.includes('okex') || zhName.includes('欧易')) return 'okx'
+  if (text.includes('bybit')) return 'bybit'
+  if (text.includes('gate.io') || text.includes('gate') || zhName.includes('芝麻')) return 'gate'
+  if (text.includes('bitget')) return 'bitget'
+  if (text.includes('htx') || text.includes('huobi') || zhName.includes('火币')) return 'htx'
 
-  return ALLOWED_EXCHANGE_NAMES.some(name =>
-    rawName.includes(name) || zhName.includes(name)
-  )
+  return ''
 }
 
 // 创建过滤后的排序列表
 const filteredAndSortedExchanges = computed(() => {
-  // 1. 先过滤出白名单中的交易所
-  let result = exchanges.value.filter(exchange => isAllowedExchange(exchange))
+  const picked = new Map()
+
+  for (const exchange of exchanges.value) {
+    const key = getCanonicalExchangeKey(exchange)
+    if (!key || picked.has(key)) continue
+    picked.set(key, exchange)
+  }
+
+  let result = TARGET_EXCHANGES
+    .map(key => picked.get(key))
+    .filter(Boolean)
 
   // 2. 再排序
   if (sortBy.value === 'trust_score_rank') {
