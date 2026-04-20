@@ -6,10 +6,12 @@
 import express from 'express'
 import cors from 'cors'
 import axios from 'axios'
+import cheerio from 'cheerio'
 
 const app = express()
 const PORT = 3001
 const CRYPTOPANIC_TOKEN = '8c820bb21bc5acdc1dcca538410b3a478e26ccc8'
+const CHAINTHINK_URL = 'https://chainthink.cn/zh-CN/article'
 
 app.use(cors())
 app.use(express.json())
@@ -93,10 +95,52 @@ const BINANCE_FALLBACK = {
   BLURUSDT: { lastPrice: '0.40', priceChangePercent: '-2.00' },
 }
 
+async function fetchChainThinkNews() {
+  const response = await axios.get(CHAINTHINK_URL, { timeout: 8000 })
+  const $ = cheerio.load(response.data)
+  const results = []
+
+  $('a').each((_, el) => {
+    const href = $(el).attr('href') || ''
+    const text = $(el).text().replace(/\s+/g, ' ').trim()
+    if (!href || !/\/zh-CN\/article\//.test(href)) return
+    if (text.length < 8) return
+
+    const title = text.slice(0, 80)
+    const summary = ''
+    const fullUrl = href.startsWith('http') ? href : `https://chainthink.cn${href}`
+    if (!results.some(i => i.url === fullUrl)) {
+      results.push({
+        title,
+        summary,
+        time: '',
+        url: fullUrl,
+        tags: ['ChainThink'],
+        isImportant: false,
+        source: 'ChainThink'
+      })
+    }
+  })
+
+  return results.slice(0, 12)
+}
+
 app.get('/api/news', async (req, res) => {
   const cached = getCache('news')
   if (cached) return res.json(cached)
   
+  // 优先抓取 ChainThink
+  try {
+    const chainthink = await fetchChainThinkNews()
+    if (chainthink.length > 0) {
+      const result = { success: true, data: chainthink }
+      setCache('news', result)
+      return res.json(result)
+    }
+  } catch (e) {
+    console.error('获取 ChainThink 失败:', e.message)
+  }
+
   // 尝试从CryptoPanic获取实时数据
   try {
     const response = await axios.get(
@@ -139,6 +183,21 @@ app.get('/api/news/important', (req, res) => {
   const result = { success: true, data: FALLBACK_IMPORTANT }
   setCache('important', result)
   res.json(result)
+})
+
+app.get('/api/news/chainthink', async (req, res) => {
+  const cached = getCache('chainthink')
+  if (cached) return res.json(cached)
+
+  try {
+    const items = await fetchChainThinkNews()
+    const result = { success: true, data: items }
+    setCache('chainthink', result)
+    return res.json(result)
+  } catch (e) {
+    console.error('获取 ChainThink 快讯失败:', e.message)
+    return res.json({ success: true, data: [] })
+  }
 })
 
 /**
