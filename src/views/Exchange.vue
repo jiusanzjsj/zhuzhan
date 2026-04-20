@@ -19,7 +19,6 @@
             <option value="name">名称排序</option>
           </select>
         </div>
-
       </div>
 
       <!-- 表格头部 - 桌面端 -->
@@ -47,9 +46,10 @@
       </div>
 
       <!-- 数据列表 -->
+      <!-- 修改点：使用 filteredAndSortedExchanges 替代 sortedExchanges -->
       <div v-else class="bg-white rounded-b-xl divide-y divide-slate-100">
         <div
-          v-for="(exchange, index) in sortedExchanges.slice(0, 15)"
+          v-for="(exchange, index) in filteredAndSortedExchanges.slice(0, 6)"
           :key="exchange.id"
           class="px-4 py-3 sm:py-4 hover:bg-orange-50/50 transition cursor-pointer group"
           @click="navigateToDetail(exchange)"
@@ -191,7 +191,7 @@ const error = ref(null)
 
 const exchanges = ref([])
 
-// 国家代码转国旗emoji
+// ... [保留原有的 countryFlags, countryToRegion, getCountryFlag, getRegion 代码] ...
 const countryFlags = {
   'CN': '🇨🇳', 'US': '🇺🇸', 'HK': '🇭🇰', 'JP': '🇯🇵', 'KR': '🇰🇷',
   'UK': '🇬🇧', 'DE': '🇩🇪', 'SG': '🇸🇬', 'AU': '🇦🇺', 'CA': '🇨🇦',
@@ -203,24 +203,18 @@ const getCountryFlag = (country) => {
   return countryFlags[country] || '🌍'
 }
 
-// 国家代码转地区
 const countryToRegion = {
-  // 亚太
+  // ... [保留原有映射数据] ...
   'CN': '🌏 亚太', 'HK': '🌏 亚太', 'JP': '🌏 亚太', 'KR': '🌏 亚太',
   'SG': '🌏 亚太', 'VN': '🌏 亚太', 'TH': '🌏 亚太', 'MY': '🌏 亚太',
   'IN': '🌏 亚太', 'ID': '🌏 亚太', 'PH': '🌏 亚太', 'TW': '🌏 亚太',
   'AU': '🌏 亚太', 'NZ': '🌏 亚太',
-  // 北美
   'US': '🌎 北美', 'CA': '🌎 北美', 'MX': '🌎 北美',
-  // 欧洲
   'UK': '🌍 欧洲', 'DE': '🌍 欧洲', 'SE': '🌍 欧洲', 'CH': '🌍 欧洲',
   'RU': '🌍 欧洲', 'EU': '🌍 欧洲', 'NL': '🌍 欧洲', 'FR': '🌍 欧洲',
   'ES': '🌍 欧洲', 'IT': '🌍 欧洲', 'PL': '🌍 欧洲', 'CY': '🌍 欧洲',
-  // 中东
   'AE': '🏜️ 中东', 'IL': '🏜️ 中东', 'TR': '🏜️ 中东', 'SA': '🏜️ 中东',
-  // 南美
   'BR': '🌎 南美', 'AR': '🌎 南美', 'CL': '🌎 南美', 'VE': '🌎 南美',
-  // 非洲
   'KE': '🌍 非洲', 'NG': '🌍 非洲', 'ZA': '🌍 非洲',
 }
 
@@ -233,8 +227,7 @@ const loadExchanges = async (forceRefresh = false) => {
     loading.value = true
     error.value = null
     const list = await fetchExchanges(forceRefresh)
-    // 预处理国家显示字段,避免模板方法调用时机问题
-    exchanges.value = list.map(e => ({
+ exchanges.value = list.map(e => ({
       ...e,
       _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',
       _typeDisplay: getExchangeTypeZh(e.id) || 'CEX'
@@ -251,7 +244,6 @@ const handleRefresh = () => {
 }
 
 const navigateToDetail = (exchange) => {
-  // 把关键字段编码进query,防止组件实例问题导致数据丢失
   const preview = btoa(encodeURIComponent(JSON.stringify({
     name: exchange.name || '',
     image: exchange.image || '',
@@ -278,9 +270,25 @@ const formatVolume = (vol) => {
   return vol.toFixed(2)
 }
 
-const sortedExchanges = computed(() => {
-  let result = [...exchanges.value]
- 
+// --- 新增代码开始 ---
+
+// 定义允许显示的交易所 ID 白名单 (对应 exchange.js 中的 key)
+// binance, bybitspot, gateio (芝麻), okex, bitget, huobi (火币)
+const ALLOWED_EXCHANGE_IDS = new Set([
+  'binance',
+  'bybitspot',
+  'gateio',
+  'okex',
+  'bitget',
+  'huobi'
+])
+
+// 创建过滤后的排序列表
+const filteredAndSortedExchanges = computed(() => {
+  // 1. 先过滤出白名单中的交易所
+  let result = exchanges.value.filter(exchange => ALLOWED_EXCHANGE_IDS.has(exchange.id))
+
+  // 2. 再排序
   if (sortBy.value === 'trust_score_rank') {
     result.sort((a, b) => a.trust_score_rank - b.trust_score_rank)
   } else if (sortBy.value === 'trade_volume_24h') {
@@ -291,4 +299,23 @@ const sortedExchanges = computed(() => {
 
   return result
 })
+
+// --- 新增代码结束 ---
+
+// 原有的 sortedExchanges 可以保留用于其他用途，或者如果不再需要可以删除
+// 这里为了兼容，我们让模板使用新的 filteredAndSortedExchanges
+const sortedExchanges = computed(() => {
+   // 如果其他地方还用得到，可以保留原逻辑，否则建议直接移除或重命名
+   let result = [...exchanges.value]
+   if (sortBy.value === 'trust_score_rank') {
+     result.sort((a, b) => a.trust_score_rank - b.trust_score_rank)
+   } else if (sortBy.value === 'trade_volume_24h') {
+     result.sort((a, b) => b.trade_volume_24h_btc - a.trade_volume_24h_btc)
+   } else if (sortBy.value === 'name') {
+     result.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+   }
+   return result
+})
+
+// 注意：模板中已改为使用 filteredAndSortedExchanges
 </script>
