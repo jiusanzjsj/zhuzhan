@@ -34,6 +34,10 @@
 
         <!-- 新闻列表 -->
         <div v-else class="news-list">
+          <!-- 页面级别调试 -->
+          <div style="background: magenta; color: white; padding: 10px; margin: 10px 0;">
+            DEBUG: newsList.length = {{ newsList.length }}
+          </div>
           <div 
             v-for="(item, index) in newsList" 
             :key="item.id"
@@ -51,17 +55,38 @@
               <div class="item-card">
                 <div class="card-top">
                   <span class="card-badge">快讯</span>
-                  <span class="card-source">{{ item.source }}</span>
+                  <span v-if="debugMode" class="debug-pill">{{ item.image ? '有image' : '无image' }}</span>
+                  <span v-if="debugMode && imageErrors[item.id]" class="debug-pill debug-pill-error">图片加载失败</span>
                 </div>
-                <h3 class="card-title">{{ item.title }}</h3>
-                <p class="card-desc" v-if="item.description">{{ item.description }}</p>
-                <div class="card-footer">
-                  <span class="read-more">
-                    阅读全文
-                    <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </span>
+                <div class="card-body-row" :class="{ 'has-image': item.image }">
+                  <!-- 调试信息：确保这一行显示 -->
+                  <div style="background: yellow; padding: 5px; font-size: 12px;">
+                    DEBUG: image = {{ item.image ? '有值:' + item.image : '空' }}
+                  </div>
+                  <div class="card-body-main">
+                    <h3 class="card-title">{{ item.title }}</h3>
+                    <p class="card-desc" v-if="item.description">{{ item.description }}</p>
+                    <div class="card-footer">
+                      <span class="read-more">
+                        阅读全文
+                        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="card-thumb" :style="{ display: item.image ? 'block' : 'none' }">
+                    <!-- 测试用硬编码图片 -->
+                    <img src="https://cos.chainthink.cn/101_admin_file/890604557265726264/890604557265726264.png" alt="test" style="width: 100%; height: 100%; object-fit: cover; border: 3px solid red;" />
+                    <!-- 实际图片 -->
+                    <img v-if="false" :src="item.image || ''" :alt="item.title" loading="lazy" @error="onImageError(item.id, $event)" style="width: 100%; height: 100%; object-fit: cover;" />
+                  </div>
+                </div>
+                <div v-if="debugMode" class="debug-box">
+                  <div><strong>id:</strong> {{ item.id }}</div>
+                  <div><strong>image:</strong> {{ item.image || '空' }}</div>
+                  <div><strong>source:</strong> {{ item.source || '空' }}</div>
+                  <div><strong>load:</strong> {{ imageErrors[item.id] ? 'error' : 'pending/ok' }}</div>
                 </div>
               </div>
             </div>
@@ -86,7 +111,6 @@
               <span class="hot-rank" :class="{ 'top': index < 3 }">{{ index + 1 }}</span>
               <div class="hot-content">
                 <p class="hot-title">{{ item.title }}</p>
-                <span class="hot-source">{{ item.source }}</span>
               </div>
             </div>
           </div>
@@ -131,6 +155,8 @@ const router = useRouter()
 const newsList = ref([])
 const hotNews = ref([])
 const loading = ref(true)
+const debugMode = ref(true)
+const imageErrors = ref({})
 
 const loadNews = async (forceRefresh = false) => {
   try {
@@ -138,6 +164,8 @@ const loadNews = async (forceRefresh = false) => {
     const result = await fetchNewsList(forceRefresh)
     newsList.value = result.articles || []
     hotNews.value = result.hotNews || []
+    console.log('[NewsList] loaded newsList:', newsList.value.length, 'items')
+    console.log('[NewsList] first item image:', newsList.value[0]?.image)
   } catch (err) {
     console.error('加载新闻失败:', err)
   } finally {
@@ -162,8 +190,18 @@ const filterByCategory = (category) => {
   console.log('筛选:', category)
 }
 
+const onImageError = (id, event) => {
+  imageErrors.value = {
+    ...imageErrors.value,
+    [id]: true
+  }
+  if (event?.target) {
+    event.target.style.display = 'none'
+  }
+}
+
 onMounted(() => {
-  loadNews()
+  loadNews(true)
 })
 </script>
 
@@ -344,6 +382,62 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.debug-pill {
+  font-size: 11px;
+  color: #0f766e;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.debug-pill-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.debug-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #475569;
+  word-break: break-all;
+}
+
+.card-body-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.card-body-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-thumb {
+  width: 140px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f3f4f6;
+  border: 5px solid blue;
+}
+
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .card-badge {
@@ -615,6 +709,15 @@ onMounted(() => {
   
   .card-title {
     font-size: 14px;
+  }
+
+  .card-body-row {
+    flex-direction: column;
+  }
+
+  .card-thumb {
+    width: 100%;
+    height: 180px;
   }
 }
 </style>
