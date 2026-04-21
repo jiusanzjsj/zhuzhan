@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "server": "cd server && npm start",
+    "fetch:news:py": "python scripts/fetch_chainthink.py",
     "build": "vite build && npm run prerender",
     "build:spa": "vite build",
     "prerender": "node scripts/prerender-routes.js",

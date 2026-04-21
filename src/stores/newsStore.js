@@ -68,28 +68,20 @@ export async function fetchNewsList(forceRefresh = false) {
     loading.value = true
     error.value = null
 
-    // 优先从后端API获取，后备直连CryptoPanic
+    // 优先读取 Python 抓取生成的静态 JSON，后端接口作为兜底
     let rawData = []
-    try {
+
+    const staticResponse = await fetchWithTimeout(`/data/chainthink-news.json${forceRefresh ? `?t=${Date.now()}` : ''}`)
+    if (staticResponse.ok) {
+      const result = await staticResponse.json()
+      rawData = result.data || result.results || []
+    }
+
+    if (!Array.isArray(rawData) || rawData.length === 0) {
       const response = await fetchWithTimeout('/api/news')
       if (response.ok) {
         const result = await response.json()
-        // 兼容后端格式: result.data (数组)
         rawData = result.data || result.results || []
-      }
-      if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('数据格式错误')
-    } catch {
-      // 后备：直连CryptoPanic
-      try {
-        const response = await fetchWithTimeout(
-          'https://cryptopanic.com/api/developer/v2/posts/?auth_token=8c820bb21bc5acdc1dcca538410b3a478e26ccc8&regions=zh'
-        )
-        if (response.ok) {
-          const data = await response.json()
-          rawData = data.results || []
-        }
-      } catch (e) {
-        console.warn('CryptoPanic备用也失败:', e.message)
       }
     }
 
@@ -97,8 +89,13 @@ export async function fetchNewsList(forceRefresh = false) {
       throw new Error('无数据')
     }
 
-    const articlesData = rawData.slice(0, 10).map((item, index) => ({
-      id: index + 1,
+    const cleanData = rawData.filter(item => {
+      const t = String(item?.title || '').trim()
+      return t && !t.includes('ChainThink链智库') && !t.includes('ChainThink') && !t.includes('链智库')
+    })
+
+    const articlesData = cleanData.slice(0, 20).map((item, index) => ({
+      id: item.id || index + 1,
       title: item.title || '无标题',
       tag: '快讯',
       tagClass: 'bg-blue-50 text-blue-600 border border-blue-100',
@@ -106,17 +103,19 @@ export async function fetchNewsList(forceRefresh = false) {
       views: Math.floor(Math.random() * 900 + 100),
       comments: Math.floor(Math.random() * 50 + 10),
       url: item.url || '',
-      image: '',
+      image: item.coverImage || '',
       description: item.summary || item.description || '',
-      source: item.source || item.source?.name || '比特视界',
+      source: '',
       content: item.summary || item.description || '',
-      publishedAt: item.published_at
+      publishedAt: item.published_at,
+      tags: item.tags || [],
+      isImportant: !!item.isImportant
     }))
 
     const hotData = rawData.slice(0, 5).map((item, index) => ({
       id: index + 1,
       title: item.title || '无标题',
-      source: item.source || item.source?.name || '快讯',
+      source: '',
       time: item.time || formatTime(item.published_at)
     }))
 
