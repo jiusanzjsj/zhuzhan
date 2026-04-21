@@ -159,21 +159,58 @@ async function fetchDetail(detailId) {
   if (!detailId) return { content: '', image: '' }
   try {
     const page = await httpGet(`${DETAIL_URL_PREFIX}${detailId}`)
+    
+    // Extract coverImage from the page
     const imageMatch = page.match(/"coverImage":"([^"]+)"/)
-    const textMatch = page.match(/"text":"([\s\S]*?)","title":"/)
+    
     let content = ''
-    if (textMatch?.[1]) {
-      const rawText = textMatch[1]
-        .replace(/\\n/g, '\n')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-      content = stripTags(rawText)
+    
+    // Method 1: Try to extract from rich_text_content div
+    const richContentMatch = page.match(/<div class="[^"]*rich_text_content[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="/)
+    if (richContentMatch) {
+      const htmlContent = richContentMatch[1]
+      // Extract all p tags
+      const pMatches = htmlContent.match(/<p[^>]*>([\s\S]*?)<\/p>/gi)
+      if (pMatches && pMatches.length > 0) {
+        const texts = pMatches.map(p => {
+          // Remove img tags but keep alt text
+          let text = p.replace(/<img[^>]*alt="([^"]*)"[^>]*>/gi, ' [$1] ')
+          text = text.replace(/<[^>]+>/g, ' ') // Remove all HTML
+          text = text.replace(/&nbsp;/g, ' ')
+          text = text.replace(/&amp;/g, '&')
+          text = text.replace(/&quot;/g, '"')
+          text = text.replace(/&#39;/g, "'")
+          text = text.replace(/&lt;/g, '<')
+          text = text.replace(/&gt;/g, '>')
+          text = text.replace(/\s+/g, ' ').trim()
+          return text
+        }).filter(t => t.length > 10) // Filter out short fragments
+        
+        if (texts.length > 0) {
+          content = texts.join('\n\n')
+        }
+      }
     }
+    
+    // Method 2: Fallback to initDetalis if method 1 failed
+    if (!content || content.length < 100) {
+      const initDetalisMatch = page.match(/"initDetalis":(\{[\s\S]*?\}])\}\}\}/)
+      if (initDetalisMatch) {
+        try {
+          const initData = JSON.parse('{' + initDetalisMatch[1] + '}}')
+          if (initData?.info?.text) {
+            content = stripTags(initData.info.text)
+          }
+        } catch {}
+      }
+    }
+    
     return {
       content,
       image: normalizeImage(imageMatch?.[1] || ''),
     }
-  } catch {
+  } catch (err) {
+    console.error('fetchDetail error:', err.message)
     return { content: '', image: '' }
   }
 }

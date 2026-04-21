@@ -62,7 +62,7 @@
                   ></div>
                 </div>
 
-                <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <!-- <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <div class="rounded-xl bg-white/70 px-3 py-2 border border-white/80">
                     <div class="text-slate-400">上涨占比</div>
                     <div class="font-semibold text-green-600 mt-0.5">{{ upPercent }}%</div>
@@ -71,7 +71,7 @@
                     <div class="text-slate-400">下跌占比</div>
                     <div class="font-semibold text-red-600 mt-0.5">{{ downPercent }}%</div>
                   </div>
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
@@ -148,6 +148,10 @@
                   </div>
                   <h3 class="text-sm md:text-[15px] font-semibold leading-6 text-slate-900 line-clamp-2">{{ item.title }}</h3>
                   <p v-if="item.description" class="mt-1.5 text-[13px] leading-6 text-slate-500 line-clamp-2">{{ item.description }}</p>
+                  <!-- 新闻图片 -->
+                  <div v-if="item.image" class="mt-2 rounded-lg overflow-hidden">
+                    <img :src="item.image" :alt="item.title" class="w-full h-24 sm:h-28 object-cover" loading="lazy" />
+                  </div>
                 </div>
               </div>
             </button>

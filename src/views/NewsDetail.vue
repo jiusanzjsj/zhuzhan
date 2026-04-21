@@ -27,14 +27,13 @@
         <h1 class="news-title text-xl sm:text-2xl lg:text-3xl">{{ article.title }}</h1>
         <div class="news-meta flex flex-wrap gap-2 sm:gap-4">
           <span class="meta-item text-xs sm:text-sm">{{ article.time }}</span>
-          <span class="meta-item text-xs sm:text-sm hidden sm:inline">{{ article.source }}</span>
           
         </div>
       </div>
       
       <!-- 封面图 -->
       <div class="news-image" v-if="article.image || contentData.image">
-        <img :src="article.image || contentData.image" :alt="article.title">
+        <img :src="article.image || contentData.image" :alt="article.title" loading="lazy">
       </div>
       
       <div class="news-body">
@@ -126,7 +125,7 @@ const loadArticle = () => {
   if (navArticle) {
     article.value = navArticle
     contentData.value = { 
-      content: navArticle.description || '暂无详细内容', 
+      content: navArticle.content || navArticle.description || '暂无详细内容', 
       image: navArticle.image || '' 
     }
   }
@@ -137,7 +136,7 @@ const loadArticle = () => {
     if (storeArticle) {
       article.value = storeArticle
       contentData.value = { 
-        content: storeArticle.description || '暂无详细内容', 
+        content: storeArticle.content || storeArticle.description || '暂无详细内容', 
         image: storeArticle.image || '' 
       }
     }
@@ -263,8 +262,9 @@ body {
 
 .news-image img {
   width: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
 }
 
 .news-body {

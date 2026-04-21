@@ -49,29 +49,16 @@ async function fetchWithTimeout(url, options = {}) {
  * 获取新闻列表
  */
 export async function fetchNewsList(forceRefresh = false) {
-  // 内存缓存优先
-  if (!forceRefresh && articles.value.length > 0) {
-    return { articles: articles.value, hotNews: hotNews.value }
-  }
-
-  // API缓存
-  if (!forceRefresh) {
-    const cached = apiCache.get('news_list')
-    if (cached && cached.articles) {
-      articles.value = cached.articles
-      hotNews.value = cached.hotNews
-      return cached
-    }
-  }
-
   try {
     loading.value = true
     error.value = null
 
-    // 优先读取 Python 抓取生成的静态 JSON，后端接口作为兜底
+    // 优先读取本地抓取生成的静态 JSON，强制绕过浏览器缓存
     let rawData = []
 
-    const staticResponse = await fetchWithTimeout(`/data/chainthink-news.json${forceRefresh ? `?t=${Date.now()}` : ''}`)
+    const staticResponse = await fetchWithTimeout(`/data/chainthink-news.json?t=${Date.now()}`, {
+      cache: 'no-store'
+    })
     if (staticResponse.ok) {
       const result = await staticResponse.json()
       rawData = result.data || result.results || []
@@ -103,10 +90,10 @@ export async function fetchNewsList(forceRefresh = false) {
       views: Math.floor(Math.random() * 900 + 100),
       comments: Math.floor(Math.random() * 50 + 10),
       url: item.url || '',
-      image: item.coverImage || '',
+      image: item.coverImage || item.image || '',
       description: item.summary || item.description || '',
-      source: '',
-      content: item.summary || item.description || '',
+      source: item.source || '',
+      content: item.content || item.summary || item.description || '',
       publishedAt: item.published_at,
       tags: item.tags || [],
       isImportant: !!item.isImportant
