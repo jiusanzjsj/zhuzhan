@@ -37,24 +37,25 @@
       </div>
       
       <div class="news-body">
-        <!-- 文章正文 -->
-        <div v-if="contentData.content" class="article-content">
-          <p class="content-text text-sm sm:text-base whitespace-pre-line">{{ contentData.content }}</p>
-        </div>
-        
-        <!-- 文章配图 -->
-        <div v-if="article.images && article.images.length > 0" class="mt-4">
-          <h4 class="text-sm font-semibold mb-2">配图</h4>
-          <div class="grid grid-cols-2 gap-2">
+        <!-- 文章内容（块级渲染，图片文字交叉显示） -->
+        <div v-if="article.blocks && article.blocks.length > 0" class="article-blocks">
+          <div v-for="(block, idx) in article.blocks" :key="idx" class="mb-4">
+            <!-- 文字段落 -->
+            <p v-if="block.text" class="text-sm sm:text-base leading-relaxed text-gray-700 whitespace-pre-line">{{ block.text }}</p>
+            <!-- 段落中的图片 -->
             <img 
-              v-for="(img, idx) in article.images" 
-              :key="idx"
-              :src="img" 
+              v-if="block.image" 
+              :src="block.image" 
               :alt="article.title + ' 图片' + (idx + 1)"
-              class="w-full h-40 object-cover rounded-lg"
+              class="w-full h-auto max-h-96 object-contain rounded-lg mt-2"
               loading="lazy"
             />
           </div>
+        </div>
+        
+        <!-- 兼容：纯文本模式（如果没有blocks） -->
+        <div v-else-if="contentData.content" class="article-content">
+          <p class="content-text text-sm sm:text-base whitespace-pre-line">{{ contentData.content }}</p>
         </div>
         
         <!-- 无内容 -->

@@ -156,7 +156,7 @@ function stripTags(text) {
 }
 
 async function fetchDetail(detailId) {
-  if (!detailId) return { content: '', image: '', images: [] }
+  if (!detailId) return { content: '', image: '', images: [], blocks: [] }
   try {
     const page = await httpGet(`${DETAIL_URL_PREFIX}${detailId}`)
     
@@ -166,54 +166,50 @@ async function fetchDetail(detailId) {
     
     let content = ''
     let images = []
+    let blocks = []
     
     // Method 1: Try to extract from rich_text_content div
     const richContentMatch = page.match(/<div class="[^"]*rich_text_content[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="/)
     if (richContentMatch) {
       const htmlContent = richContentMatch[1]
       
-      // Extract all img tags URLs
-      const imgMatches = htmlContent.match(/<img[^>]*src="([^"]+)"[^>]*>/gi)
-      if (imgMatches) {
-        imgMatches.forEach(imgTag => {
-          const srcMatch = imgTag.match(/src="([^"]+)"/)
-          if (srcMatch) {
-            let url = srcMatch[1]
-            // Handle relative URLs
-            if (url.startsWith('//')) url = 'https:' + url
-            else if (url.startsWith('/')) url = 'https://chainthink.cn' + url
-            if (url && !url.includes('data:')) {
-              images.push(url)
-            }
-          }
-        })
-      }
+      // Split by p tags but keep img tags in between
+      const segments = htmlContent.split(/(<p[^>]*>[\s\S]*?<\/p>)/gi)
       
-      // Extract all p tags
-      const pMatches = htmlContent.match(/<p[^>]*>([\s\S]*?)<\/p>/gi)
-      if (pMatches && pMatches.length > 0) {
-        const texts = pMatches.map(p => {
-          // Remove img tags but keep alt text
-          let text = p.replace(/<img[^>]*alt="([^"]*)"[^>]*>/gi, ' [$1] ')
-          text = text.replace(/<[^>]+>/g, ' ') // Remove all HTML
-          text = text.replace(/&nbsp;/g, ' ')
-          text = text.replace(/&amp;/g, '&')
-          text = text.replace(/&quot;/g, '"')
-          text = text.replace(/&#39;/g, "'")
-          text = text.replace(/&lt;/g, '<')
-          text = text.replace(/&gt;/g, '>')
-          text = text.replace(/\s+/g, ' ').trim()
-          return text
-        }).filter(t => t.length > 10) // Filter out short fragments
+      segments.forEach(segment => {
+        if (!segment.trim()) return
         
-        if (texts.length > 0) {
-          content = texts.join('\n\n')
+        // Check if this segment has an image
+        let imgUrl = null
+        const imgMatch = segment.match(/<img[^>]*src="([^"]+)"[^>]*>/i)
+        if (imgMatch) {
+          let url = imgMatch[1]
+          if (url.startsWith('//')) url = 'https:' + url
+          else if (url.startsWith('/')) url = 'https://chainthink.cn' + url
+          if (url && !url.includes('data:')) {
+            imgUrl = url
+            images.push(url)
+          }
         }
-      }
+        
+        // Extract text content
+        let text = segment.replace(/<[^>]+>/g, ' ')
+        text = text.replace(/&nbsp;/g, ' ')
+        text = text.replace(/&amp;/g, '&')
+        text = text.replace(/&quot;/g, '"')
+        text = text.replace(/&#39;/g, "'")
+        text = text.replace(/&lt;/g, '<')
+        text = text.replace(/&gt;/g, '>')
+        text = text.replace(/\s+/g, ' ').trim()
+        
+        if (text.length > 10 || imgUrl) {
+          blocks.push({ text, image: imgUrl })
+        }
+      })
     }
     
     // Method 2: Fallback to initDetalis if method 1 failed
-    if (!content || content.length < 100) {
+    if (blocks.length === 0) {
       const initDetalisMatch = page.match(/"initDetalis":(\{[\s\S]*?\}])\}\}\}/)
       if (initDetalisMatch) {
         try {
@@ -233,11 +229,12 @@ async function fetchDetail(detailId) {
     return {
       content,
       image: mainImage,
-      images: images
+      images: images,
+      blocks: blocks
     }
   } catch (err) {
     console.error('fetchDetail error:', err.message)
-    return { content: '', image: '', images: [] }
+    return { content: '', image: '', images: [], blocks: [] }
   }
 }
 
@@ -272,6 +269,7 @@ async function buildItems(payloadText, limit, withDetail) {
       if (detail.image && !result.coverImage) result.coverImage = detail.image
       if (detail.content) result.content = detail.content
       if (detail.images && detail.images.length > 0) result.images = detail.images
+      if (detail.blocks && detail.blocks.length > 0) result.blocks = detail.blocks
       await sleep(200)
     }
 

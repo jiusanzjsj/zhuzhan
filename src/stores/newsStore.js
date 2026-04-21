@@ -92,6 +92,7 @@ export async function fetchNewsList(forceRefresh = false) {
       url: item.url || '',
       image: item.coverImage || item.image || '',
       images: item.images || [],
+      blocks: item.blocks || [],
       description: item.summary || item.description || '',
       source: item.source || '',
       content: item.content || item.summary || item.description || '',
