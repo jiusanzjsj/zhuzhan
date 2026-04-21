@@ -290,17 +290,17 @@ const setNewsSeo = () => {
   })
 }
 
-const loadArticle = () => {
+const loadArticle = async () => {
   loading.value = true
   article.value = null
   contentData.value = { content: '', image: '' }
 
   const navArticle = getNavigationArticle()
-  if (navArticle) {
+  if (navArticle && navArticle.id == route.params.id) {
     article.value = navArticle
     contentData.value = {
       content: navArticle.content || navArticle.description || '暂无详细内容',
-      image: navArticle.image || ''
+      image: navArticle.image || navArticle.coverImage || ''
     }
   }
 
@@ -310,9 +310,27 @@ const loadArticle = () => {
       article.value = storeArticle
       contentData.value = {
         content: storeArticle.content || storeArticle.description || '暂无详细内容',
-        image: storeArticle.image || ''
+        image: storeArticle.image || storeArticle.coverImage || ''
       }
     }
+  }
+
+  // 刷新页面时store为空，从后端news列表里找
+  if (!article.value) {
+    try {
+      const res = await fetch('/api/news')
+      const json = await res.json()
+      if (json.success && json.data) {
+        const found = json.data.find(item => String(item.id) === String(route.params.id))
+        if (found) {
+          article.value = found
+          contentData.value = {
+            content: found.content || found.description || '暂无详细内容',
+            image: found.image || found.coverImage || ''
+          }
+        }
+      }
+    } catch {}
   }
 
   loading.value = false
