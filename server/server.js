@@ -19,14 +19,53 @@ app.use(express.json())
 // 缓存
 const cache = new Map()
 const CACHE_TTL = 5 * 60 * 1000
+const FETCH_INTERVAL = 2 * 60 * 60 * 1000 // 2小时
+
+// 主动预缓存（启动时 + 每2小时抓取一次）
+const prefetchNews = async () => {
+  try {
+    const chainthink = await fetchChainThinkNews()
+    if (chainthink.length > 0) {
+      setCache('news', { success: true, data: chainthink }, FETCH_INTERVAL)
+      console.log(`[${new Date().toLocaleTimeString()}] 快讯已刷新，共 ${chainthink.length} 条`)
+    }
+  } catch (e) {
+    console.error('定时抓取快讯失败:', e.message)
+  }
+}
+
+const prefetchChain = async () => {
+  try {
+    const items = await fetchChainThinkNews()
+    setCache('chain', { success: true, data: items.slice(0, 5).map(i => ({ title: i.title, time: i.time, url: i.url })) }, FETCH_INTERVAL)
+  } catch {}
+}
+
+const prefetchImportant = async () => {
+  try {
+    const items = await fetchChainThinkNews()
+    setCache('important', { success: true, data: items.slice(0, 3).map(i => ({ title: i.title, url: i.url })) }, FETCH_INTERVAL)
+  } catch {}
+}
+
+// 启动时立即抓取一次
+prefetchNews()
+prefetchChain()
+prefetchImportant()
+
+// 每2小时定时抓取
+setInterval(prefetchNews, FETCH_INTERVAL)
+setInterval(prefetchChain, FETCH_INTERVAL)
+setInterval(prefetchImportant, FETCH_INTERVAL)
 
 const getCache = (key) => {
   const item = cache.get(key)
   if (!item) return null
-  if (Date.now() - item.timestamp > CACHE_TTL) { cache.delete(key); return null }
+  const ttl = item.ttl || CACHE_TTL
+  if (Date.now() - item.timestamp > ttl) { cache.delete(key); return null }
   return item.data
 }
-const setCache = (key, data) => cache.set(key, { data, timestamp: Date.now() })
+const setCache = (key, data, ttl = CACHE_TTL) => cache.set(key, { data, timestamp: Date.now(), ttl })
 
 // 后备数据
 const FALLBACK_NEWS = [
