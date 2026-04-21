@@ -5,10 +5,10 @@
       <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="overflow-hidden py-2 bg-slate-50/70">
           <div class="ticker-wrapper">
-            <div class="ticker-content" v-if="coinList.value && coinList.value.length">
+            <div class="ticker-content">
               <!-- 复制一份内容用于无缝循环 -->
               <button
-                v-for="coin in [...coinList.value, ...coinList.value]"
+                v-for="coin in [...tickerCoins, ...tickerCoins]"
                 :key="coin.symbol + '-' + Math.random()"
                 class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl hover:border-orange-300 hover:bg-orange-50/40 transition whitespace-nowrap mx-2"
                 @click="goToChart(coin.symbol)"
@@ -392,7 +392,7 @@ const fetchStats = async (forceRefresh = false) => {
 const fetchChange = async () => {
   try {
     const promises = coinConfig.map(async (c) => {
-      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
+      const res = await fetch(`https://www.openupbtc.com/binance-api/api/v3/ticker/24hr?symbol=${c.pair.toUpperCase()}`)
       const d = await res.json()
       return {
         symbol: c.symbol,
@@ -419,22 +419,39 @@ const fetchChange = async () => {
 }
 
 const connectWS = () => {
+  // 1. 生成所有币种的 stream 路径
   const streams = coinConfig.map(c => c.pair + '@ticker').join('/')
-  ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`)
+
+  // 2. 将原有的币安域名替换为你自己的服务器域名，并加上 Nginx 匹配前缀 /binance-ws/
+  // 注意：不再需要 :9443 端口，因为 Nginx 已经在 443(HTTPS) 端口帮你转发了
+  const wsUrl = `wss://www.openupbtc.com/binance-ws/stream?streams=${streams}`
+
+  ws = new WebSocket(wsUrl)
+
   ws.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data).data
       if (!d) return
+      // 这里的逻辑保持不变
       const c = coinList.value.find(x => x.symbol === d.s.replace('USDT', ''))
       if (c) {
         if (d.c) c.price = parseFloat(d.c)
         if (d.P) c.change = parseFloat(d.P)
       }
-    } catch {}
+    } catch (err) {
+      console.error("解析WS数据失败", err)
+    }
   }
-  ws.onclose = () => setTimeout(connectWS, 3000)
-}
 
+  ws.onerror = (err) => {
+    console.error("WS连接发生错误:", err)
+  }
+
+  ws.onclose = () => {
+    console.log("WS连接已断开，3秒后重连...")
+    setTimeout(connectWS, 3000)
+  }
+}
 const loadNews = async (forceRefresh = false) => {
   try {
     newsLoading.value = true
