@@ -316,6 +316,7 @@ app.post('/api/forum', (req, res) => {
     return res.status(400).json({ success: false, message: '内容不能为空' })
   }
   const nick = (nickname || '').trim() || '游客#' + Math.floor(1000 + Math.random() * 9000)
+  const password = String(Date.now()).slice(-8) // 8位随机密码
   const posts = loadPosts()
   const newPost = {
     id: Date.now(),
@@ -327,18 +328,23 @@ app.post('/api/forum', (req, res) => {
   }
   posts.push(newPost)
   savePosts(posts)
-  res.json({ success: true, data: newPost })
+  res.json({ success: true, data: newPost, password })
 })
 
-// 删除帖子
+// 删除帖子（需提供正确密码）
 app.delete('/api/forum/:id', (req, res) => {
   const { id } = req.params
+  const { password } = req.body
   const posts = loadPosts()
-  const before = posts.length
-  const remaining = posts.filter(p => String(p.id) !== String(id))
-  if (remaining.length === before) {
+  const target = posts.find(p => String(p.id) === String(id))
+  if (!target) {
     return res.status(404).json({ success: false, message: '帖子不存在' })
   }
+  const postPassword = String(target.timestamp).slice(-8)
+  if (password !== postPassword) {
+    return res.status(403).json({ success: false, message: '删除密码错误' })
+  }
+  const remaining = posts.filter(p => String(p.id) !== String(id))
   savePosts(remaining)
   res.json({ success: true })
 })
