@@ -5,8 +5,8 @@
         <!-- 左侧分类 -->
         <aside class="w-40 flex-shrink-0">
           <div class="left-sidebar">
-            <button 
-              v-for="cat in categories" 
+            <button
+              v-for="cat in categories"
               :key="cat.id"
               @click="activeCategory = cat.id"
               class="cat-btn"
@@ -16,7 +16,7 @@
             </button>
           </div>
         </aside>
-        
+
         <!-- 中间内容 -->
         <main class="flex-1 min-w-0">
           <!-- 筛选栏 -->
@@ -36,21 +36,21 @@
               <span v-if="lastUpdate" class="last-update">更新: {{ lastUpdate }}</span>
             </div>
           </div>
-          
+
           <!-- 日期 -->
           <div class="date-header">2026-03-21</div>
-          
+
           <!-- 快讯列表 -->
           <div class="news-container">
-            <div 
-              v-for="(item, index) in filteredNews" 
+            <div
+              v-for="(item, index) in filteredNews"
               :key="index"
               class="news-item"
               @click="openNews(item.url)"
             >
               <!-- 时间 -->
               <div class="news-time">{{ item.time }}</div>
-              
+
               <!-- 内容 -->
               <div class="news-main">
                 <h3 class="news-title">
@@ -64,7 +64,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 加载更多 -->
           <div class="load-more">
             <button class="load-btn" @click="loadMore" :disabled="loading">
@@ -72,7 +72,7 @@
             </button>
           </div>
         </main>
-        
+
         <!-- 右侧边栏 -->
         <aside class="w-64 flex-shrink-0">
           <!-- 链上侦探 -->
@@ -90,13 +90,13 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 24H重要资讯 -->
           <div class="right-block">
             <div class="block-header">24H重要资讯</div>
             <div class="important-list">
-              <a 
-                v-for="item in importantNews" 
+              <a
+                v-for="item in importantNews"
                 :key="item.title"
                 :href="'https://www.theblockbeats.info' + item.url"
                 target="_blank"
@@ -134,13 +134,10 @@ const categories = [
 const newsData = ref([])
 const chainNews = ref([])
 const importantNews = ref([])
-const displayCount = ref(10) // 当前显示数量
+const displayCount = ref(10)
 
 const filteredNews = computed(() => {
   let news = newsData.value
-  // 跳过前5条数据
-  news = news.slice(5)
-  // 只显示当前数量的数据
   news = news.slice(0, displayCount.value)
   if (showImportant.value) {
     news = news.filter(item => item.isImportant)
@@ -160,29 +157,29 @@ const openNews = (url) => {
 
 const fetchNews = async () => {
   loading.value = true
-  displayCount.value = 10 // 重置显示数量
+  displayCount.value = 10
   try {
-    // 获取快讯数据
     const res = await fetch(`${API_BASE}/news`)
     const data = await res.json()
     if (data.success) {
-      newsData.value = data.data
+      newsData.value = (data.data || []).filter(item => {
+        const t = String(item?.title || '').trim()
+        return t && !t.includes('ChainThink链智库') && !t.includes('ChainThink') && !t.includes('链智库')
+      })
     }
-    
-    // 获取链上侦探数据
+
     const chainRes = await fetch(`${API_BASE}/news/chain`)
     const chainData = await chainRes.json()
     if (chainData.success) {
       chainNews.value = chainData.data
     }
-    
-    // 获取重要资讯
+
     const impRes = await fetch(`${API_BASE}/news/important`)
     const impData = await impRes.json()
     if (impData.success) {
       importantNews.value = impData.data
     }
-    
+
     lastUpdate.value = new Date().toLocaleTimeString('zh-CN')
   } catch (err) {
     console.error('获取快讯失败:', err)
@@ -192,15 +189,14 @@ const fetchNews = async () => {
 }
 
 const loadMore = () => {
-  alert('加载更多...')
-  fetchNews()
+  displayCount.value += 10
 }
 
 // 自动刷新 - 每30秒更新一次
 const startAutoRefresh = () => {
   refreshTimer = setInterval(() => {
     fetchNews()
-  }, 30000) // 30秒刷新
+  }, 30000)
 }
 
 onMounted(() => {
@@ -218,7 +214,7 @@ onUnmounted(() => {
 <style scoped>
 .flash-page {
   min-height: calc(100vh - 80px);
-  background: #f7f7f7;
+  background: #0f0f1a;
   padding: 20px 0;
 }
 
@@ -230,8 +226,9 @@ onUnmounted(() => {
 
 /* 左侧分类 */
 .left-sidebar {
-  background: #fff;
+  background: #16162a;
   border-radius: 8px;
+  border: 1px solid rgba(251,158,81,0.15);
   overflow: hidden;
 }
 
@@ -240,11 +237,11 @@ onUnmounted(() => {
   width: 100%;
   padding: 12px 16px;
   text-align: left;
-  background: #fff;
+  background: #16162a;
   border: none;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(251,158,81,0.08);
   font-size: 14px;
-  color: #666;
+  color: #8b8b8b;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -254,14 +251,15 @@ onUnmounted(() => {
 }
 
 .cat-btn:hover {
-  background: #fafafa;
-  color: #e45d3a;
+  background: rgba(251,158,81,0.05);
+  color: #fb9e51;
 }
 
 .cat-btn.active {
-  background: #fff3ef;
-  color: #e45d3a;
+  background: rgba(251,158,81,0.1);
+  color: #fb9e51;
   font-weight: 600;
+  border-left: 2px solid #fb9e51;
 }
 
 /* 筛选栏 */
@@ -282,7 +280,7 @@ onUnmounted(() => {
 
 .last-update {
   font-size: 12px;
-  color: #999;
+  color: #6b5c4a;
 }
 
 .filter-checkbox {
@@ -291,7 +289,7 @@ onUnmounted(() => {
   gap: 8px;
   cursor: pointer;
   font-size: 13px;
-  color: #666;
+  color: #b0a88a;
 }
 
 .filter-checkbox input {
@@ -301,7 +299,7 @@ onUnmounted(() => {
 .checkmark {
   width: 16px;
   height: 16px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(251,158,81,0.3);
   border-radius: 3px;
   display: flex;
   align-items: center;
@@ -309,12 +307,13 @@ onUnmounted(() => {
   font-size: 10px;
   color: transparent;
   transition: all 0.2s;
+  background: rgba(251,158,81,0.05);
 }
 
 .filter-checkbox input:checked + .checkmark {
-  background: #e45d3a;
-  border-color: #e45d3a;
-  color: #fff;
+  background: rgba(251,158,81,0.15);
+  border-color: #fb9e51;
+  color: #fb9e51;
 }
 
 .auto-refresh {
@@ -322,7 +321,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #999;
+  color: #6b5c4a;
 }
 
 .green-dot {
@@ -341,15 +340,16 @@ onUnmounted(() => {
 /* 日期 */
 .date-header {
   font-size: 13px;
-  color: #999;
+  color: #6b5c4a;
   margin-bottom: 12px;
   padding-left: 4px;
 }
 
 /* 消息列表容器 */
 .news-container {
-  background: #fff;
+  background: #16162a;
   border-radius: 8px;
+  border: 1px solid rgba(251,158,81,0.12);
   overflow: hidden;
 }
 
@@ -357,13 +357,13 @@ onUnmounted(() => {
 .news-item {
   display: flex;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(251,158,81,0.06);
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .news-item:hover {
-  background: #fafafa;
+  background: rgba(251,158,81,0.04);
 }
 
 .news-item:last-child {
@@ -375,7 +375,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #fb9e51;
 }
 
 .news-main {
@@ -386,7 +386,7 @@ onUnmounted(() => {
 .news-title {
   font-size: 15px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #d4d0c8;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -394,7 +394,7 @@ onUnmounted(() => {
 }
 
 .news-item:hover .news-title {
-  color: #e45d3a;
+  color: #fb9e51;
 }
 
 .red-dot {
@@ -407,7 +407,7 @@ onUnmounted(() => {
 
 .news-summary {
   font-size: 14px;
-  color: #666;
+  color: #8b8b8b;
   line-height: 1.7;
   margin-bottom: 10px;
   display: -webkit-box;
@@ -423,16 +423,18 @@ onUnmounted(() => {
 
 .tag {
   font-size: 12px;
-  color: #e45d3a;
-  background: #fff3ef;
+  color: #fb9e51;
+  background: rgba(251,158,81,0.08);
   padding: 2px 8px;
   border-radius: 4px;
+  border: 1px solid rgba(251,158,81,0.15);
 }
 
 /* 右侧边栏 */
 .right-block {
-  background: #fff;
+  background: #16162a;
   border-radius: 8px;
+  border: 1px solid rgba(251,158,81,0.12);
   overflow: hidden;
   margin-bottom: 16px;
 }
@@ -442,16 +444,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 14px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(251,158,81,0.08);
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #fb9e51;
+  background: rgba(251,158,81,0.03);
 }
 
 .chain-icon {
   width: 16px;
   height: 16px;
-  color: #e45d3a;
+  color: #fb9e51;
 }
 
 .chain-list {
@@ -467,18 +470,18 @@ onUnmounted(() => {
 }
 
 .chain-item:hover {
-  background: #fafafa;
+  background: rgba(251,158,81,0.04);
 }
 
 .chain-time {
   font-size: 12px;
-  color: #999;
+  color: #6b5c4a;
   white-space: nowrap;
 }
 
 .chain-title {
   font-size: 13px;
-  color: #333;
+  color: #b0a88a;
   line-height: 1.4;
 }
 
@@ -490,9 +493,9 @@ onUnmounted(() => {
   display: block;
   padding: 10px 16px;
   font-size: 13px;
-  color: #333;
+  color: #b0a88a;
   text-decoration: none;
-  border-bottom: 1px solid #f8f8f8;
+  border-bottom: 1px solid rgba(251,158,81,0.04);
   transition: all 0.2s;
 }
 
@@ -501,8 +504,8 @@ onUnmounted(() => {
 }
 
 .important-link:hover {
-  color: #e45d3a;
-  background: #fafafa;
+  color: #fb9e51;
+  background: rgba(251,158,81,0.04);
 }
 
 /* 加载更多 */
@@ -513,17 +516,17 @@ onUnmounted(() => {
 
 .load-btn {
   padding: 10px 40px;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: rgba(251,158,81,0.06);
+  border: 1px solid rgba(251,158,81,0.2);
   border-radius: 6px;
   font-size: 14px;
-  color: #666;
+  color: #fb9e51;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .load-btn:hover {
-  border-color: #e45d3a;
-  color: #e45d3a;
+  background: rgba(251,158,81,0.12);
+  border-color: rgba(251,158,81,0.4);
 }
 </style>

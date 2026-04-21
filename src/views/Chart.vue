@@ -16,7 +16,7 @@
         <div class="price-panel">
           <div class="price-row">
             <img :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + symbol.toLowerCase() + '.png'" class="w-8 h-8 rounded-full" @error="onImgError($event)" alt="">
-            <span class="ml-2 text-xl font-bold text-gray-800">{{ symbol }}</span>
+            <span class="ml-2 text-xl font-bold text-slate-200">{{ symbol }}</span>
             <span class="price-value">${{ formatPrice(price) }}</span>
             <span class="price-change" :class="change >= 0 ? 'up' : 'down'">
               {{ change >= 0 ? '+' : '' }}{{ change.toFixed(2) }}%
@@ -114,7 +114,7 @@
       </div>
 
       <!-- Right Column -->
-      <div class="col-right">
+      <!-- <div class="col-right">
         <div class="panel">
           <h3 class="panel-title">🔥 热门币种</h3>
           <div class="hot-list">
@@ -148,7 +148,8 @@
             </a>
           </div>
         </div>
-      </div>
+      </div> -->
+
     </div>
   </div>
 </template>
@@ -194,18 +195,12 @@ const hotCoins = ref([
 
 const formatPrice = (p) => p ? p.toFixed(2) : '0.00'
 
-const onImgError = (e) => {
-  e.target.style.display = 'none'
-}
-
-const onHotImgError = (e) => {
-  e.target.style.display = 'none'
-}
+const onImgError = (e) => { e.target.style.display = 'none' }
+const onHotImgError = (e) => { e.target.style.display = 'none' }
 const goHome = () => router.push('/')
 const formatVol = (v) => v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v >= 1e6 ? (v / 1e6).toFixed(1) + '万' : v
 const formatMarket = (v) => v >= 1e12 ? (v / 1e12).toFixed(1) + '万亿' : v >= 1e9 ? (v / 1e9).toFixed(1) + '亿' : v
 
-// TradingView
 const initChart = () => {
   if (window.TradingView) {
     new window.TradingView.widget({
@@ -213,10 +208,10 @@ const initChart = () => {
       symbol: `BINANCE:${symbol}USDT`,
       interval: '60',
       timezone: 'Asia/Shanghai',
-      theme: 'light',
+      theme: 'dark',
       style: '1',
       locale: 'zh_CN',
-      toolbar_bg: '#f1f3f6',
+      toolbar_bg: '#16162a',
       enable_publishing: false,
       allow_symbol_change: true,
       container_id: 'tradingview_chart',
@@ -239,7 +234,6 @@ const loadTV = () => {
   }
 }
 
-// WebSocket
 const connectWS = () => {
   ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${pair}@ticker`)
   ws.onmessage = (e) => {
@@ -293,72 +287,72 @@ onUnmounted(() => {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Noto Sans SC', sans-serif; background: #f5f5f5; color: #333; }
+body { font-family: 'Noto Sans SC', sans-serif; background: #0f0f1a; color: #d4d0c8; }
 a { text-decoration: none; color: inherit; }
 .app { min-height: 100vh; }
-.back-home-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid #e5e7eb; background:#fff; color:#475569; padding:8px 12px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
-.back-home-chip:hover { background:#fff7ed; color:#f97316; border-color:#fdba74; }
+.back-home-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(251,158,81,0.25); background:#16162a; color:#8b8b8b; padding:8px 12px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+.back-home-chip:hover { background:rgba(251,158,81,0.1); color:#fb9e51; border-color:rgba(251,158,81,0.5); }
 
-.header { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+.header { background: #16162a; border-bottom: 1px solid rgba(251,158,81,0.15); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
 .header-left { display: flex; align-items: center; gap: 12px; }
-.back-btn { color: #666; font-size: 14px; padding: 8px 16px; background: #f5f5f5; border-radius: 6px; }
-.brand { font-size: 18px; font-weight: 700; color: #F97316; }
-.symbol-tag { background: #F97316; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
-.time { font-size: 13px; color: #999; }
+.back-btn { color: #8b8b8b; font-size: 14px; padding: 8px 16px; background: rgba(251,158,81,0.06); border-radius: 6px; }
+.brand { font-size: 18px; font-weight: 700; color: #fb9e51; }
+.symbol-tag { background: rgba(251,158,81,0.15); color: #fb9e51; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid rgba(251,158,81,0.2); }
+.time { font-size: 13px; color: #6b5c4a; }
 
 .main { max-width: 1200px; margin: 0 auto; padding: 15px; display: flex; gap: 15px; }
 .col-left { flex: 1; min-width: 0; }
 .col-right { width: 300px; flex-shrink: 0; }
 
-.price-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin-bottom: 10px; }
+.price-panel { background: #16162a; border: 1px solid rgba(251,158,81,0.15); border-radius: 8px; padding: 20px; margin-bottom: 10px; }
 .price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 15px; }
-.price-value { font-size: 32px; font-weight: 700; }
+.price-value { font-size: 32px; font-weight: 700; color: #fb9e51; }
 .price-change { font-size: 16px; font-weight: 600; padding: 4px 10px; border-radius: 4px; }
-.price-change.up { color: #22c55e; background: #dcfce7; }
-.price-change.down { color: #ef4444; background: #fee2e2; }
+.price-change.up { color: #4ade80; background: rgba(74,222,128,0.12); }
+.price-change.down { color: #f87171; background: rgba(248,113,113,0.12); }
 .price-stats { display: flex; gap: 20px; }
 .stat { text-align: center; }
-.stat .label { display: block; font-size: 12px; color: #999; margin-bottom: 4px; }
-.stat .val { font-size: 14px; font-weight: 600; }
+.stat .label { display: block; font-size: 12px; color: #6b5c4a; margin-bottom: 4px; }
+.stat .val { font-size: 14px; font-weight: 600; color: #d4d0c8; }
 
-.tab-bar { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0 15px; margin-bottom: 10px; display: flex; align-items: center; height: 44px; }
-.tab { padding: 10px 15px; color: #666; font-size: 14px; border-bottom: 2px solid transparent; }
-.tab.active { color: #F97316; border-bottom-color: #F97316; font-weight: 600; }
+.tab-bar { background: #16162a; border: 1px solid rgba(251,158,81,0.15); border-radius: 8px; padding: 0 15px; margin-bottom: 10px; display: flex; align-items: center; height: 44px; }
+.tab { padding: 10px 15px; color: #6b5c4a; font-size: 14px; border-bottom: 2px solid transparent; }
+.tab.active { color: #fb9e51; border-bottom-color: #fb9e51; font-weight: 600; }
 .tab-spacer { flex: 1; }
 .intervals { display: flex; gap: 8px; }
-.interval { padding: 4px 8px; font-size: 12px; color: #666; border-radius: 4px; }
-.interval.active { background: #F97316; color: #fff; }
+.interval { padding: 4px 8px; font-size: 12px; color: #6b5c4a; border-radius: 4px; }
+.interval.active { background: rgba(251,158,81,0.15); color: #fb9e51; }
 
-.chart-box { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; height: 450px; overflow: hidden; margin-bottom: 10px; position: relative; }
+.chart-box { background: #16162a; border: 1px solid rgba(251,158,81,0.15); border-radius: 8px; height: 450px; overflow: hidden; margin-bottom: 10px; position: relative; }
 #tradingview_chart { width: 100%; height: 100%; }
-.draw-tool-btn { position: absolute; bottom: 15px; right: 15px; background: #F97316; color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-.draw-tool-btn:hover { background: #ea580c; }
+.draw-tool-btn { position: absolute; bottom: 15px; right: 15px; background: rgba(251,158,81,0.15); color: #fb9e51; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; z-index: 100; border: 1px solid rgba(251,158,81,0.3); }
+.draw-tool-btn:hover { background: rgba(251,158,81,0.25); }
 
-.ai-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-.ai-panel h3 { font-size: 14px; margin-bottom: 10px; }
-.ai-panel p { font-size: 13px; color: #666; line-height: 1.6; }
+.ai-panel { background: #16162a; border: 1px solid rgba(251,158,81,0.15); border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+.ai-panel h3 { font-size: 14px; margin-bottom: 10px; color: #fb9e51; }
+.ai-panel p { font-size: 13px; color: #8b8b8b; line-height: 1.6; }
 
-.exchange-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; }
-.exchange-panel h3 { font-size: 14px; margin-bottom: 10px; }
+.exchange-panel { background: #16162a; border: 1px solid rgba(251,158,81,0.15); border-radius: 8px; padding: 15px; }
+.exchange-panel h3 { font-size: 14px; margin-bottom: 10px; color: #fb9e51; }
 .exchange-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.exchange-table th { text-align: left; padding: 8px; border-bottom: 1px solid #eee; color: #999; font-weight: 500; }
-.exchange-table td { padding: 8px; border-bottom: 1px solid #f5f5f5; }
+.exchange-table th { text-align: left; padding: 8px; border-bottom: 1px solid rgba(251,158,81,0.1); color: #6b5c4a; font-weight: 500; }
+.exchange-table td { padding: 8px; border-bottom: 1px solid rgba(251,158,81,0.06); color: #d4d0c8; }
 
-.panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-.panel-title { font-size: 14px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
+.panel { background: #16162a; border: 1px solid rgba(251,158,81,0.15); border-radius: 8px; padding: 15px; margin-bottom: 10px; }
+.panel-title { font-size: 14px; font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid rgba(251,158,81,0.08); margin-bottom: 12px; color: #d4d0c8; }
 
 .hot-list { display: flex; flex-direction: column; gap: 8px; }
-.hot-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 6px; }
-.hot-item:hover { background: #f9f9f9; }
+.hot-item { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 6px; transition: background 0.2s; }
+.hot-item:hover { background: rgba(251,158,81,0.05); }
 .hot-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
 .hot-info { flex: 1; }
-.hot-symbol { font-weight: 600; font-size: 13px; display: block; }
-.hot-name { font-size: 11px; color: #999; }
+.hot-symbol { font-weight: 600; font-size: 13px; display: block; color: #d4d0c8; }
+.hot-name { font-size: 11px; color: #6b5c4a; }
 .hot-price { text-align: right; }
-.hot-price .price { display: block; font-size: 12px; font-weight: 600; }
+.hot-price .price { display: block; font-size: 12px; font-weight: 600; color: #d4d0c8; }
 .hot-price .change { font-size: 11px; }
-.hot-price .up { color: #22c55e; }
-.hot-price .down { color: #ef4444; }
+.hot-price .up { color: #4ade80; }
+.hot-price .down { color: #f87171; }
 
 @media (max-width: 900px) {
   .main { flex-direction: column; }

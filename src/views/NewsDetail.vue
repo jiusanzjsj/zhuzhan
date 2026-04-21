@@ -27,47 +27,40 @@
         <h1 class="news-title text-xl sm:text-2xl lg:text-3xl">{{ article.title }}</h1>
         <div class="news-meta flex flex-wrap gap-2 sm:gap-4">
           <span class="meta-item text-xs sm:text-sm">{{ article.time }}</span>
-          
         </div>
       </div>
-      
-      
-      
+
       <div class="news-body">
-        <!-- 文章内容（块级渲染，图片文字交叉显示） -->
+        <!-- 文章内容 -->
         <div v-if="article.blocks && article.blocks.length > 0" class="article-blocks">
           <div v-for="(block, idx) in article.blocks" :key="idx" class="mb-4">
-            <!-- 文字段落 -->
-            <p v-if="block.text" class="text-sm sm:text-base leading-relaxed text-gray-700 whitespace-pre-line">{{ block.text }}</p>
-            <!-- 段落中的图片 -->
-            <img 
-              v-if="block.image" 
-              :src="block.image" 
+            <p v-if="block.text" class="text-sm sm:text-base leading-relaxed text-slate-300 whitespace-pre-line">{{ block.text }}</p>
+            <img
+              v-if="block.image"
+              :src="block.image"
               :alt="article.title + ' 图片' + (idx + 1)"
-              class="w-full h-auto max-h-96 object-contain rounded-lg mt-2"
+              class="w-full h-auto max-h-96 object-contain rounded-lg mt-2 border border-yellow-500/10"
               loading="lazy"
             />
           </div>
         </div>
-        
-        <!-- 兼容：纯文本模式（如果没有blocks） -->
+
+        <!-- 兼容：纯文本模式 -->
         <div v-else-if="contentData.content" class="article-content">
           <p class="content-text text-sm sm:text-base whitespace-pre-line">{{ contentData.content }}</p>
         </div>
-        
+
         <!-- 无内容 -->
         <div v-else class="no-content">
           <p>暂无详细内容</p>
         </div>
-        
+
         <div class="news-tags mt-4" v-if="article.tag">
           <span class="tag-item text-xs" :class="article.tagClass">{{ article.tag }}</span>
         </div>
-        
-        
       </div>
     </main>
-    
+
     <!-- 无数据 -->
     <main class="content-wrapper px-4" v-else-if="!loading">
       <div class="article-header">
@@ -78,7 +71,7 @@
         返回首页
       </router-link>
     </main>
-    
+
     <!-- 加载状态 -->
     <div class="loading" v-if="loading && !article">
       <div class="spinner"></div>
@@ -105,18 +98,9 @@ const buildDescription = (text = '') => {
 }
 
 const setNewsSeo = () => {
-  const title = article.value?.title
-    ? `${article.value.title} - 比特视界`
-    : '资讯详情 - 比特视界'
+  const title = article.value?.title ? `${article.value.title} - 比特视界` : '资讯详情 - 比特视界'
   const description = buildDescription(contentData.value.content || article.value?.description)
-  const keywords = [
-    article.value?.title,
-    article.value?.tag,
-    article.value?.source,
-    '加密货币新闻',
-    '区块链资讯',
-    '比特视界'
-  ].filter(Boolean).join(',')
+  const keywords = [article.value?.title, article.value?.tag, article.value?.source, '加密货币新闻', '区块链资讯', '比特视界'].filter(Boolean).join(',')
 
   updatePageSeo({
     title,
@@ -133,24 +117,22 @@ const loadArticle = () => {
   article.value = null
   contentData.value = { content: '', image: '' }
 
-  // 1. 从导航数据获取
   const navArticle = getNavigationArticle()
   if (navArticle) {
     article.value = navArticle
-    contentData.value = { 
-      content: navArticle.content || navArticle.description || '暂无详细内容', 
-      image: navArticle.image || '' 
+    contentData.value = {
+      content: navArticle.content || navArticle.description || '暂无详细内容',
+      image: navArticle.image || ''
     }
   }
 
-  // 2. 从store获取
   if (!article.value) {
     const storeArticle = getArticleById(route.params.id)
     if (storeArticle) {
       article.value = storeArticle
-      contentData.value = { 
-        content: storeArticle.content || storeArticle.description || '暂无详细内容', 
-        image: storeArticle.image || '' 
+      contentData.value = {
+        content: storeArticle.content || storeArticle.description || '暂无详细内容',
+        image: storeArticle.image || ''
       }
     }
   }
@@ -173,38 +155,37 @@ watch(() => route.params.id, () => {
 
 .news-detail-container {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f9fafb, #ffffff);
+  background: #0f0f1a;
 }
 
 :root {
-  --primary: #F7931A;
-  --slate-50: #F8FAFC;
-  --slate-100: #F1F5F9;
-  --slate-200: #E2E8F0;
-  --slate-400: #94A3B8;
-  --slate-500: #64748B;
-  --slate-700: #334155;
-  --slate-800: #1E293B;
-  --white: #FFFFFF;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --primary: #fb9e51;
+  --slate-50: #0f0f1a;
+  --slate-100: #16162a;
+  --slate-200: #1e1e35;
+  --slate-400: #6b5c4a;
+  --slate-500: #8b8b8b;
+  --slate-700: #d4d0c8;
+  --slate-800: #e5e5e5;
+  --white: #1e1e35;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
   --radius-md: 10px;
 }
 
 body {
   font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--slate-50);
-  color: var(--slate-800);
+  background: #0f0f1a;
+  color: #d4d0c8;
   font-size: 15px;
   line-height: 1.7;
 }
 
 .navbar {
-  background: white;
-  border-bottom: 1px solid var(--slate-200);
+  background: #16162a;
+  border-bottom: 1px solid rgba(251,158,81,0.15);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow-sm);
 }
 
 .navbar-inner {
@@ -221,23 +202,25 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #f97316;
+  color: #fb9e51;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   padding: 8px 12px;
   border-radius: 8px;
   transition: background 0.2s;
+  background: rgba(251,158,81,0.06);
+  border: 1px solid rgba(251,158,81,0.15);
 }
 
 .back-btn:hover {
-  background: #fff7ed;
+  background: rgba(251,158,81,0.12);
 }
 
 .navbar-title {
   font-size: 17px;
   font-weight: 600;
-  color: #1f2937;
+  color: #d4d0c8;
 }
 
 .navbar-right {
@@ -250,20 +233,21 @@ body {
 .news-category {
   display: inline-block;
   padding: 4px 10px;
-  background: var(--primary);
-  color: white;
+  background: rgba(251,158,81,0.1);
+  color: #fb9e51;
   font-size: 12px;
   font-weight: 600;
   border-radius: 6px;
+  border: 1px solid rgba(251,158,81,0.2);
   margin-bottom: 12px;
 }
 
-.news-title { font-size: 20px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; color: var(--slate-800); }
+.news-title { font-size: 20px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; color: #e5e5e5; }
 
 .news-meta {
   display: flex;
   gap: 12px;
-  color: var(--slate-500);
+  color: #6b5c4a;
   font-size: 14px;
 }
 
@@ -278,14 +262,14 @@ body {
   max-height: 500px;
   object-fit: contain;
   border-radius: var(--radius-md);
+  border: 1px solid rgba(251,158,81,0.1);
 }
 
 .news-body {
-  background: var(--white);
-  border: 1px solid var(--slate-200);
+  background: #16162a;
+  border: 1px solid rgba(251,158,81,0.12);
   border-radius: var(--radius-md);
   padding: 16px;
-  box-shadow: var(--shadow-sm);
 }
 
 .loading-content {
@@ -293,14 +277,14 @@ body {
   align-items: center;
   gap: 12px;
   padding: 20px 0;
-  color: var(--slate-500);
+  color: #6b5c4a;
 }
 
 .spinner-small {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--slate-200);
-  border-top-color: var(--primary);
+  border: 2px solid rgba(251,158,81,0.15);
+  border-top-color: #fb9e51;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -310,14 +294,14 @@ body {
 }
 
 .content-text {
-  color: var(--slate-700);
+  color: #8b8b8b;
   line-height: 1.9;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .no-content {
-  color: var(--slate-400);
+  color: #6b5c4a;
   padding: 20px 0;
 }
 
@@ -338,28 +322,30 @@ body {
 .read-original-btn {
   display: inline-block;
   padding: 12px 24px;
-  background: var(--primary);
-  color: white;
+  background: rgba(251,158,81,0.1);
+  color: #fb9e51;
   text-decoration: none;
   font-weight: 600;
   border-radius: var(--radius-md);
   transition: background 0.2s;
+  border: 1px solid rgba(251,158,81,0.2);
 }
-.read-original-btn:hover { background: #E8850C; }
+.read-original-btn:hover { background: rgba(251,158,81,0.18); }
 
 .back-home-btn {
   display: inline-block;
   margin-top: 20px;
   padding: 12px 24px;
-  background: var(--slate-200);
-  color: var(--slate-700);
+  background: rgba(251,158,81,0.06);
+  color: #fb9e51;
   text-decoration: none;
   font-weight: 500;
   border-radius: var(--radius-md);
+  border: 1px solid rgba(251,158,81,0.15);
 }
 
-.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; color: var(--slate-500); }
-.spinner { width: 40px; height: 40px; border: 3px solid var(--slate-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; color: #6b5c4a; }
+.spinner { width: 40px; height: 40px; border: 3px solid rgba(251,158,81,0.1); border-top-color: #fb9e51; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (min-width: 640px) {

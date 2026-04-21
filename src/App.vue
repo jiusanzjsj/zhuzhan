@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-[#f7f8fa]">
-    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+  <div class="min-h-screen flex flex-col bg-[#0f0f1a]">
+    <header class="bg-[#16162a]/95 backdrop-blur-md border-b border-yellow-500/20 sticky top-0 z-50 shadow-lg shadow-yellow-500/5">
       <div class="max-w-[1400px] mx-auto px-3 md:px-4">
         <div class="h-14 flex items-center gap-4">
           <router-link to="/" class="flex items-center gap-3 group flex-shrink-0">
-            <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-orange-500/20 group-hover:ring-orange-500/50 transition" />
-            <div class="text-[17px] font-bold text-slate-900">比特视界</div>
+            <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-yellow-500/40 group-hover:ring-yellow-500/80 transition shadow-lg shadow-yellow-500/20" />
+            <div class="text-[17px] font-bold text-yellow-400">比特视界</div>
           </router-link>
 
           <div class="flex-1"></div>
 
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
-            class="md:hidden p-2 text-slate-600 hover:text-orange-500 transition"
+            class="md:hidden p-2 text-slate-400 hover:text-yellow-400 transition"
           >
             <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -23,13 +23,13 @@
           </button>
         </div>
 
-        <div v-show="mobileMenuOpen" class="md:hidden pb-3 border-t border-slate-100">
+        <div v-show="mobileMenuOpen" class="md:hidden pb-3 border-t border-yellow-500/10">
           <nav class="flex flex-col gap-2 pt-3">
             <router-link
               to="/"
               @click="mobileMenuOpen = false"
               class="px-4 py-3 rounded-xl text-sm transition flex items-center gap-3"
-              :class="$route.path === '/' ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:text-orange-500 hover:bg-orange-50'"
+              :class="$route.path === '/' ? 'text-yellow-400 bg-yellow-500/10' : 'text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/5'"
             >
               <span>🏠</span> 首页
             </router-link>
@@ -46,14 +46,14 @@
       </router-view>
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-5 mt-auto">
+    <footer class="bg-[#16162a] border-t border-yellow-500/20 py-5 mt-auto">
       <div class="max-w-[1400px] mx-auto px-3 md:px-4">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-400">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-500">
           <div class="flex items-center gap-2">
             <img src="/src/assets/bsj.png" class="w-5 h-5 rounded-full" />
-            <span>© 2026 比特视界</span>
+            <span class="text-yellow-500/60">© 2026 比特视界</span>
           </div>
-          <div>加密货币行情、快讯与交易所信息平台</div>
+          <div class="text-slate-500">加密货币行情、快讯与交易所信息平台</div>
         </div>
       </div>
     </footer>

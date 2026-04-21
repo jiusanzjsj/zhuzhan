@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+  <div class="min-h-screen bg-[#0f0f1a]">
     <!-- 精美横幅 -->
     <header class="page-banner">
       <div class="banner-inner">
@@ -34,12 +34,8 @@
 
         <!-- 新闻列表 -->
         <div v-else class="news-list">
-          <!-- 页面级别调试 -->
-          <div style="background: magenta; color: white; padding: 10px; margin: 10px 0;">
-            DEBUG: newsList.length = {{ newsList.length }}
-          </div>
-          <div 
-            v-for="(item, index) in newsList" 
+          <div
+            v-for="(item, index) in newsList"
             :key="item.id"
             @click="navigateToDetail(item)"
             class="news-item"
@@ -50,19 +46,13 @@
               </div>
               <div class="item-line"></div>
             </div>
-            
+
             <div class="item-right">
               <div class="item-card">
                 <div class="card-top">
                   <span class="card-badge">快讯</span>
-                  <span v-if="debugMode" class="debug-pill">{{ item.image ? '有image' : '无image' }}</span>
-                  <span v-if="debugMode && imageErrors[item.id]" class="debug-pill debug-pill-error">图片加载失败</span>
                 </div>
                 <div class="card-body-row" :class="{ 'has-image': item.image }">
-                  <!-- 调试信息：确保这一行显示 -->
-                  <div style="background: yellow; padding: 5px; font-size: 12px;">
-                    DEBUG: image = {{ item.image ? '有值:' + item.image : '空' }}
-                  </div>
                   <div class="card-body-main">
                     <h3 class="card-title">{{ item.title }}</h3>
                     <p class="card-desc" v-if="item.description">{{ item.description }}</p>
@@ -75,18 +65,9 @@
                       </span>
                     </div>
                   </div>
-                  <div class="card-thumb" :style="{ display: item.image ? 'block' : 'none' }">
-                    <!-- 测试用硬编码图片 -->
-                    <img src="https://cos.chainthink.cn/101_admin_file/890604557265726264/890604557265726264.png" alt="test" style="width: 100%; height: 100%; object-fit: cover; border: 3px solid red;" />
-                    <!-- 实际图片 -->
-                    <img v-if="false" :src="item.image || ''" :alt="item.title" loading="lazy" @error="onImageError(item.id, $event)" style="width: 100%; height: 100%; object-fit: cover;" />
+                  <div v-if="item.image" class="card-thumb">
+                    <img :src="item.image" :alt="item.title" loading="lazy" @error="onImageError(item.id, $event)" />
                   </div>
-                </div>
-                <div v-if="debugMode" class="debug-box">
-                  <div><strong>id:</strong> {{ item.id }}</div>
-                  <div><strong>image:</strong> {{ item.image || '空' }}</div>
-                  <div><strong>source:</strong> {{ item.source || '空' }}</div>
-                  <div><strong>load:</strong> {{ imageErrors[item.id] ? 'error' : 'pending/ok' }}</div>
                 </div>
               </div>
             </div>
@@ -102,8 +83,8 @@
             <h3 class="sidebar-title">热门快讯</h3>
           </div>
           <div class="hot-list">
-            <div 
-              v-for="(item, index) in hotNews" 
+            <div
+              v-for="(item, index) in hotNews"
               :key="index"
               @click="navigateToDetail(item)"
               class="hot-item"
@@ -155,7 +136,6 @@ const router = useRouter()
 const newsList = ref([])
 const hotNews = ref([])
 const loading = ref(true)
-const debugMode = ref(true)
 const imageErrors = ref({})
 
 const loadNews = async (forceRefresh = false) => {
@@ -164,8 +144,6 @@ const loadNews = async (forceRefresh = false) => {
     const result = await fetchNewsList(forceRefresh)
     newsList.value = result.articles || []
     hotNews.value = result.hotNews || []
-    console.log('[NewsList] loaded newsList:', newsList.value.length, 'items')
-    console.log('[NewsList] first item image:', newsList.value[0]?.image)
   } catch (err) {
     console.error('加载新闻失败:', err)
   } finally {
@@ -186,7 +164,6 @@ const navigateToDetail = (item) => {
 }
 
 const filterByCategory = (category) => {
-  // 分类筛选功能，后续扩展
   console.log('筛选:', category)
 }
 
@@ -210,8 +187,8 @@ onMounted(() => {
 
 /* ===== 页面横幅 ===== */
 .page-banner {
-  background: linear-gradient(to right, #FFF8F0 0%, #FB9E51 35%, #FB9E51 50%, #FB9E51 65%, #FFF8F0 100%) !important;
-  box-shadow: 0 4px 16px rgba(251, 158, 81, 0.12) !important;
+  background: linear-gradient(to right, rgba(251,158,81,0.05) 0%, rgba(251,158,81,0.15) 35%, rgba(251,158,81,0.15) 50%, rgba(251,158,81,0.15) 65%, rgba(251,158,81,0.05) 100%);
+  border-bottom: 1px solid rgba(251,158,81,0.2);
 }
 
 .banner-inner {
@@ -226,12 +203,12 @@ onMounted(() => {
 .banner-icon-wrap {
   width: 56px;
   height: 56px;
-  background: #ffffff;
+  background: rgba(251,158,81,0.1);
+  border: 1px solid rgba(251,158,81,0.3);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(251, 158, 81, 0.15);
   transform: rotate(3deg);
   flex-shrink: 0;
 }
@@ -239,7 +216,7 @@ onMounted(() => {
 .banner-icon-wrap svg {
   width: 28px;
   height: 28px;
-  color: #FB9E51;
+  color: #fb9e51;
 }
 
 .banner-text {
@@ -249,13 +226,13 @@ onMounted(() => {
 .banner-title {
   font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  color: #fb9e51;
+  text-shadow: 0 1px 4px rgba(251,158,81,0.2);
 }
 
 .banner-sub {
   font-size: 13px;
-  color: #FFF8F0;
+  color: #8b7355;
   margin-top: 2px;
 }
 
@@ -285,20 +262,20 @@ onMounted(() => {
 .header-line {
   width: 4px;
   height: 24px;
-  background: linear-gradient(180deg, #FB9E51, #FB9E51, #FB9E51);
+  background: linear-gradient(180deg, #fb9e51, #d4881e);
   border-radius: 2px;
 }
 
 .header-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #e5c87a;
 }
 
 .header-count {
   font-size: 12px;
-  color: #999;
-  background: #FFF8F0;
+  color: #8b7355;
+  background: rgba(251,158,81,0.08);
   padding: 3px 10px;
   border-radius: 10px;
 }
@@ -318,7 +295,7 @@ onMounted(() => {
 }
 
 .news-item + .news-item {
-  border-top: 1px solid #FFF8F0;
+  border-top: 1px solid rgba(251,158,81,0.08);
 }
 
 .item-left {
@@ -332,8 +309,8 @@ onMounted(() => {
 .item-time-box {
   width: 70px;
   height: 32px;
-  background: #FFF8F0;
-  border: 1px solid #FFF8F0;
+  background: rgba(251,158,81,0.08);
+  border: 1px solid rgba(251,158,81,0.15);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -343,13 +320,13 @@ onMounted(() => {
 .item-time {
   font-size: 12px;
   font-weight: 600;
-  color: #FB9E51;
+  color: #fb9e51;
 }
 
 .item-line {
   width: 1px;
   flex: 1;
-  background: linear-gradient(180deg, #FB9E51, transparent);
+  background: linear-gradient(180deg, rgba(251,158,81,0.4), transparent);
   min-height: 20px;
 }
 
@@ -363,17 +340,17 @@ onMounted(() => {
 }
 
 .item-card {
-  background: #ffffff;
-  border: 1px solid #FFF8F0;
+  background: #1a1a2e;
+  border: 1px solid rgba(251,158,81,0.12);
   border-radius: 16px;
   padding: 18px;
   transition: all 0.25s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .news-item:hover .item-card {
-  border-color: #FB9E51;
-  box-shadow: 0 4px 16px rgba(249,115,22,0.08);
+  border-color: rgba(251,158,81,0.4);
+  box-shadow: 0 4px 16px rgba(251,158,81,0.1);
   transform: translateX(4px);
 }
 
@@ -383,33 +360,6 @@ onMounted(() => {
   gap: 10px;
   margin-bottom: 12px;
   flex-wrap: wrap;
-}
-
-.debug-pill {
-  font-size: 11px;
-  color: #0f766e;
-  background: #ecfeff;
-  border: 1px solid #a5f3fc;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-.debug-pill-error {
-  color: #b91c1c;
-  background: #fef2f2;
-  border-color: #fecaca;
-}
-
-.debug-box {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #475569;
-  word-break: break-all;
 }
 
 .card-body-row {
@@ -429,8 +379,8 @@ onMounted(() => {
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
-  background: #f3f4f6;
-  border: 5px solid blue;
+  background: #16162a;
+  border: 1px solid rgba(251,158,81,0.1);
 }
 
 .card-thumb img {
@@ -443,32 +393,33 @@ onMounted(() => {
 .card-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #ffffff;
-  background: linear-gradient(to right, #FB9E51, #FB9E51, #FB9E51);
+  color: #fb9e51;
+  background: rgba(251,158,81,0.1);
   padding: 3px 10px;
   border-radius: 4px;
+  border: 1px solid rgba(251,158,81,0.2);
 }
 
 .card-source {
   font-size: 12px;
-  color: #999;
+  color: #8b7355;
 }
 
 .card-title {
   font-size: 15px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #d4d0c8;
   line-height: 1.6;
   margin-bottom: 8px;
 }
 
 .news-item:hover .card-title {
-  color: #FB9E51;
+  color: #fb9e51;
 }
 
 .card-desc {
   font-size: 13px;
-  color: #666;
+  color: #8b8b8b;
   line-height: 1.7;
   margin-bottom: 12px;
   display: -webkit-box;
@@ -488,7 +439,7 @@ onMounted(() => {
   gap: 4px;
   font-size: 12px;
   font-weight: 500;
-  color: #FB9E51;
+  color: #fb9e51;
   opacity: 0;
   transform: translateX(-5px);
   transition: all 0.2s;
@@ -514,11 +465,11 @@ onMounted(() => {
 }
 
 .sidebar-card, .category-card {
-  background: #ffffff;
-  border: 1px solid #FFF8F0;
+  background: #1a1a2e;
+  border: 1px solid rgba(251,158,81,0.12);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .sidebar-header {
@@ -526,7 +477,8 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  background: linear-gradient(to right, #FB9E51, #FB9E51, #FB9E51);
+  background: rgba(251,158,81,0.05);
+  border-bottom: 1px solid rgba(251,158,81,0.08);
 }
 
 .sidebar-icon {
@@ -536,7 +488,7 @@ onMounted(() => {
 .sidebar-title {
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: #fb9e51;
 }
 
 /* ===== 热门榜单 ===== */
@@ -551,15 +503,14 @@ onMounted(() => {
   padding: 12px 16px;
   cursor: pointer;
   transition: background 0.2s;
-  border-radius: 0;
 }
 
 .hot-item:hover {
-  background: #FFF8F0;
+  background: rgba(251,158,81,0.05);
 }
 
 .hot-item + .hot-item {
-  border-top: 1px solid #FFF8F0;
+  border-top: 1px solid rgba(251,158,81,0.06);
 }
 
 .hot-rank {
@@ -570,15 +521,15 @@ onMounted(() => {
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: #999;
-  background: #FFF8F0;
+  color: #8b7355;
+  background: rgba(251,158,81,0.06);
   border-radius: 6px;
   flex-shrink: 0;
 }
 
 .hot-rank.top {
-  color: #ffffff;
-  background: linear-gradient(to right, #FB9E51, #FB9E51, #FB9E51);
+  color: #fb9e51;
+  background: rgba(251,158,81,0.12);
 }
 
 .hot-content {
@@ -589,7 +540,7 @@ onMounted(() => {
 .hot-title {
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: #b0a88a;
   line-height: 1.5;
   margin-bottom: 4px;
   display: -webkit-box;
@@ -600,12 +551,12 @@ onMounted(() => {
 }
 
 .hot-item:hover .hot-title {
-  color: #FB9E51;
+  color: #fb9e51;
 }
 
 .hot-source {
   font-size: 11px;
-  color: #999;
+  color: #8b7355;
 }
 
 /* ===== 分类 ===== */
@@ -622,16 +573,16 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 12px;
-  background: #FFF8F0;
-  border: 1px solid #FFF8F0;
+  background: rgba(251,158,81,0.04);
+  border: 1px solid rgba(251,158,81,0.1);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .category-item:hover {
-  background: #FFF8F0;
-  border-color: #FFF8F0;
+  background: rgba(251,158,81,0.08);
+  border-color: rgba(251,158,81,0.25);
   transform: translateY(-2px);
 }
 
@@ -642,11 +593,11 @@ onMounted(() => {
 .cat-name {
   font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: #b0a88a;
 }
 
 .category-item:hover .cat-name {
-  color: #FB9E51;
+  color: #fb9e51;
 }
 
 /* ===== 加载状态 ===== */
@@ -657,14 +608,14 @@ onMounted(() => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: #999;
+  color: #8b7355;
 }
 
 .loading-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #FFF8F0;
-  border-top-color: #FB9E51;
+  border: 3px solid rgba(251,158,81,0.1);
+  border-top-color: #fb9e51;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -673,7 +624,7 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 80px 20px;
-  color: #999;
+  color: #8b7355;
 }
 
 .empty-icon {
@@ -693,20 +644,20 @@ onMounted(() => {
   .main-layout {
     padding: 16px;
   }
-  
+
   .item-time-box {
     width: 60px;
     height: 28px;
   }
-  
+
   .item-time {
     font-size: 11px;
   }
-  
+
   .item-card {
     padding: 14px;
   }
-  
+
   .card-title {
     font-size: 14px;
   }
