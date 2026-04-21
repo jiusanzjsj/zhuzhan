@@ -91,6 +91,7 @@ export async function fetchNewsList(forceRefresh = false) {
       comments: Math.floor(Math.random() * 50 + 10),
       url: item.url || '',
       image: item.coverImage || item.image || '',
+      images: item.images || [],
       description: item.summary || item.description || '',
       source: item.source || '',
       content: item.content || item.summary || item.description || '',

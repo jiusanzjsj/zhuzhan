@@ -39,7 +39,22 @@
       <div class="news-body">
         <!-- 文章正文 -->
         <div v-if="contentData.content" class="article-content">
-          <p class="content-text text-sm sm:text-base">{{ contentData.content }}</p>
+          <p class="content-text text-sm sm:text-base whitespace-pre-line">{{ contentData.content }}</p>
+        </div>
+        
+        <!-- 文章配图 -->
+        <div v-if="article.images && article.images.length > 0" class="mt-4">
+          <h4 class="text-sm font-semibold mb-2">配图</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <img 
+              v-for="(img, idx) in article.images" 
+              :key="idx"
+              :src="img" 
+              :alt="article.title + ' 图片' + (idx + 1)"
+              class="w-full h-40 object-cover rounded-lg"
+              loading="lazy"
+            />
+          </div>
         </div>
         
         <!-- 无内容 -->

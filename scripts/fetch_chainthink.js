@@ -156,19 +156,39 @@ function stripTags(text) {
 }
 
 async function fetchDetail(detailId) {
-  if (!detailId) return { content: '', image: '' }
+  if (!detailId) return { content: '', image: '', images: [] }
   try {
     const page = await httpGet(`${DETAIL_URL_PREFIX}${detailId}`)
     
     // Extract coverImage from the page
     const imageMatch = page.match(/"coverImage":"([^"]+)"/)
+    const mainImage = normalizeImage(imageMatch?.[1] || '')
     
     let content = ''
+    let images = []
     
     // Method 1: Try to extract from rich_text_content div
     const richContentMatch = page.match(/<div class="[^"]*rich_text_content[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="/)
     if (richContentMatch) {
       const htmlContent = richContentMatch[1]
+      
+      // Extract all img tags URLs
+      const imgMatches = htmlContent.match(/<img[^>]*src="([^"]+)"[^>]*>/gi)
+      if (imgMatches) {
+        imgMatches.forEach(imgTag => {
+          const srcMatch = imgTag.match(/src="([^"]+)"/)
+          if (srcMatch) {
+            let url = srcMatch[1]
+            // Handle relative URLs
+            if (url.startsWith('//')) url = 'https:' + url
+            else if (url.startsWith('/')) url = 'https://chainthink.cn' + url
+            if (url && !url.includes('data:')) {
+              images.push(url)
+            }
+          }
+        })
+      }
+      
       // Extract all p tags
       const pMatches = htmlContent.match(/<p[^>]*>([\s\S]*?)<\/p>/gi)
       if (pMatches && pMatches.length > 0) {
@@ -205,13 +225,19 @@ async function fetchDetail(detailId) {
       }
     }
     
+    // If we have images in content, also add cover image
+    if (mainImage && !images.includes(mainImage)) {
+      images.unshift(mainImage)
+    }
+    
     return {
       content,
-      image: normalizeImage(imageMatch?.[1] || ''),
+      image: mainImage,
+      images: images
     }
   } catch (err) {
     console.error('fetchDetail error:', err.message)
-    return { content: '', image: '' }
+    return { content: '', image: '', images: [] }
   }
 }
 
@@ -245,6 +271,7 @@ async function buildItems(payloadText, limit, withDetail) {
       const detail = await fetchDetail(articleId)
       if (detail.image && !result.coverImage) result.coverImage = detail.image
       if (detail.content) result.content = detail.content
+      if (detail.images && detail.images.length > 0) result.images = detail.images
       await sleep(200)
     }
 
