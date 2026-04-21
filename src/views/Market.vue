@@ -1,75 +1,33 @@
 <template>
   <div class="min-h-screen bg-[#f7f8fa] text-slate-900">
     <div class="max-w-[1400px] mx-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4">
-      <!-- 顶部轮播行情条 -->
+      <!-- 顶部无缝滚动行情条 -->
       <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="relative">
-          <!-- 轮播内容 -->
-          <div class="overflow-hidden">
-            <div 
-              class="flex transition-transform duration-500 ease-in-out"
-              :style="{ transform: `translateX(-${currentTickerIndex * 100}%)` }"
-            >
-              <div 
-                v-for="(group, gIdx) in tickerGroups" 
-                :key="gIdx"
-                class="w-full flex-shrink-0"
+        <div class="overflow-hidden py-2 bg-slate-50/70">
+          <div class="ticker-wrapper">
+            <div class="ticker-content">
+              <!-- 复制一份内容用于无缝循环 -->
+              <button
+                v-for="coin in [...coinList.value, ...coinList.value]"
+                :key="coin.symbol + '-' + Math.random()"
+                class="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl hover:border-orange-300 hover:bg-orange-50/40 transition whitespace-nowrap mx-2"
+                @click="goToChart(coin.symbol)"
               >
-                <div class="flex items-stretch gap-2 px-3 py-2 bg-slate-50/70 overflow-x-auto">
-                  <button
-                    v-for="coin in group"
-                    :key="coin.symbol"
-                    class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl hover:border-orange-300 hover:bg-orange-50/40 transition whitespace-nowrap"
-                    @click="goToChart(coin.symbol)"
-                  >
-                    <img
-                      :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'"
-                      class="w-5 h-5 rounded-full"
-                      @error="onImageError($event)"
-                      :alt="coin.symbol"
-                    >
-                    <div class="leading-tight text-left">
-                      <div class="text-xs font-semibold text-slate-800">{{ coin.symbol }}</div>
-                      <div class="text-[11px] text-slate-500">${{ formatPrice(coin.price) }}</div>
-                    </div>
-                    <span class="text-[11px] font-semibold px-2 py-1 rounded-lg" :class="coin.change >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
-                      {{ coin.change >= 0 ? '+' : '' }}{{ (coin.change || 0).toFixed(2) }}%
-                    </span>
-                  </button>
+                <img
+                  :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'"
+                  class="w-5 h-5 rounded-full"
+                  @error="onImageError($event)"
+                  :alt="coin.symbol"
+                >
+                <div class="leading-tight text-left">
+                  <div class="text-xs font-semibold text-slate-800">{{ coin.symbol }}</div>
+                  <div class="text-[11px] text-slate-500">${{ formatPrice(coin.price) }}</div>
                 </div>
-              </div>
+                <span class="text-[11px] font-semibold px-2 py-1 rounded-lg" :class="coin.change >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+                  {{ coin.change >= 0 ? '+' : '' }}{{ (coin.change || 0).toFixed(2) }}%
+                </span>
+              </button>
             </div>
-          </div>
-          
-          <!-- 左右切换按钮 -->
-          <button 
-            v-if="tickerGroups.length > 1"
-            class="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/90 shadow-md rounded-full hover:bg-white transition z-10"
-            @click="prevTicker"
-          >
-            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          <button 
-            v-if="tickerGroups.length > 1"
-            class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/90 shadow-md rounded-full hover:bg-white transition z-10"
-            @click="nextTicker"
-          >
-            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </button>
-          
-          <!-- 指示器 -->
-          <div v-if="tickerGroups.length > 1" class="flex justify-center gap-1.5 py-2">
-            <button
-              v-for="(_, idx) in tickerGroups"
-              :key="idx"
-              class="w-2 h-2 rounded-full transition"
-              :class="idx === currentTickerIndex ? 'bg-orange-500' : 'bg-slate-300'"
-              @click="currentTickerIndex = idx"
-            />
           </div>
         </div>
       </section>
@@ -280,6 +238,7 @@ const newsLoading = ref(true)
 const exchangeList = ref([])
 const exchangeLoading = ref(true)
 
+// 轮播相关（已移除，改用无缝滚动）
 // 轮播相关
 const currentTickerIndex = ref(0)
 let tickerAutoPlay = null
@@ -541,12 +500,36 @@ onMounted(async () => {
   await Promise.all([fetchStats(), fetchChange(), loadNews(), loadExchangesData()])
   connectWS()
   setupHourlyRefresh()
-  startTickerAutoPlay()
 })
 
 onUnmounted(() => {
   ws?.close()
   if (hourlyTimer) clearTimeout(hourlyTimer)
-  stopTickerAutoPlay()
 })
 </script>
+
+<style scoped>
+.ticker-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.ticker-content {
+  display: flex;
+  animation: ticker-scroll 30s linear infinite;
+  width: max-content;
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+</style>
