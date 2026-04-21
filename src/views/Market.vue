@@ -5,7 +5,7 @@
       <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="overflow-hidden py-2 bg-slate-50/70">
           <div class="ticker-wrapper">
-            <div class="ticker-content">
+            <div class="ticker-content" v-if="coinList.value && coinList.value.length">
               <!-- 复制一份内容用于无缝循环 -->
               <button
                 v-for="coin in [...coinList.value, ...coinList.value]"
