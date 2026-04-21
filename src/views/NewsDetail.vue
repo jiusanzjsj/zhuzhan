@@ -186,19 +186,14 @@ const contentData = ref({ content: '', image: '' })
 const loading = ref(true)
 const baseUrl = 'https://openupbtc.com'
 
-// 论坛数据
-const allPosts = ref([])
+// 论坛数据（后端API）
+const filteredPosts = ref([])
 const newPost = ref('')
 const nickname = ref('')
 const showHints = ref(false)
 
 const placeholderText = computed(() => {
-  const hints = [
-    '聊聊你的看法...',
-    '说点什么吧...',
-    '发表你的观点...',
-    '留下你的足迹...'
-  ]
+  const hints = ['聊聊你的看法...', '说点什么吧...', '发表你的观点...', '留下你的足迹...']
   return hints[Math.floor(Math.random() * hints.length)]
 })
 
@@ -217,66 +212,54 @@ const getAvatarGradient = (seed) => {
   return gradients[idx]
 }
 
-const avatarGradient = computed(() => {
-  return getAvatarGradient(nickname.value || 'B')
-})
+const avatarGradient = computed(() => getAvatarGradient(nickname.value || 'B'))
+const currentAvatarChar = computed(() => (nickname.value || 'B').slice(0, 1).toUpperCase())
 
-const currentAvatarChar = computed(() => {
-  return (nickname.value || 'B').slice(0, 1).toUpperCase()
-})
-
-const STORAGE_KEY = 'bsj_forum_posts'
-
-const loadPosts = () => {
+const loadPosts = async () => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    allPosts.value = stored ? JSON.parse(stored) : []
-  } catch {
-    allPosts.value = []
-  }
+    const res = await fetch(`/api/forum/${route.params.id}`)
+    const json = await res.json()
+    if (json.success) filteredPosts.value = json.data
+  } catch {}
 }
 
-const savePosts = () => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(allPosts.value))
+const deletePost = async (id) => {
+  try {
+    const res = await fetch(`/api/forum/${id}`, { method: 'DELETE' })
+    const json = await res.json()
+    if (json.success) {
+      filteredPosts.value = filteredPosts.value.filter(p => p.id !== id)
+    }
+  } catch {}
 }
 
-const filteredPosts = computed(() => {
-  const aid = route.params.id
-  return allPosts.value
-    .filter(p => p.articleId === aid)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 20)
-})
-
-const generateNickname = () => {
-  return '游客#' + Math.floor(1000 + Math.random() * 9000)
-}
-
-const deletePost = (id) => {
-  allPosts.value = allPosts.value.filter(p => p.id !== id)
-  savePosts()
-}
-
-const submitPost = () => {
+const submitPost = async () => {
   const content = newPost.value.trim()
   if (!content) return
-
-  const nick = nickname.value.trim() || generateNickname()
+  const nick = nickname.value.trim() || '游客#' + Math.floor(1000 + Math.random() * 9000)
   if (!nickname.value.trim()) nickname.value = nick
 
-  allPosts.value.push({
-    id: Date.now(),
-    articleId: route.params.id,
-    nickname: nick,
-    content,
-    timestamp: Date.now(),
-    time: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-  })
+  try {
+    const res = await fetch('/api/forum', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        articleId: route.params.id,
+        nickname: nick,
+        content
+      })
+    })
+    const json = await res.json()
+    if (json.success) {
+      filteredPosts.value.unshift(json.data)
+    }
+  } catch {}
 
-  savePosts()
   newPost.value = ''
   showHints.value = false
 }
+
+const generateNickname = () => '游客#' + Math.floor(1000 + Math.random() * 9000)
 
 const buildDescription = (text = '') => {
   const cleaned = String(text).replace(/\s+/g, ' ').trim()

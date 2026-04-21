@@ -6,7 +6,7 @@
 import express from 'express'
 import cors from 'cors'
 import axios from 'axios'
-import cheerio from 'cheerio'
+import * as cheerio from 'cheerio'
 
 const app = express()
 const PORT = 3001
@@ -272,7 +272,77 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// ========== 论坛模块 ==========
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const POSTS_FILE = path.join(__dirname, 'posts.json')
+
+const loadPosts = () => {
+  try {
+    if (existsSync(POSTS_FILE)) {
+      const raw = readFileSync(POSTS_FILE, 'utf8')
+      return JSON.parse(raw)
+    }
+  } catch {}
+  return []
+}
+
+const savePosts = (posts) => {
+  try {
+    writeFileSync(POSTS_FILE, JSON.stringify(posts, null, 2), 'utf8')
+  } catch (e) {
+    console.error('保存帖子失败:', e.message)
+  }
+}
+
+// 获取某资讯下的帖子
+app.get('/api/forum/:articleId', (req, res) => {
+  const { articleId } = req.params
+  const allPosts = loadPosts()
+  const filtered = allPosts
+    .filter(p => String(p.articleId) === String(articleId))
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 50)
+  res.json({ success: true, data: filtered, total: filtered.length })
+})
+
+// 发帖
+app.post('/api/forum', (req, res) => {
+  const { articleId, nickname, content } = req.body
+  if (!content || !content.trim()) {
+    return res.status(400).json({ success: false, message: '内容不能为空' })
+  }
+  const nick = (nickname || '').trim() || '游客#' + Math.floor(1000 + Math.random() * 9000)
+  const posts = loadPosts()
+  const newPost = {
+    id: Date.now(),
+    articleId: String(articleId || ''),
+    nickname: nick,
+    content: String(content).trim().slice(0, 500),
+    timestamp: Date.now(),
+    time: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+  }
+  posts.push(newPost)
+  savePosts(posts)
+  res.json({ success: true, data: newPost })
+})
+
+// 删除帖子
+app.delete('/api/forum/:id', (req, res) => {
+  const { id } = req.params
+  const posts = loadPosts()
+  const before = posts.length
+  const remaining = posts.filter(p => String(p.id) !== String(id))
+  if (remaining.length === before) {
+    return res.status(404).json({ success: false, message: '帖子不存在' })
+  }
+  savePosts(remaining)
+  res.json({ success: true })
+})
+
 app.listen(PORT, () => {
-  console.log(`🚀 比特视界API服务已启动: http://localhost:${PORT}`)
   console.log(`🚀 比特视界API服务已启动: http://localhost:${PORT}`)
 })
