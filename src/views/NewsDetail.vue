@@ -31,10 +31,7 @@
         </div>
       </div>
       
-      <!-- 封面图 -->
-      <div class="news-image" v-if="article.image || contentData.image">
-        <img :src="article.image || contentData.image" :alt="article.title" loading="lazy">
-      </div>
+      
       
       <div class="news-body">
         <!-- 文章内容（块级渲染，图片文字交叉显示） -->
