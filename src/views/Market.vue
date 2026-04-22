@@ -7,15 +7,14 @@
           <div class="ticker-wrapper">
             <div class="ticker-content">
               <button
-                v-for="coin in [...tickerCoins, ...tickerCoins]"
-                :key="coin.symbol + '-' + Math.random()"
+                v-for="(coin, idx) in tickerCoins"
+                :key="coin.symbol"
                 class="flex items-center gap-2 px-4 py-1.5 bg-[#1e1e35] border border-yellow-500/20 rounded-xl hover:border-yellow-500/60 hover:bg-[#1e1e35]/80 transition whitespace-nowrap mx-2"
                 @click="goToChart(coin.symbol)"
               >
                 <img
                   :src="'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/' + coin.symbol.toLowerCase() + '.png'"
                   class="w-5 h-5 rounded-full"
-                  @error="onImageError($event)"
                   :alt="coin.symbol"
                 >
                 <div class="leading-tight text-left">
