@@ -223,8 +223,15 @@ const downPercent = ref(50)
 
 const newsList = ref([])
 const newsLoading = ref(true)
-const exchangeList = ref([])
-const exchangeLoading = ref(true)
+const exchangeList = ref([
+  { id: 'binance', name: '币安', desc: '全球最大加密货币交易所', image: '/images/exchanges/binance.jpg' },
+  { id: 'okx', name: 'OKX', desc: '全球领先的数字资产交易所', image: '/images/exchanges/okx.png' },
+  { id: 'bybit', name: 'Bybit', desc: '专业加密合约及现货交易所', image: '/images/exchanges/bybit.jpg' },
+  { id: 'gate', name: 'Gate.io', desc: '老牌加密货币交易所', image: '/images/exchanges/gate.png' },
+  { id: 'bitget', name: 'Bitget', desc: '合约跟单领先的交易所', image: '/images/exchanges/bitget.png' },
+  { id: 'htx', name: 'HTX', desc: '全球知名的数字资产交易平台', image: '/images/exchanges/htx.png' }
+])
+const exchangeLoading = ref(false)
 
 const currentTickerIndex = ref(0)
 let tickerAutoPlay = null
@@ -296,8 +303,7 @@ const navigateToDetail = (item) => {
 }
 
 const getExchangeBrief = (exchange) => {
-  const desc = getExchangeDescZh(exchange.id) || ''
-  return desc ? desc.slice(0, 60) + (desc.length > 60 ? '...' : '') : exchange._countryDisplay || '-'
+  return exchange.desc || '-'
 }
 
 const navigateToExchange = (exchange) => {
@@ -471,37 +477,13 @@ const getCanonicalExchangeKey = (exchange) => {
   return ''
 }
 
-const loadExchangesData = async (forceRefresh = false) => {
-  try {
-    exchangeLoading.value = true
-    const list = await fetchExchanges(forceRefresh)
-    const picked = new Map()
-
-    for (const exchange of list) {
-      const key = getCanonicalExchangeKey(exchange)
-      if (!key || picked.has(key)) continue
-      picked.set(key, exchange)
-    }
-
-    exchangeList.value = TARGET_EXCHANGES
-      .map(key => picked.get(key))
-      .filter(Boolean)
-      .map(e => ({
-        ...e,
-        _countryDisplay: getExchangeCountryZh(e.id) || getCountryZh(e.country) || '-',
-        _typeDisplay: getExchangeTypeZh(e.id) || 'CEX'
-      }))
-  } catch (e) {
-    console.error('loadExchanges error:', e)
-    exchangeList.value = []
-  } finally {
-    exchangeLoading.value = false
-  }
+const loadExchangesData = () => {
+  // 使用写死数据，无需加载
 }
 
 onMounted(async () => {
   loadFromCache()
-  await Promise.all([fetchStats(), fetchChange(), loadNews(), loadExchangesData()])
+  await Promise.all([fetchStats(), fetchChange(), loadNews()])
   connectWS()
   setupHourlyRefresh()
 })
