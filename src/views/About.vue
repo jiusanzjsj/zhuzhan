@@ -22,9 +22,9 @@
         <p class="text-sm text-slate-500">专业加密货币行情与资讯平台</p>
       </div>
 
-      <!-- 二维码区域 -->
+      <!-- 联系方式 -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- 微信二维码 -->
+        <!-- 微信 -->
         <div class="bg-[#16162a] border border-yellow-500/20 rounded-2xl overflow-hidden">
           <div class="px-5 py-4 border-b border-yellow-500/10 flex items-center gap-3">
             <div class="w-8 h-8 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center justify-center">
@@ -32,43 +32,47 @@
             </div>
             <div>
               <div class="text-sm font-semibold text-slate-200">联系我们</div>
-              <div class="text-xs text-slate-500">微信咨询</div>
+              <div class="text-xs text-slate-500">扫码添加微信</div>
             </div>
           </div>
-          <div class="p-5">
+          <div class="p-5 flex items-start gap-4">
             <img
               src="/images/lianxi.png"
               alt="微信二维码"
-              class="w-full max-w-[200px] mx-auto rounded-xl"
+              class="w-24 rounded-xl flex-shrink-0"
             />
+            <div class="text-xs text-slate-500 leading-relaxed pt-1">
+              <p class="text-slate-400 font-medium mb-2">WeChat</p>
+              <p>扫描二维码添加好友，咨询合作事宜</p>
+            </div>
           </div>
         </div>
 
-        <!-- QQ二维码 -->
+        <!-- QQ -->
         <div class="bg-[#16162a] border border-yellow-500/20 rounded-2xl overflow-hidden">
           <div class="px-5 py-4 border-b border-yellow-500/10 flex items-center gap-3">
             <div class="w-8 h-8 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-center justify-center">
               <span class="text-base">💬</span>
             </div>
             <div>
-              <div class="text-sm font-semibold text-slate-200">加Q交流</div>
-              <div class="text-xs text-slate-500">QQ咨询</div>
+              <div class="text-sm font-semibold text-slate-200">加群交流</div>
+              <div class="text-xs text-slate-500">扫码加入QQ群</div>
             </div>
           </div>
-          <div class="p-5">
+          <div class="p-5 flex items-start gap-4">
             <img
               src="/images/lianxi2.png"
               alt="QQ二维码"
-              class="w-full max-w-[200px] mx-auto rounded-xl"
+              class="w-24 rounded-xl flex-shrink-0"
             />
+            <div class="text-xs text-slate-500 leading-relaxed pt-1">
+              <p class="text-slate-400 font-medium mb-2">QQ Group</p>
+              <p>扫描二维码加入群聊，与更多用户交流</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 底部说明 -->
-      <div class="mt-6 text-center text-xs text-slate-600">
-        扫描上方二维码添加好友或加入群聊
-      </div>
     </div>
   </div>
 </template>

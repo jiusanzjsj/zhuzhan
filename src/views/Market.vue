@@ -188,12 +188,16 @@
           <div class="px-4 py-3 border-t border-yellow-500/10">
             <div class="text-xs font-semibold text-slate-200 text-center">加入榜单</div>
           </div>
-          <div class="px-4 pb-4">
+          <div class="px-4 pb-4 flex items-start gap-3">
             <img
               src="/images/lianxi.png"
               alt="加入榜单"
-              class="w-full rounded-xl"
+              class="w-24 rounded-xl flex-shrink-0"
             />
+            <div class="text-xs text-slate-500 leading-relaxed">
+              <p class="text-slate-400 font-medium mb-1">Join Our Network</p>
+              <p>扫码联系，获取交易所推广合作方案，共享流量红利</p>
+            </div>
           </div>
         </div>
       </section>
