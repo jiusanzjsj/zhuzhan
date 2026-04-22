@@ -7,28 +7,297 @@ import express from 'express'
 import cors from 'cors'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const app = express()
 const PORT = 3001
 const CRYPTOPANIC_TOKEN = '8c820bb21bc5acdc1dcca538410b3a478e26ccc8'
 const CHAINTHINK_URL = 'https://chainthink.cn/zh-CN/article'
+const CHAIN_DATA_FILE = path.join(__dirname, 'chainthink-news.json')
+const POSTS_FILE = path.join(__dirname, 'posts.json')
+const KEEP_DAYS = 7
+const FETCH_INTERVAL = 2 * 60 * 60 * 1000 // 2小时
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000 // 24小时
 
 app.use(cors())
 app.use(express.json())
 
-// 缓存
+// ========== 工具函数 ==========
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+function normalizeImage(src) {
+  if (!src) return ''
+  const value = String(src).trim()
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  if (value.startsWith('/_next/image?url=')) {
+    try {
+      const parsed = new URL(value, 'https://chainthink.cn')
+      const rawUrl = parsed.searchParams.get('url')
+      return rawUrl ? decodeURIComponent(rawUrl) : parsed.toString()
+    } catch {
+      return `https://chainthink.cn${value}`
+    }
+  }
+  if (value.startsWith('//')) return `https:${value}`
+  if (value.startsWith('/')) return `https://chainthink.cn${value}`
+  return value
+}
+
+function formatPublishTime(ts) {
+  const n = Number(ts)
+  if (!Number.isFinite(n)) return ''
+  const d = new Date(n * 1000)
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${mm}-${dd} ${hh}:${mi}`
+}
+
+function decodeNextFPayload(htmlText) {
+  const pushMarker = 'self.__next_f.push([1,"'
+  const start = htmlText.lastIndexOf(pushMarker)
+  if (start === -1) throw new Error('未找到 Next.js payload 起始位置')
+  const payloadStart = start + pushMarker.length
+  let end = htmlText.indexOf('"])</script>', payloadStart)
+  if (end === -1) end = htmlText.indexOf('"])', payloadStart)
+  if (end === -1 || end <= payloadStart) throw new Error('未找到 Next.js payload 结束位置')
+  const raw = htmlText.slice(payloadStart, end)
+  return raw.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\')
+}
+
+function extractJsonObjectAfterKey(text, keyWithQuotes) {
+  const idx = text.indexOf(keyWithQuotes)
+  if (idx === -1) throw new Error(`未找到键: ${keyWithQuotes}`)
+  const after = text.slice(idx + keyWithQuotes.length)
+  const objStart = after.indexOf('{"')
+  if (objStart === -1) throw new Error(`未找到 ${keyWithQuotes} 对应 JSON 对象起点`)
+  let pos = objStart; let depth = 0; let inString = false; let escape = false
+  while (pos < after.length) {
+    const ch = after[pos]
+    if (inString) {
+      if (escape) { escape = false }
+      else if (ch === '\\') { escape = true }
+      else if (ch === '"') { inString = false }
+    } else {
+      if (ch === '"') { inString = true }
+      else if (ch === '{' || ch === '[') { depth++ }
+      else if (ch === '}' || ch === ']') {
+        depth--
+        if (depth === 0) {
+          return JSON.parse(after.slice(objStart, pos + 1))
+        }
+      }
+    }
+    pos++
+  }
+  throw new Error(`未能完整提取 ${keyWithQuotes} 对应 JSON 对象`)
+}
+
+async function httpGet(url, timeout = 15000) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      signal: controller.signal
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.text()
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// ========== 爬取完整实现 ==========
+
+async function fetchDetail(detailId) {
+  if (!detailId) return { content: '', image: '', images: [], blocks: [] }
+  try {
+    const page = await httpGet(`${CHAINTHINK_URL.replace('/zh-CN/article', '')}/zh-CN/article/${detailId}`)
+    const imageMatch = page.match(/"coverImage":"([^"]+)"/)
+    const mainImage = normalizeImage(imageMatch?.[1] || '')
+    let blocks = []
+    const richContentMatch = page.match(/<div class="[^"]*rich_text_content[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<div class="/)
+    if (richContentMatch) {
+      const segments = richContentMatch[1].split(/(<p[^>]*>[\s\S]*?<\/p>)/gi)
+      for (const segment of segments) {
+        if (!segment.trim()) continue
+        let imgUrl = null
+        const imgMatch = segment.match(/<img[^>]*src="([^"]+)"[^>]*>/i)
+        if (imgMatch) {
+          let url = imgMatch[1]
+          if (url.startsWith('//')) url = 'https:' + url
+          else if (url.startsWith('/')) url = `https://chainthink.cn${url}`
+          if (url && !url.includes('data:')) { imgUrl = url }
+        }
+        let text = segment.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim()
+        if (text.length > 10 || imgUrl) blocks.push({ text, image: imgUrl })
+      }
+    }
+    if (blocks.length === 0) {
+      const initDetalisMatch = page.match(/"initDetalis":(\{[\s\S]*?\}])\}\}\}/)
+      if (initDetalisMatch) {
+        try {
+          const initData = JSON.parse('{' + initDetalisMatch[1] + '}}')
+          if (initData?.info?.text) {
+            const content = initData.info.text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+            blocks = content ? [{ text: content, image: null }] : []
+          }
+        } catch {}
+      }
+    }
+    const images = []
+    if (mainImage) images.push(mainImage)
+    blocks.forEach(b => { if (b.image && !images.includes(b.image)) images.push(b.image) })
+    return { content: blocks.map(b => b.text).join('\n'), image: mainImage, images, blocks }
+  } catch (err) {
+    return { content: '', image: '', images: [], blocks: [] }
+  }
+}
+
+async function fetchChainThinkNews(withDetail = true) {
+  try {
+    const htmlText = await httpGet(CHAINTHINK_URL)
+    const payload = decodeNextFPayload(htmlText)
+    const latest = extractJsonObjectAfterKey(payload, '"initialLatestData"')
+    const items = Array.isArray(latest.list) ? latest.list : []
+    const results = []
+    const limit = 20
+
+    for (const item of items.slice(0, limit)) {
+      const info = item?.info || {}
+      const articleId = String(item?.id || '')
+      const title = String(info?.title || '').trim()
+      if (!title) continue
+      if (['ChainThink链智库', 'ChainThink', '链智库'].some(word => title.includes(word))) continue
+
+      const result = {
+        id: articleId,
+        title,
+        summary: String(info?.abstract || '').trim(),
+        time: formatPublishTime(item?.publishTime),
+        published_at: item?.publishTime || null,
+        url: articleId ? `${CHAINTHINK_URL}/${articleId}` : CHAINTHINK_URL,
+        tags: Array.isArray(item?.contentTags) ? item.contentTags.map(tag => tag?.tagName).filter(Boolean) : [],
+        isImportant: Boolean(item?.isGood),
+        coverImage: normalizeImage(info?.coverImage || ''),
+        content: '',
+        source: 'ChainThink',
+      }
+
+      if (withDetail && articleId) {
+        const detail = await fetchDetail(articleId)
+        if (detail.image && !result.coverImage) result.coverImage = detail.image
+        if (detail.content) result.content = detail.content
+        if (detail.images && detail.images.length > 0) result.images = detail.images
+        if (detail.blocks && detail.blocks.length > 0) result.blocks = detail.blocks
+        await sleep(200)
+      }
+
+      results.push(result)
+    }
+    return results
+  } catch (e) {
+    console.error('fetchChainThinkNews 失败:', e.message)
+    return []
+  }
+}
+
+// ========== 文件读写 & 清理 ==========
+
+function cleanupOldArticles(items) {
+  const cutoff = Date.now() - KEEP_DAYS * 24 * 60 * 60 * 1000
+  return items.filter(item => {
+    const ts = Number(item.published_at) * 1000
+    return Number.isFinite(ts) && ts > cutoff
+  })
+}
+
+function loadChainData() {
+  try {
+    if (existsSync(CHAIN_DATA_FILE)) {
+      const raw = readFileSync(CHAIN_DATA_FILE, 'utf8')
+      const json = JSON.parse(raw)
+      if (json?.data?.length > 0) return json
+    }
+  } catch {}
+  return null
+}
+
+function saveChainData(items) {
+  const filtered = cleanupOldArticles(items)
+  const output = {
+    success: true,
+    source: 'node-chainthink-scraper',
+    generatedAt: new Date().toISOString(),
+    count: filtered.length,
+    data: filtered
+  }
+  writeFileSync(CHAIN_DATA_FILE, JSON.stringify(output, null, 2), 'utf8')
+  return output
+}
+
+function isDataEqual(oldData, newData) {
+  if (!oldData || !newData) return false
+  const oldIds = new Set((oldData.data || []).map(i => i.id))
+  const newIds = new Set((newData.data || []).map(i => i.id))
+  if (oldIds.size !== newIds.size) return false
+  for (const id of oldIds) { if (!newIds.has(id)) return false }
+  return true
+}
+
+// ========== 论坛存储 ==========
+
+const loadPosts = () => {
+  try {
+    if (existsSync(POSTS_FILE)) return JSON.parse(readFileSync(POSTS_FILE, 'utf8'))
+  } catch {}
+  return []
+}
+
+const savePosts = (posts) => {
+  try {
+    writeFileSync(POSTS_FILE, JSON.stringify(posts, null, 2), 'utf8')
+  } catch (e) {
+    console.error('保存帖子失败:', e.message)
+  }
+}
+
+// ========== 缓存 ==========
+
 const cache = new Map()
 const CACHE_TTL = 5 * 60 * 1000
-const FETCH_INTERVAL = 2 * 60 * 60 * 1000 // 2小时
 
-// 主动预缓存（启动时 + 每2小时抓取一次）
+const getCache = (key) => {
+  const item = cache.get(key)
+  if (!item) return null
+  if (Date.now() - item.timestamp > (item.ttl || CACHE_TTL)) { cache.delete(key); return null }
+  return item.data
+}
+
+const setCache = (key, data, ttl) => cache.set(key, { data, timestamp: Date.now(), ttl })
+
+// ========== 定时任务 ==========
+
 const prefetchNews = async () => {
   try {
-    const chainthink = await fetchChainThinkNews()
-    if (chainthink.length > 0) {
-      setCache('news', { success: true, data: chainthink }, FETCH_INTERVAL)
-      console.log(`[${new Date().toLocaleTimeString()}] 快讯已刷新，共 ${chainthink.length} 条`)
+    const newData = await fetchChainThinkNews(true)
+    const oldData = loadChainData()
+    if (!isDataEqual(oldData, { data: newData })) {
+      const saved = saveChainData(newData)
+      console.log(`[${new Date().toLocaleTimeString()}] 快讯已刷新，共 ${saved.count} 条`)
+    } else {
+      console.log(`[${new Date().toLocaleTimeString()}] 数据无变化，跳过写入`)
     }
+    setCache('news', { success: true, data: newData })
+    setCache('chainthink', { success: true, data: newData })
   } catch (e) {
     console.error('定时抓取快讯失败:', e.message)
   }
@@ -36,57 +305,71 @@ const prefetchNews = async () => {
 
 const prefetchChain = async () => {
   try {
-    const items = await fetchChainThinkNews()
-    setCache('chain', { success: true, data: items.slice(0, 5).map(i => ({ title: i.title, time: i.time, url: i.url })) }, FETCH_INTERVAL)
+    const cached = getCache('chainthink')
+    const items = cached ? cached.data : await fetchChainThinkNews(false)
+    setCache('chain', { success: true, data: items.slice(0, 5).map(i => ({ title: i.title, time: i.time, url: i.url })) })
+    setCache('important', { success: true, data: items.slice(0, 3).map(i => ({ title: i.title, url: i.url })) })
   } catch {}
 }
 
-const prefetchImportant = async () => {
-  try {
-    const items = await fetchChainThinkNews()
-    setCache('important', { success: true, data: items.slice(0, 3).map(i => ({ title: i.title, url: i.url })) }, FETCH_INTERVAL)
-  } catch {}
+// ========== 启动时执行 ==========
+
+const cachedData = loadChainData()
+if (cachedData && cachedData.data?.length > 0) {
+  setCache('news', cachedData)
+  setCache('chainthink', cachedData)
+  console.log(`[启动] 从文件恢复快讯 ${cachedData.count} 条`)
+  prefetchChain()
+} else {
+  console.log('[启动] 无本地缓存，即将首次抓取...')
+  prefetchNews().then(() => prefetchChain())
 }
 
-// 启动时立即抓取一次
-prefetchNews()
-prefetchChain()
-prefetchImportant()
-
-// 每2小时定时抓取
+// 每2小时抓取一次
 setInterval(prefetchNews, FETCH_INTERVAL)
 setInterval(prefetchChain, FETCH_INTERVAL)
-setInterval(prefetchImportant, FETCH_INTERVAL)
 
-const getCache = (key) => {
-  const item = cache.get(key)
-  if (!item) return null
-  const ttl = item.ttl || CACHE_TTL
-  if (Date.now() - item.timestamp > ttl) { cache.delete(key); return null }
-  return item.data
-}
-const setCache = (key, data, ttl = CACHE_TTL) => cache.set(key, { data, timestamp: Date.now(), ttl })
+// 每24小时清理一次
+setInterval(() => {
+  try {
+    const json = loadChainData()
+    if (json?.data) {
+      const cleaned = cleanupOldArticles(json.data)
+      if (cleaned.length !== json.data.length) {
+        saveChainData(cleaned)
+        console.log(`[${new Date().toLocaleTimeString()}] 自动清理完成，保留 ${cleaned.length} 条`)
+      }
+    }
+  } catch (e) {
+    console.error('自动清理失败:', e.message)
+  }
+}, CLEANUP_INTERVAL)
 
-// 后备数据
-const FALLBACK_NEWS = [
-  { title: '以太坊Gas费骤降，DeFi活动创新高', summary: '以太坊网络Gas费降至50 Gwei以下，DeFi协议活跃度大幅提升', time: '10:15', url: '', tags: ['ETH'], isImportant: false },
-  { title: 'Solana链上NFT销售额突破10亿美元', summary: 'Solana网络NFT市场持续繁荣，本月销售额已突破10亿美元', time: '09:45', url: '', tags: ['SOL'], isImportant: false },
-  { title: '币安将在迪拜设立全球合规中心', summary: '币安宣布将在迪拜设立全球合规中心，以应对各国监管要求', time: '09:20', url: '', tags: ['BNB'], isImportant: false },
-  { title: '美国SEC批准以太坊现货ETF，多家机构提交申请', summary: '美国证券交易委员会批准以太坊现货ETF，机构投资者热情高涨', time: '08:50', url: '', tags: ['ETH'], isImportant: true },
-  { title: '狗狗币社区发起新营销活动，价格小幅上涨', summary: '狗狗币社区发起新营销活动，吸引大量新投资者关注', time: '08:30', url: '', tags: ['DOGE'], isImportant: false },
-  { title: 'Cardano主网升级即将完成，智能合约功能增强', summary: 'Cardano主网升级进入最后阶段，将大幅提升网络性能', time: '08:00', url: '', tags: ['ADA'], isImportant: false },
-  { title: 'Ripple与多家银行达成合作，XRP应用场景扩大', summary: 'Ripple宣布与多家国际银行建立合作关系，XRP采用率提升', time: '07:40', url: '', tags: ['XRP'], isImportant: false },
-  { title: '加密货币总市值突破3万亿美元', summary: '全球加密货币市场总市值今日突破3万亿美元大关，创历史记录', time: '07:20', url: '', tags: ['BTC'], isImportant: true },
-  { title: 'Polygon推出新开发者工具，ZK-Rollup技术再进一步', summary: 'Polygon发布新一代开发者工具，进一步简化ZK-Rollup应用开发', time: '07:00', url: '', tags: ['MATIC'], isImportant: false }
-]
+// ========== 后备数据 ==========
+
+const FALLBACK_NEWS = (() => {
+  const now = new Date()
+  const pad = n => String(n).padStart(2, '0')
+  const hh = pad(now.getHours())
+  const mm = pad(now.getMinutes())
+  return [
+    { title: '以太坊Gas费骤降，DeFi活动创新高', summary: '以太坊网络Gas费降至50 Gwei以下，DeFi协议活跃度大幅提升', time: `${hh}:${mm}`, url: '', tags: ['ETH'], isImportant: false },
+    { title: 'Solana链上NFT销售额突破10亿美元', summary: 'Solana网络NFT市场持续繁荣，本月销售额已突破10亿美元', time: `${pad((now.getHours() - 1 + 24) % 24)}:${mm}`, url: '', tags: ['SOL'], isImportant: false },
+    { title: '美国SEC批准以太坊现货ETF，多家机构提交申请', summary: '美国证券交易委员会批准以太坊现货ETF，机构投资者热情高涨', time: `${pad((now.getHours() - 2 + 24) % 24)}:${mm}`, url: '', tags: ['ETH'], isImportant: true },
+    { title: '加密货币总市值突破3万亿美元', summary: '全球加密货币市场总市值今日突破3万亿美元大关，创历史记录', time: `${pad((now.getHours() - 3 + 24) % 24)}:${mm}`, url: '', tags: ['BTC'], isImportant: true },
+    { title: 'Polygon推出新开发者工具，ZK-Rollup技术再进一步', summary: 'Polygon发布新一代开发者工具，进一步简化ZK-Rollup应用开发', time: `${pad((now.getHours() - 4 + 24) % 24)}:${mm}`, url: '', tags: ['MATIC'], isImportant: false },
+  ]
+})()
+
 const FALLBACK_CHAIN = [
   { title: '某巨鲸地址转移5000枚BTC至交易所', time: '14:20', url: '' },
-  { title: '未知钱包地址增持10000枚ETH', time: '13:45', url: '' }
+  { title: '未知钱包地址增持10000枚ETH', time: '13:45', url: '' },
 ]
 const FALLBACK_IMPORTANT = [
   { title: '美国SEC批准以太坊现货ETF', url: '' },
-  { title: '比特币减半倒计时：预计还有30天', url: '' }
+  { title: '比特币减半倒计时：预计还有30天', url: '' },
 ]
+
 const BINANCE_FALLBACK = {
   BTCUSDT: { lastPrice: '105000.00', priceChangePercent: '1.50' },
   ETHUSDT: { lastPrice: '3200.00', priceChangePercent: '2.30' },
@@ -115,7 +398,7 @@ const BINANCE_FALLBACK = {
   ATOMUSDT: { lastPrice: '10.00', priceChangePercent: '0.80' },
   UNIUSDT: { lastPrice: '12.00', priceChangePercent: '1.20' },
   AAVEUSDT: { lastPrice: '280.00', priceChangePercent: '2.00' },
-  MKRUSDT: { lastPrice: '2800.00', priceChangePercent: '1.50' },
+  MKRUSUSDT: { lastPrice: '2800.00', priceChangePercent: '1.50' },
   CRVUSDT: { lastPrice: '0.60', priceChangePercent: '-1.80' },
   BCHUSDT: { lastPrice: '480.00', priceChangePercent: '0.30' },
   TONUSDT: { lastPrice: '6.50', priceChangePercent: '1.20' },
@@ -134,53 +417,19 @@ const BINANCE_FALLBACK = {
   BLURUSDT: { lastPrice: '0.40', priceChangePercent: '-2.00' },
 }
 
-async function fetchChainThinkNews() {
-  const response = await axios.get(CHAINTHINK_URL, { timeout: 8000 })
-  const $ = cheerio.load(response.data)
-  const results = []
-
-  $('a').each((_, el) => {
-    const href = $(el).attr('href') || ''
-    const text = $(el).text().replace(/\s+/g, ' ').trim()
-    if (!href || !/\/zh-CN\/article\//.test(href)) return
-    if (text.length < 8) return
-
-    const title = text.slice(0, 80)
-    const summary = ''
-    const fullUrl = href.startsWith('http') ? href : `https://chainthink.cn${href}`
-    if (!results.some(i => i.url === fullUrl)) {
-      results.push({
-        title,
-        summary,
-        time: '',
-        url: fullUrl,
-        tags: ['ChainThink'],
-        isImportant: false,
-        source: 'ChainThink'
-      })
-    }
-  })
-
-  return results.slice(0, 12)
-}
+// ========== API 路由 ==========
 
 app.get('/api/news', async (req, res) => {
   const cached = getCache('news')
   if (cached) return res.json(cached)
-  
-  // 优先抓取 ChainThink
   try {
-    const chainthink = await fetchChainThinkNews()
-    if (chainthink.length > 0) {
-      const result = { success: true, data: chainthink }
+    const items = await fetchChainThinkNews(false)
+    if (items.length > 0) {
+      const result = { success: true, data: items }
       setCache('news', result)
       return res.json(result)
     }
-  } catch (e) {
-    console.error('获取 ChainThink 失败:', e.message)
-  }
-
-  // 尝试从CryptoPanic获取实时数据
+  } catch (e) { console.error('获取快讯失败:', e.message) }
   try {
     const response = await axios.get(
       `https://cryptopanic.com/api/developer/v2/posts/?auth_token=${CRYPTOPANIC_TOKEN}&regions=zh`,
@@ -188,11 +437,9 @@ app.get('/api/news', async (req, res) => {
     )
     if (response.data?.results?.length > 0) {
       const news = response.data.results.slice(0, 20).map(item => ({
-        title: item.title,
-        summary: item.description || '',
+        title: item.title, summary: item.description || '',
         time: item.published_at ? new Date(item.published_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '',
-        url: item.url || '',
-        tags: item.tags?.map(t => t.name) || [],
+        url: item.url || '', tags: item.tags?.map(t => t.name) || [],
         isImportant: item.title.includes('重要') || item.title.includes('突发'),
         source: item.source?.name || 'CryptoPanic'
       }))
@@ -200,11 +447,7 @@ app.get('/api/news', async (req, res) => {
       setCache('news', result)
       return res.json(result)
     }
-  } catch (e) {
-    console.error('获取快讯失败:', e.message)
-  }
-  
-  // 后备静态数据
+  } catch (e) { console.error('获取快讯失败:', e.message) }
   res.json({ success: true, data: FALLBACK_NEWS })
 })
 
@@ -227,9 +470,8 @@ app.get('/api/news/important', (req, res) => {
 app.get('/api/news/chainthink', async (req, res) => {
   const cached = getCache('chainthink')
   if (cached) return res.json(cached)
-
   try {
-    const items = await fetchChainThinkNews()
+    const items = await fetchChainThinkNews(true)
     const result = { success: true, data: items }
     setCache('chainthink', result)
     return res.json(result)
@@ -239,33 +481,19 @@ app.get('/api/news/chainthink', async (req, res) => {
   }
 })
 
-/**
- * Binance代理 → 尝试连接，失败则返回后备数据
- */
 app.get('/binance-api/*', async (req, res) => {
   const path = req.params[0]
-  const targets = [
-    'https://api.binance.com',
-    'https://api.binanceu.com',
-    'https://api1.binance.com',
-    'https://api2.binance.com',
-    'https://api3.binance.com',
-  ]
+  const targets = ['https://api.binance.com', 'https://api.binanceu.com', 'https://api1.binance.com', 'https://api2.binance.com', 'https://api3.binance.com']
   for (const target of targets) {
     try {
       const response = await axios.get(`${target}/${path}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        timeout: 3000
+        headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 3000
       })
       return res.json(response.data)
-    } catch (e) {
-      // 跳过失败，尝试下一个
-    }
+    } catch {}
   }
-  // 全部失败，返回后备数据
   const symbol = (req.query.symbol || '').toUpperCase()
-  const data = BINANCE_FALLBACK[symbol]
-  res.json(data || { lastPrice: '100.00', priceChangePercent: '0.00' })
+  res.json(BINANCE_FALLBACK[symbol] || { lastPrice: '100.00', priceChangePercent: '0.00' })
 })
 
 app.get('/api/health', (req, res) => {
@@ -273,50 +501,21 @@ app.get('/api/health', (req, res) => {
 })
 
 // ========== 论坛模块 ==========
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const POSTS_FILE = path.join(__dirname, 'posts.json')
-
-const loadPosts = () => {
-  try {
-    if (existsSync(POSTS_FILE)) {
-      const raw = readFileSync(POSTS_FILE, 'utf8')
-      return JSON.parse(raw)
-    }
-  } catch {}
-  return []
-}
-
-const savePosts = (posts) => {
-  try {
-    writeFileSync(POSTS_FILE, JSON.stringify(posts, null, 2), 'utf8')
-  } catch (e) {
-    console.error('保存帖子失败:', e.message)
-  }
-}
-
-// 获取某资讯下的帖子
 app.get('/api/forum/:articleId', (req, res) => {
-  const { articleId } = req.params
   const allPosts = loadPosts()
   const filtered = allPosts
-    .filter(p => String(p.articleId) === String(articleId))
+    .filter(p => String(p.articleId) === String(req.params.articleId))
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 50)
   res.json({ success: true, data: filtered, total: filtered.length })
 })
 
-// 发帖
 app.post('/api/forum', (req, res) => {
   const { articleId, nickname, content } = req.body
-  if (!content || !content.trim()) {
-    return res.status(400).json({ success: false, message: '内容不能为空' })
-  }
+  if (!content?.trim()) return res.status(400).json({ success: false, message: '内容不能为空' })
   const nick = (nickname || '').trim() || '游客#' + Math.floor(1000 + Math.random() * 9000)
-  const password = String(Date.now()).slice(-8) // 8位随机密码
+  const password = String(Date.now()).slice(-8)
   const posts = loadPosts()
   const newPost = {
     id: Date.now(),
@@ -331,21 +530,14 @@ app.post('/api/forum', (req, res) => {
   res.json({ success: true, data: newPost, password })
 })
 
-// 删除帖子（需提供正确密码）
 app.delete('/api/forum/:id', (req, res) => {
-  const { id } = req.params
-  const { password } = req.body
+  const { id } = req.params; const { password } = req.body
   const posts = loadPosts()
   const target = posts.find(p => String(p.id) === String(id))
-  if (!target) {
-    return res.status(404).json({ success: false, message: '帖子不存在' })
-  }
+  if (!target) return res.status(404).json({ success: false, message: '帖子不存在' })
   const postPassword = String(target.timestamp).slice(-8)
-  if (password !== postPassword) {
-    return res.status(403).json({ success: false, message: '删除密码错误' })
-  }
-  const remaining = posts.filter(p => String(p.id) !== String(id))
-  savePosts(remaining)
+  if (password !== postPassword) return res.status(403).json({ success: false, message: '删除密码错误' })
+  savePosts(posts.filter(p => String(p.id) !== String(id)))
   res.json({ success: true })
 })
 
