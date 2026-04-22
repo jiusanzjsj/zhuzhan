@@ -16,7 +16,7 @@
           @click="navigateToDetail(exchange)"
         >
           <!-- 移动端 -->
-          <div class="flex items-center gap-3">
+          <div class="sm:hidden flex items-center gap-3">
             <img :src="exchange.image" :alt="exchange.name" class="w-8 h-8 rounded-full object-cover flex-shrink-0" @error="$event.target.style.display='none'" />
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-slate-200 group-hover:text-yellow-400 transition">
