@@ -41,7 +41,7 @@
     <main class="flex-1">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="['Exchange', 'NewsList']">
-          <component :is="Component" :key="route.fullPath" />
+          <component :is="Component" :key="route.name" />
         </keep-alive>
       </router-view>
     </main>
