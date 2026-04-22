@@ -306,9 +306,10 @@ const prefetchNews = async () => {
 const prefetchChain = async () => {
   try {
     const cached = getCache('chainthink')
-    const items = cached ? cached.data : await fetchChainThinkNews(false)
-    setCache('chain', { success: true, data: items.slice(0, 5).map(i => ({ title: i.title, time: i.time, url: i.url })) })
-    setCache('important', { success: true, data: items.slice(0, 3).map(i => ({ title: i.title, url: i.url })) })
+    if (cached?.data?.length) {
+      setCache('chain', { success: true, data: cached.data.slice(0, 5).map(i => ({ title: i.title, time: i.time, url: i.url })) })
+      setCache('important', { success: true, data: cached.data.slice(0, 3).map(i => ({ title: i.title, url: i.url })) })
+    }
   } catch {}
 }
 
