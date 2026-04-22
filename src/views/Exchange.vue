@@ -57,7 +57,7 @@ const router = useRouter()
 const exchanges = ref([
   { id: 'binance', name: '币安', desc: '全球最大加密货币交易所', image: '/images/exchanges/binance.jpg' },
   { id: 'okx', name: 'OKX', desc: '全球领先的数字资产交易所', image: '/images/exchanges/okx.png', apiId: 'okex' },
-  { id: 'bybit', name: 'Bybit', desc: '专业加密合约及现货交易所', image: '/images/exchanges/bybit.jpg', apiId: 'bybit-spot' },
+  { id: 'bybit', name: 'Bybit', desc: '专业加密合约及现货交易所', image: '/images/exchanges/bybit.jpg', apiId: 'bybitspot' },
   { id: 'gate', name: 'Gate.io', desc: '老牌加密货币交易所', image: '/images/exchanges/gate.png' },
   { id: 'bitget', name: 'Bitget', desc: '合约跟单领先的交易所', image: '/images/exchanges/bitget.png' },
   { id: 'htx', name: 'HTX', desc: '全球知名的数字资产交易平台', image: '/images/exchanges/htx.png', apiId: 'huobi' }
