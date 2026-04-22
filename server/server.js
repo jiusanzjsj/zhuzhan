@@ -246,10 +246,13 @@ function saveChainData(items) {
 
 function isDataEqual(oldData, newData) {
   if (!oldData || !newData) return false
-  const oldIds = new Set((oldData.data || []).map(i => i.id))
-  const newIds = new Set((newData.data || []).map(i => i.id))
-  if (oldIds.size !== newIds.size) return false
-  for (const id of oldIds) { if (!newIds.has(id)) return false }
+  const oldMap = new Map((oldData.data || []).map(i => [i.id, i.published_at]))
+  const newMap = new Map((newData.data || []).map(i => [i.id, i.published_at]))
+  if (oldMap.size !== newMap.size) return false
+  for (const [id, ts] of oldMap) {
+    if (!newMap.has(id)) return false
+    if (String(newMap.get(id)) !== String(ts)) return false
+  }
   return true
 }
 
