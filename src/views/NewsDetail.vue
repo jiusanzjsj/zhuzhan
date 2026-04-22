@@ -295,58 +295,43 @@ const loadArticle = async () => {
   article.value = null
   contentData.value = { content: '', image: '' }
 
+  let baseData = null
+
   const navArticle = getNavigationArticle()
   if (navArticle && navArticle.id == route.params.id) {
-    article.value = navArticle
-    contentData.value = {
-      content: navArticle.content || navArticle.description || '暂无详细内容',
-      image: navArticle.image || navArticle.coverImage || ''
-    }
-  }
-
-  if (!article.value) {
+    baseData = navArticle
+  } else {
     const storeArticle = getArticleById(route.params.id)
-    if (storeArticle) {
-      article.value = storeArticle
-      contentData.value = {
-        content: storeArticle.content || storeArticle.description || '暂无详细内容',
-        image: storeArticle.image || storeArticle.coverImage || ''
-      }
-    }
+    if (storeArticle) baseData = storeArticle
   }
 
-  // 刷新页面时store为空，从后端news列表里找
-  if (!article.value) {
+  if (!baseData) {
     try {
       const res = await fetch('/api/news')
       const json = await res.json()
       if (json.success && json.data) {
-        const found = json.data.find(item => String(item.id) === String(route.params.id))
-        if (found) {
-          article.value = found
-          contentData.value = {
-            content: found.content || found.description || '暂无详细内容',
-            image: found.image || found.coverImage || ''
-          }
-        }
+        baseData = json.data.find(item => String(item.id) === String(route.params.id))
       }
     } catch {}
   }
 
-  // article有基本数据后，额外从chainthink接口获取完整blocks内容
-  if (article.value && !article.value.blocks) {
+  if (baseData) {
     try {
       const res = await fetch('/api/news/chainthink')
       const json = await res.json()
       const full = (json.data || []).find(item => String(item.id) === String(route.params.id))
       if (full) {
-        if (full.blocks) article.value.blocks = full.blocks
-        if (full.content) article.value.content = full.content
-        if (full.images) article.value.images = full.images
-        if (!contentData.value.content && full.content) contentData.value.content = full.content
-        if (!contentData.value.image && full.image) contentData.value.image = full.image
+        article.value = { ...baseData, ...full }
+      } else {
+        article.value = baseData
       }
-    } catch {}
+      contentData.value = {
+        content: article.value.content || article.value.description || '暂无详细内容',
+        image: article.value.image || article.value.coverImage || ''
+      }
+    } catch {
+      article.value = baseData
+    }
   }
 
   loading.value = false
