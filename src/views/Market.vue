@@ -7,8 +7,8 @@
           <div class="ticker-wrapper">
             <div class="ticker-content">
               <button
-                v-for="(coin, idx) in tickerCoins"
-                :key="coin.symbol"
+                v-for="(coin, idx) in [...tickerCoins, ...tickerCoins]"
+                :key="coin.symbol + '-' + idx"
                 class="flex items-center gap-2 px-4 py-1.5 bg-[#1e1e35] border border-yellow-500/20 rounded-xl hover:border-yellow-500/60 hover:bg-[#1e1e35]/80 transition whitespace-nowrap mx-2"
                 @click="goToChart(coin.symbol)"
               >
@@ -223,12 +223,12 @@ const downPercent = ref(50)
 const newsList = ref([])
 const newsLoading = ref(true)
 const exchangeList = ref([
-  { id: 'binance', name: '币安', desc: '全球最大加密货币交易所', image: '/images/exchanges/binance.jpg' },
-  { id: 'okx', name: 'OKX', desc: '全球领先的数字资产交易所', image: '/images/exchanges/okx.png', apiId: 'okex' },
-  { id: 'bybit', name: 'Bybit', desc: '专业加密合约及现货交易所', image: '/images/exchanges/bybit.jpg', apiId: 'bybit_spot' },
-  { id: 'gate', name: 'Gate.io', desc: '老牌加密货币交易所', image: '/images/exchanges/gate.png' },
-  { id: 'bitget', name: 'Bitget', desc: '合约跟单领先的交易所', image: '/images/exchanges/bitget.png' },
-  { id: 'htx', name: 'HTX', desc: '全球知名的数字资产交易平台', image: '/images/exchanges/htx.png', apiId: 'huobi' }
+  { id: 'binance', name: '币安', desc: '币安(Binance)，国际领先的区块链数字资产国际站，向全球提供广泛的数字货币交易、', image: '/images/exchanges/binance.jpg' },
+  { id: 'okx', name: 'OKX', desc: '欧易OKX是全球领先的加密生态建设者，成立于', image: '/images/exchanges/okx.png', apiId: 'okex' },
+  { id: 'bybit', name: 'Bybit', desc: 'Bybit成立于2018年3月，注册在英属维京地区', image: '/images/exchanges/bybit.jpg', apiId: 'bybit_spot' },
+  { id: 'gate', name: 'Gate.io', desc: 'Gate.io 成⽴于2013年，是全球领先的加密',image: '/images/exchanges/gate.png' },
+	{ id: 'bitget', name: 'Bitget', desc: 'Bitget 成立于2018年，是世界领先的加密量排', image: '/images/exchanges/bitget.png' },
+  { id: 'htx', name: 'HTX', desc: '火币HTX是一个全面的区块链业务生态系统，涵盖杆、全世界供全面、安全、可靠的价创投拿马', image: '/images/exchanges/htx.png', apiId: 'huobi' }
 ])
 const exchangeLoading = ref(false)
 
@@ -420,14 +420,30 @@ const connectWS = () => {
 
   ws = new WebSocket(wsUrl)
 
+  let pendingUpdates = []
+  let rafPending = false
+
+  const flushUpdates = () => {
+    for (const u of pendingUpdates) {
+      const c = coinList.value.find(x => x.symbol === u.s)
+      if (c) {
+        if (u.c) c.price = parseFloat(u.c)
+        if (u.P) c.change = parseFloat(u.P)
+      }
+    }
+    pendingUpdates = []
+    rafPending = false
+  }
+
   ws.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data).data
       if (!d) return
-      const c = coinList.value.find(x => x.symbol === d.s.replace('USDT', ''))
-      if (c) {
-        if (d.c) c.price = parseFloat(d.c)
-        if (d.P) c.change = parseFloat(d.P)
+      const sym = d.s.replace('USDT', '')
+      pendingUpdates.push({ s: sym, c: d.c, P: d.P })
+      if (!rafPending) {
+        rafPending = true
+        requestAnimationFrame(flushUpdates)
       }
     } catch (err) {
       console.error("解析WS数据失败", err)
@@ -503,6 +519,7 @@ onUnmounted(() => {
   display: flex;
   animation: ticker-scroll 30s linear infinite;
   width: max-content;
+  will-change: transform;
 }
 
 .ticker-content:hover {
