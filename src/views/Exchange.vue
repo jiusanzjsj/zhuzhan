@@ -17,9 +17,12 @@
         >
           <!-- 移动端 -->
           <div class="flex items-center gap-3">
-            <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 bg-yellow-500 text-black">
-              {{ index + 1 }}
-            </span>
+            <div
+              class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+              :style="{ background: exchange.color, color: exchange.textColor || '#000' }"
+            >
+              {{ exchange.letter }}
+            </div>
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-slate-200 group-hover:text-yellow-400 transition">
                 {{ exchange.name }}
@@ -34,9 +37,12 @@
           <!-- 桌面端 -->
           <div class="hidden sm:flex items-center mt-3">
             <div class="w-12 flex items-center justify-center">
-              <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-yellow-500 text-black">
-                {{ index + 1 }}
-              </span>
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
+                :style="{ background: exchange.color, color: exchange.textColor || '#000' }"
+              >
+                {{ exchange.letter }}
+              </div>
             </div>
             <div class="flex-1">
               <div class="font-semibold text-slate-200 group-hover:text-yellow-400 transition text-base">{{ exchange.name }}</div>
@@ -59,12 +65,12 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const exchanges = ref([
-  { id: 'binance', name: '币安', desc: '全球最大加密货币交易所' },
-  { id: 'okx', name: 'OKX', desc: '全球领先的数字资产交易所' },
-  { id: 'bybit', name: 'Bybit', desc: '专业加密合约及现货交易所' },
-  { id: 'gate', name: 'Gate.io', desc: '老牌加密货币交易所' },
-  { id: 'bitget', name: 'Bitget', desc: '合约跟单领先的交易所' },
-  { id: 'htx', name: 'HTX', desc: '全球知名的数字资产交易平台' }
+  { id: 'binance', name: '币安', desc: '全球最大加密货币交易所', letter: 'B', color: '#F0B90B' },
+  { id: 'okx', name: 'OKX', desc: '全球领先的数字资产交易所', letter: 'O', color: '#FFFFFF', textColor: '#000' },
+  { id: 'bybit', name: 'Bybit', desc: '专业加密合约及现货交易所', letter: 'B', color: '#F7A600' },
+  { id: 'gate', name: 'Gate.io', desc: '老牌加密货币交易所', letter: 'G', color: '#17E09B' },
+  { id: 'bitget', name: 'Bitget', desc: '合约跟单领先的交易所', letter: 'B', color: '#C8102E' },
+  { id: 'htx', name: 'HTX', desc: '全球知名的数字资产交易平台', letter: 'H', color: '#1F8E43' }
 ])
 
 const navigateToDetail = (exchange) => {
