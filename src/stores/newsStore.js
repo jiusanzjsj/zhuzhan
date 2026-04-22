@@ -148,7 +148,8 @@ export async function fetchArticleContent(url) {
  * 根据ID获取文章
  */
 export function getArticleById(id) {
-  return articles.value.find(item => item.id === Number(id)) || null
+  const sid = String(id)
+  return articles.value.find(item => String(item.id) === sid) || null
 }
 
 // 辅助函数
