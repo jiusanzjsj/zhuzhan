@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onActivated, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -62,6 +62,8 @@ const exchanges = ref([
   { id: 'bitget', name: 'Bitget', desc: '合约跟单领先的交易所', image: '/images/exchanges/bitget.png' },
   { id: 'htx', name: 'HTX', desc: '全球知名的数字资产交易平台', image: '/images/exchanges/htx.png', apiId: 'huobi' }
 ])
+
+let initialized = false
 
 const navigateToDetail = (exchange) => {
   const preview = btoa(encodeURIComponent(JSON.stringify({
@@ -77,4 +79,13 @@ const navigateToDetail = (exchange) => {
     query: { p: preview }
   })
 }
+
+onMounted(() => {
+  initialized = true
+})
+
+// keep-alive 激活时保持状态，不需要重新加载（数据是静态的）
+onActivated(() => {
+  // Exchange 数据是静态写死的，不需要刷新
+})
 </script>

@@ -224,19 +224,16 @@ const loadPosts = async () => {
 }
 
 const deletePost = async (id) => {
-  const password = prompt('请输入删除密码：')
-  if (!password) return
+  if (!confirm('确定删除此评论？')) return
   try {
     const res = await fetch(`/api/forum/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+      method: 'DELETE'
     })
     const json = await res.json()
     if (json.success) {
       filteredPosts.value = filteredPosts.value.filter(p => p.id !== id)
     } else {
-      alert('删除失败：' + (json.message || '密码错误'))
+      alert('删除失败：' + (json.message || '删除失败'))
     }
   } catch {}
 }
@@ -260,12 +257,10 @@ const submitPost = async () => {
     const json = await res.json()
     if (json.success) {
       filteredPosts.value.unshift(json.data)
-      alert('发布成功！\n删除密码：' + json.password + '\n请妥善保存，用于删除帖子')
+      newPost.value = ''
+      showHints.value = false
     }
   } catch {}
-
-  newPost.value = ''
-  showHints.value = false
 }
 
 const generateNickname = () => '游客#' + Math.floor(1000 + Math.random() * 9000)

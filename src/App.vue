@@ -10,6 +10,25 @@
 
           <div class="flex-1"></div>
 
+          <a
+            href="https://studybtcion.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 bg-[#0f0f1a]/60 border border-yellow-500/20 rounded-xl hover:border-yellow-500/60 hover:bg-yellow-500/10 transition text-sm font-medium text-yellow-400"
+          >
+            加密学习
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
+
+          <router-link
+            to="/about"
+            class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 bg-[#0f0f1a]/60 border border-yellow-500/20 rounded-xl hover:border-yellow-500/60 hover:bg-yellow-500/10 transition text-sm font-medium text-yellow-400"
+          >
+            关于我们
+          </router-link>
+
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
             class="md:hidden p-2 text-slate-400 hover:text-yellow-400 transition"
@@ -41,7 +60,7 @@
     <main class="flex-1">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="['Exchange', 'NewsList']">
-          <component :is="Component" :key="route.name" />
+          <component :is="Component" :key="route.fullPath" />
         </keep-alive>
       </router-view>
     </main>

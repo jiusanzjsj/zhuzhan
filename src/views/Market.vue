@@ -183,6 +183,18 @@
 
             </button>
           </div>
+
+          <!-- 加盟信号 -->
+          <div class="px-4 py-3 border-t border-yellow-500/10">
+            <div class="text-xs font-semibold text-slate-200 text-center">加入榜单</div>
+          </div>
+          <div class="px-4 pb-4">
+            <img
+              src="/images/lianxi.png"
+              alt="加入榜单"
+              class="w-full rounded-xl"
+            />
+          </div>
         </div>
       </section>
     </div>

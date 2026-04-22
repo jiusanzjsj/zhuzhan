@@ -32,8 +32,13 @@
           <p>加载中...</p>
         </div>
 
+        <!-- 新内容提示 -->
+        <div v-if="newCount > 0" class="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-center cursor-pointer hover:bg-yellow-500/20 transition" @click="showNewPosts">
+          <span class="text-sm text-yellow-400 font-medium">📰 {{ newCount }} 条新快讯，点击展开</span>
+        </div>
+
         <!-- 新闻列表 -->
-        <div v-else class="news-list">
+        <div class="news-list">
           <div
             v-for="(item, index) in newsList"
             :key="item.id"
@@ -128,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchNewsList, setNavigationArticle } from '../stores/newsStore'
 
@@ -137,12 +142,34 @@ const newsList = ref([])
 const hotNews = ref([])
 const loading = ref(true)
 const imageErrors = ref({})
+const newCount = ref(0)
+
+let initialized = false
 
 const loadNews = async (forceRefresh = false) => {
   try {
-    loading.value = true
+    // 首次加载才显示loading动画，后续静默检查新内容
+    if (newsList.value.length === 0) {
+      loading.value = true
+    }
+
     const result = await fetchNewsList(forceRefresh)
-    newsList.value = result.articles || []
+    const newArticles = result.articles || []
+
+    if (newsList.value.length === 0) {
+      // 首次加载，正常赋值
+      newsList.value = newArticles
+    } else if (forceRefresh) {
+      // 后续刷新：对比找出真正的新内容
+      const existingIds = new Set(newsList.value.map(i => i.id))
+      const incoming = newArticles.filter(i => !existingIds.has(i.id))
+      newCount.value = incoming.length
+
+      if (incoming.length > 0) {
+        newsList.value = [...incoming, ...newsList.value]
+      }
+    }
+
     hotNews.value = result.hotNews || []
   } catch (err) {
     console.error('加载新闻失败:', err)
@@ -151,7 +178,13 @@ const loadNews = async (forceRefresh = false) => {
   }
 }
 
+const showNewPosts = () => {
+  newCount.value = 0
+}
+
+// 下拉刷新
 const handleRefresh = () => {
+  newCount.value = 0
   loadNews(true)
 }
 
@@ -179,6 +212,14 @@ const onImageError = (id, event) => {
 
 onMounted(() => {
   loadNews(true)
+  initialized = true
+})
+
+// keep-alive 激活时刷新数据
+onActivated(() => {
+  if (initialized) {
+    loadNews(true)
+  }
 })
 </script>
 

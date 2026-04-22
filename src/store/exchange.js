@@ -151,7 +151,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
   // 2. 并行请求详情和BTC价格（使用Settled确保一个失败不影响另一个）
   const results = await Promise.allSettled([
     fetchWithTimeout(
-      `https://api.coingecko.com/api/v3/exchanges/${exchangeId}`,
+      `https://www.openupbtc.com/coingecko-api/api/v3/exchanges/${exchangeId}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -160,7 +160,7 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
       }
     ),
     fetchWithTimeout(
-      `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd`,
+      `https://www.openupbtc.com/coingecko-api/api/v3/simple/price?ids=bitcoin&vs_currencies=usd`,
       { headers: { 'x-cg-demo-api-key': API_KEY } }
     ).then(r => r.json()).catch(() => ({ bitcoin: { usd: 50000 } }))
   ])
@@ -248,7 +248,7 @@ const EXCHANGE_INFO_ZH = {
   bitget: { name: 'Bitget', desc: '全球领先的合约跟单交易所' },
   bybitspot: { name: 'Bybit', desc: '全球加密货币交易所，专注衍生品交易' },
   
-  htx: { name: '火币HTX', desc: '全球领先加密货币交易所' }
+  htx: { name: '火币', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' }
  
 }
 

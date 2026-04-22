@@ -53,9 +53,10 @@ export async function fetchNewsList(forceRefresh = false) {
     loading.value = true
     error.value = null
 
-    // 直接走 /api/news 接口
+    // 直接走 /api/news 接口，带时间戳防缓存
     let rawData = []
-    const response = await fetchWithTimeout('/api/news')
+    const url = forceRefresh ? `/api/news?_=${Date.now()}` : '/api/news'
+    const response = await fetchWithTimeout(url)
     if (response.ok) {
       const result = await response.json()
       rawData = result.data || result.results || []
