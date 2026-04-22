@@ -333,6 +333,22 @@ const loadArticle = async () => {
     } catch {}
   }
 
+  // article有基本数据后，额外从chainthink接口获取完整blocks内容
+  if (article.value && !article.value.blocks) {
+    try {
+      const res = await fetch('/api/news/chainthink')
+      const json = await res.json()
+      const full = (json.data || []).find(item => String(item.id) === String(route.params.id))
+      if (full) {
+        if (full.blocks) article.value.blocks = full.blocks
+        if (full.content) article.value.content = full.content
+        if (full.images) article.value.images = full.images
+        if (!contentData.value.content && full.content) contentData.value.content = full.content
+        if (!contentData.value.image && full.image) contentData.value.image = full.image
+      }
+    } catch {}
+  }
+
   loading.value = false
   setNewsSeo()
 }
