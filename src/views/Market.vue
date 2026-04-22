@@ -306,7 +306,18 @@ const getExchangeBrief = (exchange) => {
 }
 
 const navigateToExchange = (exchange) => {
-  router.push({ name: 'ExchangeDetail', params: { id: exchange.apiId || exchange.id } })
+  const preview = btoa(encodeURIComponent(JSON.stringify({
+    name: exchange.name || '',
+    image: '',
+    trust_score_rank: '-',
+    number_of_markets: '-',
+    trade_volume_24h_btc: 0
+  })))
+  router.push({
+    name: 'ExchangeDetail',
+    params: { id: exchange.apiId || exchange.id },
+    query: { p: preview }
+  })
 }
 
 const getNextMidnight = () => {
