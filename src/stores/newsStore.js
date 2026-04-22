@@ -53,23 +53,12 @@ export async function fetchNewsList(forceRefresh = false) {
     loading.value = true
     error.value = null
 
-    // 优先读取本地抓取生成的静态 JSON，强制绕过浏览器缓存
+    // 直接走 /api/news 接口
     let rawData = []
-
-    const staticResponse = await fetchWithTimeout(`/data/chainthink-news.json?t=${Date.now()}`, {
-      cache: 'no-store'
-    })
-    if (staticResponse.ok) {
-      const result = await staticResponse.json()
+    const response = await fetchWithTimeout('/api/news')
+    if (response.ok) {
+      const result = await response.json()
       rawData = result.data || result.results || []
-    }
-
-    if (!Array.isArray(rawData) || rawData.length === 0) {
-      const response = await fetchWithTimeout('/api/news')
-      if (response.ok) {
-        const result = await response.json()
-        rawData = result.data || result.results || []
-      }
     }
 
     if (!Array.isArray(rawData) || rawData.length === 0) {
