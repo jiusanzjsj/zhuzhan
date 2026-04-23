@@ -25,7 +25,7 @@
               <label class="filter-checkbox">
                 <input type="checkbox" v-model="showImportant" />
                 <span class="checkmark">✓</span>
-                <span>重要快讯</span>
+                <span>重要资讯</span>
               </label>
             </div>
             <div class="right">
@@ -40,7 +40,7 @@
           <!-- 日期 -->
           <div class="date-header">2026-03-21</div>
 
-          <!-- 快讯列表 -->
+          <!-- 资讯列表 -->
           <div class="news-container">
             <div
               v-for="(item, index) in filteredNews"
@@ -182,7 +182,7 @@ const fetchNews = async () => {
 
     lastUpdate.value = new Date().toLocaleTimeString('zh-CN')
   } catch (err) {
-    console.error('获取快讯失败:', err)
+    console.error('获取资讯失败:', err)
   } finally {
     loading.value = false
   }

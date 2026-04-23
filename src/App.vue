@@ -65,14 +65,58 @@
       </router-view>
     </main>
 
-    <footer class="bg-[#16162a] border-t border-yellow-500/20 py-5 mt-auto">
-      <div class="max-w-[1400px] mx-auto px-3 md:px-4">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-slate-500">
-          <div class="flex items-center gap-2">
-            <img src="/src/assets/bsj.png" class="w-5 h-5 rounded-full" />
-            <span class="text-yellow-500/60">© 2026 比特视界</span>
+    <footer class="bg-[#16162a] border-t border-yellow-500/20 mt-auto">
+      <div class="max-w-[1400px] mx-auto px-3 md:px-4 py-6">
+        <!-- 链接区 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+          <div>
+            <h3 class="text-xs font-semibold text-slate-300 mb-3">快捷导航</h3>
+            <ul class="space-y-2">
+              <li><router-link to="/" class="text-xs text-slate-500 hover:text-yellow-400 transition">🏠 首页</router-link></li>
+              <li><router-link to="/news" class="text-xs text-slate-500 hover:text-yellow-400 transition">📰 资讯</router-link></li>
+              <li><router-link to="/exchange" class="text-xs text-slate-500 hover:text-yellow-400 transition">🏦 交易所</router-link></li>
+              <li><router-link to="/about" class="text-xs text-slate-500 hover:text-yellow-400 transition">ℹ️ 关于我们</router-link></li>
+            </ul>
           </div>
-          <div class="text-slate-500">加密货币行情、快讯与交易所信息平台</div>
+          <div>
+            <h3 class="text-xs font-semibold text-slate-300 mb-3">行情数据</h3>
+            <ul class="space-y-2">
+              <li><router-link to="/chart/BTC" class="text-xs text-slate-500 hover:text-yellow-400 transition">₿ Bitcoin</router-link></li>
+              <li><router-link to="/chart/ETH" class="text-xs text-slate-500 hover:text-yellow-400 transition">Ξ Ethereum</router-link></li>
+              <li><router-link to="/chart/SOL" class="text-xs text-slate-500 hover:text-yellow-400 transition">◎ Solana</router-link></li>
+              <li><router-link to="/chart/DOGE" class="text-xs text-slate-500 hover:text-yellow-400 transition">Ð Dogecoin</router-link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-xs font-semibold text-slate-300 mb-3">合作平台</h3>
+            <ul class="space-y-2">
+              <li><a href="https://www.bsmkweb.cc/join?ref=T13Y3O9Y" target="_blank" rel="noopener" class="text-xs text-slate-500 hover:text-yellow-400 transition">📈 币安</a></li>
+              <li><a href="https://www.growthhubzz.com/join/1875117" target="_blank" rel="noopener" class="text-xs text-slate-500 hover:text-yellow-400 transition">📊 OKX</a></li>
+              <li><a href="https://partner.hdmune.cn/bg/J42ZQX" target="_blank" rel="noopener" class="text-xs text-slate-500 hover:text-yellow-400 transition">📉 Bitget</a></li>
+              <li><a href="https://studybtcion.com" target="_blank" rel="noopener" class="text-xs text-slate-500 hover:text-yellow-400 transition">📚 加密学习</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-xs font-semibold text-slate-300 mb-3">关于我们</h3>
+            <ul class="space-y-2">
+              <li><router-link to="/about" class="text-xs text-slate-500 hover:text-yellow-400 transition">💬 联系我们</router-link></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 分隔线 -->
+        <div class="border-t border-yellow-500/10 pt-5">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <img src="/src/assets/bsj.png" class="w-5 h-5 rounded-full" />
+              <span class="text-xs text-yellow-500/60">© 2026 比特视界</span>
+              <span class="text-xs text-slate-600">|</span>
+              <span class="text-xs text-slate-600">加密货币行情、资讯与交易所信息平台</span>
+            </div>
+            <div class="text-xs text-slate-600">
+              数据仅供参考，不构成投资建议
+            </div>
+          </div>
         </div>
       </div>
     </footer>

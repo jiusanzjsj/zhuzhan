@@ -104,7 +104,7 @@
           </div>
         </div>
 
-        <!-- 中：快讯 -->
+        <!-- 中：资讯 -->
         <div class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden min-w-0">
           <div class="px-4 py-3 border-b border-yellow-500/10 flex items-center justify-between gap-3">
             <div>
@@ -113,7 +113,7 @@
             <div class="text-xs text-yellow-500/60">{{ newsList.length }} 条</div>
           </div>
 
-          <div v-if="newsLoading" class="p-6 text-center text-sm text-slate-500">快讯加载中...</div>
+          <div v-if="newsLoading" class="p-6 text-center text-sm text-slate-500">资讯加载中...</div>
           <div v-else class="divide-y divide-yellow-500/10">
             <button
               v-for="item in newsList"
@@ -132,7 +132,7 @@
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                         <span class="text-[11px] px-2 py-0.5 rounded-md bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">{{ '比特视界' }}</span>
-                        <span class="text-[11px] text-slate-500">快讯</span>
+                        
                       </div>
                       <h3 class="text-sm md:text-[15px] font-semibold leading-6 text-slate-200 line-clamp-2">{{ item.title }}</h3>
                       <p v-if="item.description" class="mt-1.5 text-[13px] leading-6 text-slate-400 line-clamp-2">{{ item.description }}</p>
@@ -192,11 +192,12 @@
             <img
               src="/images/lianxi.png"
               alt="加入榜单"
-              class="w-24 rounded-xl flex-shrink-0"
+              class="w-25 rounded-xl flex-shrink-0"
             />
             <div class="text-xs text-slate-500 leading-relaxed">
               <p class="text-slate-400 font-medium mb-1">Join Our Network</p>
-              <p>扫码联系，获取交易所推广合作方案，共享流量红利</p>
+              <p class="mb-1">扫码联系，获取交易所推广合作方案，共享流量红利</p>
+              
             </div>
           </div>
         </div>

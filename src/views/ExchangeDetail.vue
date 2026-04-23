@@ -70,11 +70,11 @@
                 <img :src="exchangeInfo.logo" :alt="exchangeInfo.name" class="w-14 sm:w-20 h-14 sm:h-20 rounded-xl sm:rounded-2xl bg-[#1e1e35] shadow-lg p-1 border border-yellow-500/10">
                 <div class="flex-1 min-w-0">
                   <h2 class="text-lg sm:text-2xl font-bold text-slate-200 mb-1 truncate">{{ getExchangeNameZh(exchangeInfo.id) || exchangeInfo.name }}</h2>
-                  <div class="flex flex-wrap items-center gap-2">
+                  <!-- <div class="flex flex-wrap items-center gap-2">
                     <span v-if="exchangeInfo.rank && exchangeInfo.rank !== '-'" class="px-2 sm:px-3 py-0.5 sm:py-1 bg-yellow-500/10 backdrop-blur-sm rounded-lg text-yellow-400 text-xs sm:text-sm font-medium border border-yellow-500/20">
                       🏆 #{{ exchangeInfo.rank }}
                     </span>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -218,8 +218,8 @@
         </div>
 
         <!-- 右侧信息栏 -->
+         <!-- 关注交易所 -->
         <aside class="space-y-6">
-          <!-- 关注交易所 -->
           <div class="bg-gradient-to-br from-yellow-500/10 via-yellow-500/15 to-amber-500/10 rounded-2xl p-6 border border-yellow-500/20 shadow-lg shadow-yellow-500/5 relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl"></div>
             <div class="relative">

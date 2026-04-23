@@ -206,9 +206,11 @@ export async function fetchExchangeDetail(exchangeId, forceRefresh = false) {
 
   // 交易所官网链接映射（优先使用硬编码的推广链接）
   const EXCHANGE_URL_OVERRIDE = {
-    binance: 'https://accounts.bmwweb.solutions/zh-CN/register?return_to=aHR0cHM6Ly93d3cuYm13d2ViLnNvbHV0aW9ucy96aC1DTi9qb2luP3JlZj1KTkpOSk4&ref=JNJNJN',
-    okex: 'https://www.xqmnobxky.com/join/JNJNJN',
-    bitget: 'https://www.hdmune.cn/zh-CN/expressly?channelCode=jfsg&vipCode=JN007&languageType=1&groupId=651147'
+    binance: 'https://www.bsmkweb.cc/join?ref=T13Y3O9Y',
+    okex: 'https://www.growthhubzz.com/join/1875117',
+    bitget: 'https://partner.hdmune.cn/bg/J42ZQX',
+    huobi:'https://www.htx.com.ph/invite/zh-cn/1h?invite_code=sanshu',
+    gate:'https://www.gateport.business/share/vvhfvl4o'
   }
 
   const formattedDetail = {

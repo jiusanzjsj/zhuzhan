@@ -74,7 +74,7 @@ export async function fetchNewsList(forceRefresh = false) {
     const articlesData = cleanData.slice(0, 20).map((item, index) => ({
       id: item.id || index + 1,
       title: item.title || '无标题',
-      tag: '快讯',
+      tag: '资讯',
       tagClass: 'bg-blue-50 text-blue-600 border border-blue-100',
       time: item.time || formatTime(item.published_at),
       views: Math.floor(Math.random() * 900 + 100),

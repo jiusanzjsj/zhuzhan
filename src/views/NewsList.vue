@@ -9,7 +9,7 @@
           </svg>
         </div>
         <div class="banner-text">
-          <h1 class="banner-title">加密货币快讯</h1>
+          <h1 class="banner-title">加密货币资讯</h1>
           <p class="banner-sub">追踪最新加密货币行业动态</p>
         </div>
       </div>
@@ -34,7 +34,7 @@
 
         <!-- 新内容提示 -->
         <div v-if="newCount > 0" class="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-center cursor-pointer hover:bg-yellow-500/20 transition" @click="showNewPosts">
-          <span class="text-sm text-yellow-400 font-medium">📰 {{ newCount }} 条新快讯，点击展开</span>
+          <span class="text-sm text-yellow-400 font-medium">📰 {{ newCount }} 条新资讯，点击展开</span>
         </div>
 
         <!-- 新闻列表 -->
@@ -55,7 +55,7 @@
             <div class="item-right">
               <div class="item-card">
                 <div class="card-top">
-                  <span class="card-badge">快讯</span>
+                  <span class="card-badge">资讯</span>
                 </div>
                 <div class="card-body-row" :class="{ 'has-image': item.image }">
                   <div class="card-body-main">
@@ -85,7 +85,7 @@
         <div class="sidebar-card">
           <div class="sidebar-header">
             <span class="sidebar-icon">🔥</span>
-            <h3 class="sidebar-title">热门快讯</h3>
+            <h3 class="sidebar-title">热门资讯</h3>
           </div>
           <div class="hot-list">
             <div
