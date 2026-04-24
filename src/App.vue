@@ -2,11 +2,25 @@
   <div class="min-h-screen flex flex-col bg-[#0f0f1a]">
     <header class="bg-[#16162a]/95 backdrop-blur-md border-b border-yellow-500/20 sticky top-0 z-50 shadow-lg shadow-yellow-500/5">
       <div class="max-w-[1400px] mx-auto px-3 md:px-4">
-        <div class="h-14 flex items-center gap-4">
-          <router-link to="/" class="flex items-center gap-3 group flex-shrink-0">
+        <div class="h-14 flex items-center gap-3 md:gap-4">
+          <router-link to="/" class="flex items-center gap-3 group flex-shrink-0 min-w-0">
             <img src="/src/assets/bsj.png" class="w-8 h-8 rounded-full ring-2 ring-yellow-500/40 group-hover:ring-yellow-500/80 transition shadow-lg shadow-yellow-500/20" />
-            <div class="text-[17px] font-bold text-yellow-400">比特视界</div>
+            <div class="text-[15px] md:text-[17px] font-bold text-yellow-400 truncate">比特视界</div>
           </router-link>
+
+          <nav class="hidden lg:flex items-center gap-2 ml-4">
+            <router-link
+              v-for="item in navItems"
+              :key="item.to"
+              :to="item.to"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border transition text-sm font-medium"
+              :class="isActive(item.to)
+                ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/40'
+                : 'text-slate-400 bg-[#0f0f1a]/60 border-yellow-500/20 hover:text-yellow-400 hover:border-yellow-500/60 hover:bg-yellow-500/10'"
+            >
+              {{ item.label }}
+            </router-link>
+          </nav>
 
           <div class="flex-1"></div>
 
@@ -24,14 +38,16 @@
 
           <router-link
             to="/about"
-            class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 bg-[#0f0f1a]/60 border border-yellow-500/20 rounded-xl hover:border-yellow-500/60 hover:bg-yellow-500/10 transition text-sm font-medium text-yellow-400"
+            class="hidden md:inline-flex lg:hidden items-center gap-2 px-3 py-1.5 bg-[#0f0f1a]/60 border border-yellow-500/20 rounded-xl hover:border-yellow-500/60 hover:bg-yellow-500/10 transition text-sm font-medium text-yellow-400"
           >
             关于我们
           </router-link>
 
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
-            class="md:hidden p-2 text-slate-400 hover:text-yellow-400 transition"
+            class="md:hidden p-2 -mr-2 text-slate-400 hover:text-yellow-400 transition"
+            :aria-expanded="mobileMenuOpen"
+            aria-label="切换导航菜单"
           >
             <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -45,13 +61,27 @@
         <div v-show="mobileMenuOpen" class="md:hidden pb-3 border-t border-yellow-500/10">
           <nav class="flex flex-col gap-2 pt-3">
             <router-link
-              to="/"
+              v-for="item in navItems"
+              :key="item.to"
+              :to="item.to"
               @click="mobileMenuOpen = false"
               class="px-4 py-3 rounded-xl text-sm transition flex items-center gap-3"
-              :class="$route.path === '/' ? 'text-yellow-400 bg-yellow-500/10' : 'text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/5'"
+              :class="isActive(item.to) ? 'text-yellow-400 bg-yellow-500/10' : 'text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/5'"
             >
-              <span>🏠</span> 首页
+              <span>{{ item.icon }}</span>
+              <span>{{ item.label }}</span>
             </router-link>
+
+            <a
+              href="https://studybtcion.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="mobileMenuOpen = false"
+              class="px-4 py-3 rounded-xl text-sm transition flex items-center gap-3 text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/5"
+            >
+              <span>📚</span>
+              <span>加密学习</span>
+            </a>
           </nav>
         </div>
       </div>
@@ -124,7 +154,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const mobileMenuOpen = ref(false)
+
+const navItems = [
+  { to: '/', label: '首页', icon: '🏠' },
+  { to: '/news', label: '资讯', icon: '📰' },
+  { to: '/exchange', label: '交易所', icon: '🏦' },
+  { to: '/about', label: '关于我们', icon: 'ℹ️' }
+]
+
+const isActive = (path) => route.path === path || route.path.startsWith(`${path}/`)
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false
+  }
+)
 </script>
