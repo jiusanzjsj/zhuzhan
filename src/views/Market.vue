@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-[#0f0f1a] text-slate-200">
+  <main class="min-h-screen bg-[#0f0f1a] text-slate-200" aria-label="加密货币行情仪表盘">
     <div class="max-w-[1400px] mx-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4">
       <!-- 顶部无缝滚动行情条 -->
-      <section class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden">
+      <section class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden" aria-label="实时行情滚动条">
         <div class="overflow-hidden py-2 bg-[#0f0f1a]/50">
           <div class="ticker-wrapper">
             <div class="ticker-content">
@@ -29,13 +29,13 @@
           </div>
         </div>
       </section>
-
+<!-- 点击跳转K线 @click="goToChart(coin.symbol)"-->
       <!-- 三栏主体 -->
-      <section class="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_320px] gap-3 md:gap-4 items-start">
+      <div class="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_320px] gap-3 md:gap-4 items-start">
         <!-- 左：恐慌指数 + 币种排行 -->
-        <div class="space-y-3 md:space-y-4 xl:sticky xl:top-[72px]">
+        <aside class="space-y-3 md:space-y-4 xl:sticky xl:top-[72px]" aria-label="市场数据侧栏">
           <!-- 市场情绪 -->
-          <div class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden">
+          <section class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden" aria-label="恐慌与贪婪指数">
             <div class="px-4 py-3 border-b border-yellow-500/10 flex items-center justify-between">
               <div>
                 <h2 class="text-sm font-semibold text-slate-200">市场情绪</h2>
@@ -62,10 +62,10 @@
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
           <!-- 币种排行 -->
-          <div class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden">
+          <section class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden" aria-label="加密货币市值排行">
             <div class="px-4 py-3 border-b border-yellow-500/10 flex items-center justify-between">
               <div>
                 <h2 class="text-sm font-semibold text-slate-200">币种排行</h2>
@@ -77,7 +77,7 @@
                 v-for="(coin, index) in sortedList"
                 :key="coin.symbol"
                 class="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-yellow-500/5 transition"
-                @click="goToChart(coin.symbol)"
+                
               >
                 <div class="w-7 text-xs font-semibold text-slate-500">{{ index + 1 }}</div>
                 <img
@@ -101,8 +101,8 @@
                 </div>
               </button>
             </div>
-          </div>
-        </div>
+          </section>
+        </aside>
 
         <!-- 中：资讯 -->
         <div class="bg-[#16162a] border border-yellow-500/20 rounded-2xl shadow-lg shadow-yellow-500/5 overflow-hidden min-w-0">
@@ -186,7 +186,7 @@
 
           <!-- 加盟信号 -->
           <div class="px-4 py-3 border-t border-yellow-500/10">
-            <div class="text-xs font-semibold text-slate-200 text-center">加入榜单</div>
+            <!-- <div class="text-xs font-semibold text-slate-200 text-center">加入榜单</div> -->
           </div>
           <div class="px-4 pb-4 flex items-start gap-3">
             <img
@@ -201,9 +201,9 @@
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>

@@ -1,6 +1,6 @@
 /**
  * 比特视界 - 后端API服务
- * 提供快讯、链上侦探、重要资讯及Binance代理
+ * 提供资讯、链上侦探、重要资讯及Binance代理
  */
 
 import express from 'express'
@@ -20,6 +20,7 @@ const CRYPTOPANIC_TOKEN = '8c820bb21bc5acdc1dcca538410b3a478e26ccc8'
 const CHAINTHINK_URL = 'https://chainthink.cn/zh-CN/article'
 const CHAIN_DATA_FILE = path.join(__dirname, 'chainthink-news.json')
 const POSTS_FILE = path.join(__dirname, 'posts.json')
+const SENSITIVE_WORDS_FILE = path.join(__dirname, 'sensitive-words.json')
 const KEEP_DAYS = 7
 const FETCH_INTERVAL = 2 * 60 * 60 * 1000 // 2小时
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000 // 24小时
@@ -30,6 +31,13 @@ app.use(express.json())
 // ========== 工具函数 ==========
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+function normalizeText(text) {
+  return String(text || '')
+    .toLowerCase()               // 小写化
+    .replace(/\s+/g, '')         // 去空格
+    .replace(/[\p{P}\p{S}_]/gu, '') // 去标点/符号/下划线
+}
 
 function normalizeImage(src) {
   if (!src) return ''
@@ -275,6 +283,64 @@ const savePosts = (posts) => {
 
 // ========== 缓存 ==========
 
+const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const loadSensitiveWords = () => {
+  const fromEnv = (process.env.SENSITIVE_WORDS || '')
+    .split(',')
+    .map(word => word.trim())
+    .filter(Boolean)
+
+  try {
+    if (!existsSync(SENSITIVE_WORDS_FILE)) return fromEnv
+    const parsed = JSON.parse(readFileSync(SENSITIVE_WORDS_FILE, 'utf8'))
+    const fileWords = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.words)
+        ? parsed.words
+        : []
+
+    return [...fileWords, ...fromEnv]
+      .map(word => String(word).trim())
+      .filter(Boolean)
+  } catch (e) {
+    console.error('加载敏感词失败:', e.message)
+    return fromEnv
+  }
+}
+
+const SENSITIVE_WORDS = [...new Set(loadSensitiveWords())]
+
+const SENSITIVE_PATTERNS = SENSITIVE_WORDS.map(word => ({
+  word,
+  pattern: new RegExp(
+  String(word)
+    .split('')
+    .map(char => escapeRegExp(char))
+    // 增加 \p{Cf} (控制符) 和 \p{Z} (所有分隔符)
+    .join('[\\s\\p{P}\\p{S}\\p{Cf}\\p{Z}_]*'),
+  'giu'
+  )
+}))
+
+const filterSensitiveText = (value) => {
+  let filtered = String(value || '')
+  const hits = []
+
+  for (const { word, pattern } of SENSITIVE_PATTERNS) {
+    pattern.lastIndex = 0
+    if (!pattern.test(filtered)) continue
+    hits.push(word)
+    pattern.lastIndex = 0
+    filtered = filtered.replace(pattern, matched => '*'.repeat(Math.max(2, Math.min(6, matched.length))))
+  }
+
+  return {
+    text: filtered,
+    hits: [...new Set(hits)]
+  }
+}
+
 const cache = new Map()
 const CACHE_TTL = 5 * 60 * 1000
 
@@ -295,14 +361,14 @@ const prefetchNews = async () => {
     const oldData = loadChainData()
     if (!isDataEqual(oldData, { data: newData })) {
       const saved = saveChainData(newData)
-      console.log(`[${new Date().toLocaleTimeString()}] 快讯已刷新，共 ${saved.count} 条`)
+      console.log(`[${new Date().toLocaleTimeString()}] 资讯已刷新，共 ${saved.count} 条`)
     } else {
       console.log(`[${new Date().toLocaleTimeString()}] 数据无变化，跳过写入`)
     }
     setCache('news', { success: true, data: newData })
     setCache('chainthink', { success: true, data: newData })
   } catch (e) {
-    console.error('定时抓取快讯失败:', e.message)
+    console.error('定时抓取资讯失败:', e.message)
   }
 }
 
@@ -322,7 +388,7 @@ const cachedData = loadChainData()
 if (cachedData && cachedData.data?.length > 0) {
   setCache('news', cachedData)
   setCache('chainthink', cachedData)
-  console.log(`[启动] 从文件恢复快讯 ${cachedData.count} 条`)
+  console.log(`[启动] 从文件恢复资讯 ${cachedData.count} 条`)
   prefetchChain()
 } else {
   console.log('[启动] 无本地缓存，即将首次抓取...')
@@ -402,7 +468,7 @@ const BINANCE_FALLBACK = {
   ATOMUSDT: { lastPrice: '10.00', priceChangePercent: '0.80' },
   UNIUSDT: { lastPrice: '12.00', priceChangePercent: '1.20' },
   AAVEUSDT: { lastPrice: '280.00', priceChangePercent: '2.00' },
-  MKRUSUSDT: { lastPrice: '2800.00', priceChangePercent: '1.50' },
+  MKRUSDT: { lastPrice: '2800.00', priceChangePercent: '1.50' },
   CRVUSDT: { lastPrice: '0.60', priceChangePercent: '-1.80' },
   BCHUSDT: { lastPrice: '480.00', priceChangePercent: '0.30' },
   TONUSDT: { lastPrice: '6.50', priceChangePercent: '1.20' },
@@ -440,7 +506,7 @@ app.get('/api/news', async (req, res) => {
       }
       return res.json(result)
     }
-  } catch (e) { console.error('获取快讯失败:', e.message) }
+  } catch (e) { console.error('获取资讯失败:', e.message) }
   try {
     const response = await axios.get(
       `https://cryptopanic.com/api/developer/v2/posts/?auth_token=${CRYPTOPANIC_TOKEN}&regions=zh`,
@@ -462,7 +528,7 @@ app.get('/api/news', async (req, res) => {
       }
       return res.json(result)
     }
-  } catch (e) { console.error('获取快讯失败:', e.message) }
+  } catch (e) { console.error('获取资讯失败:', e.message) }
   res.json({ success: true, data: FALLBACK_NEWS })
 })
 
@@ -491,7 +557,7 @@ app.get('/api/news/chainthink', async (req, res) => {
     setCache('chainthink', result)
     return res.json(result)
   } catch (e) {
-    console.error('获取 ChainThink 快讯失败:', e.message)
+    console.error('获取 ChainThink 资讯失败:', e.message)
     return res.json({ success: true, data: [] })
   }
 })
@@ -529,21 +595,52 @@ app.get('/api/forum/:articleId', (req, res) => {
 app.post('/api/forum', (req, res) => {
   const { articleId, nickname, content } = req.body
   if (!content?.trim()) return res.status(400).json({ success: false, message: '内容不能为空' })
-  const nick = (nickname || '').trim() || '游客#' + Math.floor(1000 + Math.random() * 9000)
+  const rawNick = (nickname || '').trim() || '游客#' + Math.floor(1000 + Math.random() * 9000)
+  const safeNick = filterSensitiveText(rawNick)
+
+  const normalizedContent = normalizeText(String(content).trim().slice(0, 500))
+  const safeContent = filterSensitiveText(normalizedContent)
+
+  // ====== 改动：敏感词拦截 ======
+  if (safeContent.hits.length > 0) {
+    console.log('[敏感词命中]', {
+      content,
+      hits: safeContent.hits,
+      ip: req.ip || req.headers['x-forwarded-for']
+    })
+    return res.status(400).json({
+      success: false,
+      message: '内容包含敏感词，请修改后再发布'
+    })
+  }
+
+  // 保留昵称过滤（可选）
+  const nick = safeNick.text.slice(0, 20) || 'Guest'
+
+  // console.log('[敏感词命中]', {
+  // content,
+  // hits: safeContent.hits,
+  // ip: req.ip || req.headers['x-forwarded-for']
+  // })
+
   const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || ''
   const posts = loadPosts()
   const newPost = {
     id: Date.now(),
     articleId: String(articleId || ''),
     nickname: nick,
-    content: String(content).trim().slice(0, 500),
+    content: safeContent.text,
     timestamp: Date.now(),
     time: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
     ip: clientIp
   }
   posts.push(newPost)
   savePosts(posts)
-  res.json({ success: true, data: newPost })
+  res.json({
+    success: true,
+    data: newPost,
+    filtered: safeNick.hits.length > 0 || safeContent.hits.length > 0
+  })
 })
 
 app.delete('/api/forum/:id', (req, res) => {

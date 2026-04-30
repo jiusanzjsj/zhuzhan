@@ -1,5 +1,5 @@
 <template>
-  <div class="flash-page">
+  <main class="flash-page" aria-label="加密货币快讯频道">
     <div class="page-container">
       <div class="flex gap-5">
         <!-- 左侧分类 -->
@@ -37,8 +37,8 @@
             </div>
           </div>
 
-          <!-- 日期 -->
-          <div class="date-header">2026-03-21</div>
+          <!-- 日期 → 动态当天日期 -->
+          <div class="date-header">{{ todayDate }}</div>
 
           <!-- 资讯列表 -->
           <div class="news-container">
@@ -109,7 +109,7 @@
         </aside>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -120,6 +120,12 @@ const showImportant = ref(false)
 const loading = ref(false)
 const lastUpdate = ref('')
 let refreshTimer = null
+
+// 动态当天日期
+const todayDate = computed(() => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+})
 
 const API_BASE = '/api'
 
@@ -136,13 +142,39 @@ const chainNews = ref([])
 const importantNews = ref([])
 const displayCount = ref(10)
 
+/**
+ * 增强版资讯筛选
+ * - activeCategory: 按分类标签过滤
+ * - showImportant: 仅显示重要资讯
+ */
 const filteredNews = computed(() => {
   let news = newsData.value
-  news = news.slice(0, displayCount.value)
+
+  // 按分类过滤（匹配 tags）
+  if (activeCategory.value !== 'all') {
+    const catMap = {
+      predict: ['预测', '预测市场', 'Polymarket', '预测'],
+      ai: ['AI', '人工智能', '机器学习', 'ChatGPT', 'GPT'],
+      chain: ['链上', '侦探', '巨鲸', '转移', '钱包'],
+      funding: ['融资', '投资', 'Fundraising', '领投', '估值'],
+    }
+    const matchTags = catMap[activeCategory.value] || [activeCategory.value]
+    news = news.filter(item => {
+      const tags = (item.tags || []).map(t => String(t).toLowerCase())
+      const titleLower = (item.title || '').toLowerCase()
+      return matchTags.some(kw =>
+        tags.some(t => t.includes(kw.toLowerCase())) || titleLower.includes(kw.toLowerCase())
+      )
+    })
+  }
+
+  // 重要资讯筛选
   if (showImportant.value) {
     news = news.filter(item => item.isImportant)
   }
-  return news
+
+  // 分页截取
+  return news.slice(0, displayCount.value)
 })
 
 const openNews = (url) => {

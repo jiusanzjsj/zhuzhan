@@ -243,15 +243,11 @@ const EXCHANGE_INFO_ZH = {
   binance: { name: '币安', desc: '全球最大加密货币交易所，支持币币、合约、法币交易' },
   okex: { name: 'OKX', desc: '全球领先的加密货币交易所，现货、合约、期权交易' },
   huobi: { name: '火币', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' },
-  
-  gateio: { name: '芝麻', desc: '全球加密货币交易平台，提供现货和合约交易' },
-  
- 
+  gateio: { name: '大门', desc: '全球加密货币交易平台，提供现货和合约交易' },
   bitget: { name: 'Bitget', desc: '全球领先的合约跟单交易所' },
   bybitspot: { name: 'Bybit', desc: '全球加密货币交易所，专注衍生品交易' },
   
   htx: { name: '火币', desc: '全球知名加密货币交易所，提供全面数字资产交易服务' }
- 
 }
 
 /**

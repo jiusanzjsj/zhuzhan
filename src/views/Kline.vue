@@ -39,6 +39,7 @@ const hotCoins = ref([
 ])
 
 const selectCoin = (symbol) => {
-  console.log('Selected:', symbol)
+  const base = symbol.split('/')[0] // 'BTC/USDT' → 'BTC'
+  router.push(`/chart/${base}`)
 }
 </script>

@@ -163,7 +163,7 @@ const cryptoTerms = {
   'rally': '反弹',
   'pullback': '回调',
   'correction': '回调',
-  ' ATH': '历史新高',
+  'ATH': '历史新高',
   'ATL': '历史新低',
 }
 

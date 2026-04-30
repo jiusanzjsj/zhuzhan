@@ -13,9 +13,9 @@ const staticRoutes = {
     type: 'website'
   },
   '/news': {
-    title: '快讯 - 比特视界',
-    description: '最新加密货币快讯、链上动态、重要资讯实时更新',
-    keywords: '加密货币,快讯,链上,新闻,资讯',
+    title: '资讯 - 比特视界',
+    description: '最新加密货币资讯、链上动态、重要资讯实时更新',
+    keywords: '加密货币,资讯,链上,新闻,资讯',
     type: 'website'
   },
   '/exchange': {
@@ -43,9 +43,9 @@ const staticRoutes = {
     type: 'website'
   },
   '/flash': {
-    title: '快讯 - 比特视界',
-    description: '最新加密货币快讯、链上动态、重要资讯实时更新',
-    keywords: '加密货币,快讯,链上,新闻',
+    title: '资讯 - 比特视界',
+    description: '最新加密货币资讯、链上动态、重要资讯实时更新',
+    keywords: '加密货币,资讯,链上,新闻',
     type: 'website'
   }
 }

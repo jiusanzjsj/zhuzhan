@@ -163,7 +163,7 @@ function getTag(source) {
     'Decrypt': '技术',
     'The Block': 'DeFi'
   }
-  return sourceMap[source] || '快讯'
+  return sourceMap[source] || '资讯'
 }
 
 function getTagClass(tag) {
@@ -172,9 +172,9 @@ function getTagClass(tag) {
     '政策': 'bg-yellow-50 text-yellow-600 border border-yellow-100',
     '技术': 'bg-purple-50 text-purple-600 border border-purple-100',
     'DeFi': 'bg-green-50 text-green-600 border border-green-100',
-    '快讯': 'bg-blue-50 text-blue-600 border border-blue-100'
+    '资讯': 'bg-blue-50 text-blue-600 border border-blue-100'
   }
-  return classMap[tag] || classMap['快讯']
+  return classMap[tag] || classMap['资讯']
 }
 
 function formatTime(dateStr) {
